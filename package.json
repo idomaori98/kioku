@@ -1,0 +1,17 @@
+{
+  "name": "kioku",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev:server": "node --watch server/local.js",
+    "dev:client": "cd client && npm run dev"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "mongoose": "^8.9.5"
+  },
+  "devDependencies": {
+    "dotenv": "^16.4.7"
+  }
+}
