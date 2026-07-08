@@ -13,6 +13,7 @@ function serializeTrip(trip) {
     endDate: trip.endDate,
     dailyBudget: trip.dailyBudget,
     homeCurrency: trip.homeCurrency,
+    tripType: trip.tripType,
     inviteToken: trip.inviteToken,
     members: trip.members.map((m) => ({
       role: m.role,
@@ -31,11 +32,14 @@ router.get('/', async (req, res) => {
 })
 
 router.post('/', async (req, res) => {
-  const { name, startDate, endDate, dailyBudget, homeCurrency } = req.body
+  const { name, startDate, endDate, dailyBudget, homeCurrency, tripType } = req.body
   if (!name || !startDate || !endDate || !dailyBudget || !homeCurrency) {
     return res.status(400).json({
       error: 'name, startDate, endDate, dailyBudget, and homeCurrency are required',
     })
+  }
+  if (tripType && !['shared', 'family'].includes(tripType)) {
+    return res.status(400).json({ error: 'tripType must be "shared" or "family"' })
   }
 
   const trip = await Trip.create({
@@ -44,6 +48,7 @@ router.post('/', async (req, res) => {
     endDate,
     dailyBudget,
     homeCurrency,
+    tripType: tripType || 'shared',
     createdBy: req.userId,
     members: [{ user: req.userId, role: 'admin' }],
   })

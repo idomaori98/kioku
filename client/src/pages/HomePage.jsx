@@ -11,6 +11,7 @@ export function HomePage() {
     endDate: '',
     dailyBudget: '',
     homeCurrency: 'USD',
+    tripType: 'shared',
   })
 
   useEffect(() => {
@@ -26,7 +27,14 @@ export function HomePage() {
         dailyBudget: Number(form.dailyBudget),
       })
       setTrips((prev) => [...(prev || []), trip])
-      setForm({ name: '', startDate: '', endDate: '', dailyBudget: '', homeCurrency: 'USD' })
+      setForm({
+        name: '',
+        startDate: '',
+        endDate: '',
+        dailyBudget: '',
+        homeCurrency: 'USD',
+        tripType: 'shared',
+      })
     } catch (err) {
       setError(err.message)
     }
@@ -88,6 +96,28 @@ export function HomePage() {
           onChange={(e) => setForm({ ...form, homeCurrency: e.target.value })}
           required
         />
+        <div className="trip-type-choice">
+          <label>
+            <input
+              type="radio"
+              name="tripType"
+              value="shared"
+              checked={form.tripType === 'shared'}
+              onChange={(e) => setForm({ ...form, tripType: e.target.value })}
+            />
+            Shared trip — track who paid for each expense
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="tripType"
+              value="family"
+              checked={form.tripType === 'family'}
+              onChange={(e) => setForm({ ...form, tripType: e.target.value })}
+            />
+            Family trip — one pot, just log the spending
+          </label>
+        </div>
         <button type="submit">Create trip</button>
       </form>
     </div>

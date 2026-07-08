@@ -36,4 +36,11 @@ export const api = {
   joinTrip: (token) => request(`/trips/join/${token}`, { method: 'POST' }),
   grantAdmin: (tripId, userId) =>
     request(`/trips/${tripId}/admins`, { method: 'POST', body: JSON.stringify({ userId }) }),
+  listExpenses: (tripId, day) =>
+    request(`/trips/${tripId}/expenses${day ? `?day=${day}` : ''}`),
+  createExpense: (tripId, body) =>
+    request(`/trips/${tripId}/expenses`, { method: 'POST', body: JSON.stringify(body) }),
+  getDayNote: (tripId, day) => request(`/trips/${tripId}/day-note?day=${day}`),
+  setDayNote: (tripId, day, note) =>
+    request(`/trips/${tripId}/day-note`, { method: 'PUT', body: JSON.stringify({ day, note }) }),
 }

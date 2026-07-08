@@ -2,6 +2,9 @@ import express from 'express'
 import { connectDB, dbStatus } from './db.js'
 import authRoutes from './routes/auth.js'
 import tripRoutes from './routes/trips.js'
+import expenseRoutes from './routes/expenses.js'
+import dayNoteRoutes from './routes/dayNotes.js'
+import { requireAuth } from './middleware/auth.js'
 
 const app = express()
 
@@ -23,5 +26,7 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/auth', authRoutes)
 app.use('/api/trips', tripRoutes)
+app.use('/api/trips/:tripId/expenses', requireAuth, expenseRoutes)
+app.use('/api/trips/:tripId/day-note', requireAuth, dayNoteRoutes)
 
 export default app
