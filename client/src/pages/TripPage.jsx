@@ -12,6 +12,10 @@ export function TripPage() {
 
   useEffect(() => {
     api.getTrip(id).then(setTrip).catch((err) => setError(err.message))
+    const interval = setInterval(() => {
+      api.getTrip(id).then(setTrip).catch(() => {})
+    }, 4000)
+    return () => clearInterval(interval)
   }, [id])
 
   async function handleGrantAdmin(userId) {
