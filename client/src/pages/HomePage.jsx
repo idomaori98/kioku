@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import { japanTodayKey } from '../lib/days'
 
 export function HomePage() {
+  const navigate = useNavigate()
   const [trips, setTrips] = useState(null)
   const [error, setError] = useState(null)
   const [form, setForm] = useState({
@@ -36,15 +37,7 @@ export function HomePage() {
         ...form,
         dailyBudget: Number(form.dailyBudget),
       })
-      setTrips((prev) => [...(prev || []), trip])
-      setForm({
-        name: '',
-        startDate: '',
-        endDate: '',
-        dailyBudget: '',
-        homeCurrency: 'USD',
-        tripType: 'shared',
-      })
+      navigate(`/trips/${trip.id}`)
     } catch (err) {
       setError(err.message)
     }
