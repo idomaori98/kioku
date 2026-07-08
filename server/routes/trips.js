@@ -86,6 +86,35 @@ router.get('/:id', async (req, res) => {
   res.json(serializeTrip(trip))
 })
 
+router.put('/:id', async (req, res) => {
+  const { startDate, endDate, dailyBudget } = req.body
+
+  const trip = await Trip.findById(req.params.id)
+  if (!trip) return res.status(404).json({ error: 'Trip not found' })
+
+  const requester = trip.members.find((m) => m.user.toString() === req.userId)
+  if (!requester || requester.role !== 'admin') {
+    return res.status(403).json({ error: 'Only an admin can edit trip settings' })
+  }
+
+  const nextStartDate = startDate ?? trip.startDate
+  const nextEndDate = endDate ?? trip.endDate
+  if (dayKeyFromDate(nextEndDate) < dayKeyFromDate(nextStartDate)) {
+    return res.status(400).json({ error: 'Trip end date cannot be before the start date' })
+  }
+  if (dailyBudget !== undefined && (typeof dailyBudget !== 'number' || dailyBudget <= 0)) {
+    return res.status(400).json({ error: 'dailyBudget must be a positive number' })
+  }
+
+  trip.startDate = nextStartDate
+  trip.endDate = nextEndDate
+  if (dailyBudget !== undefined) trip.dailyBudget = dailyBudget
+
+  await trip.save()
+  await trip.populate('members.user', 'name email photoUrl')
+  res.json(serializeTrip(trip))
+})
+
 router.post('/join/:token', async (req, res) => {
   // Atomic: only pushes if the user isn't already a member, so two
   // concurrent join requests can't both pass a separate "already a member" check.

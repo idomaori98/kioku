@@ -98,7 +98,9 @@ export function HomePage() {
           type="number"
           placeholder="Daily budget"
           value={form.dailyBudget}
-          onChange={(e) => setForm({ ...form, dailyBudget: e.target.value })}
+          onChange={(e) =>
+            setForm({ ...form, dailyBudget: e.target.value.replace(/^0+(?=\d)/, '') })
+          }
           required
         />
         <input

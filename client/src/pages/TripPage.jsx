@@ -24,6 +24,9 @@ export function TripPage() {
   const [error, setError] = useState(null)
   const [copied, setCopied] = useState(false)
 
+  const [editing, setEditing] = useState(false)
+  const [editForm, setEditForm] = useState(null)
+
   const [selectedDay, setSelectedDay] = useState(null)
   const [expenses, setExpenses] = useState([])
   const [allExpenses, setAllExpenses] = useState([])
@@ -99,6 +102,31 @@ export function TripPage() {
     }
   }
 
+  function startEdit() {
+    setEditForm({
+      startDate: dayKeyFromDate(trip.startDate),
+      endDate: dayKeyFromDate(trip.endDate),
+      dailyBudget: String(trip.dailyBudget),
+    })
+    setEditing(true)
+  }
+
+  async function handleSaveEdit(e) {
+    e.preventDefault()
+    setError(null)
+    try {
+      const updated = await api.updateTrip(id, {
+        startDate: editForm.startDate,
+        endDate: editForm.endDate,
+        dailyBudget: Number(editForm.dailyBudget),
+      })
+      setTrip(updated)
+      setEditing(false)
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
   function copyInviteLink() {
     const link = `${window.location.origin}/join/${trip.inviteToken}`
     navigator.clipboard.writeText(link)
@@ -147,14 +175,53 @@ export function TripPage() {
   return (
     <div>
       <h1>{trip.name}</h1>
-      <p>
-        {new Date(trip.startDate).toLocaleDateString()} –{' '}
-        {new Date(trip.endDate).toLocaleDateString()}
-      </p>
-      <p>
-        Daily budget: ¥{trip.dailyBudget.toLocaleString()}
-      </p>
-      <p>{trip.tripType === 'family' ? 'Family trip · one shared pot' : 'Shared trip · tracks who paid'}</p>
+
+      {editing ? (
+        <form onSubmit={handleSaveEdit}>
+          <label>
+            Start date
+            <input
+              type="date"
+              value={editForm.startDate}
+              onChange={(e) => setEditForm({ ...editForm, startDate: e.target.value })}
+              required
+            />
+          </label>
+          <label>
+            End date
+            <input
+              type="date"
+              min={editForm.startDate}
+              value={editForm.endDate}
+              onChange={(e) => setEditForm({ ...editForm, endDate: e.target.value })}
+              required
+            />
+          </label>
+          <input
+            type="number"
+            placeholder="Daily budget"
+            value={editForm.dailyBudget}
+            onChange={(e) =>
+              setEditForm({ ...editForm, dailyBudget: e.target.value.replace(/^0+(?=\d)/, '') })
+            }
+            required
+          />
+          <button type="submit">Save</button>
+          <button type="button" className="sheet-cancel" onClick={() => setEditing(false)}>
+            Cancel
+          </button>
+        </form>
+      ) : (
+        <>
+          <p>
+            {new Date(trip.startDate).toLocaleDateString()} –{' '}
+            {new Date(trip.endDate).toLocaleDateString()}
+          </p>
+          <p>Daily budget: ¥{trip.dailyBudget.toLocaleString()}</p>
+          <p>{trip.tripType === 'family' ? 'Family trip · one shared pot' : 'Shared trip · tracks who paid'}</p>
+          {isAdmin && <button onClick={startEdit}>Edit dates &amp; budget</button>}
+        </>
+      )}
 
       <h2>Invite link</h2>
       <button onClick={copyInviteLink}>{copied ? 'Copied!' : 'Copy invite link'}</button>
