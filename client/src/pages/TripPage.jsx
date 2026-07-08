@@ -241,18 +241,19 @@ export function TripPage() {
       <hr />
 
       <div className="day-nav">
-        <button disabled={dayIndex <= 0} onClick={() => setSelectedDay(days[dayIndex - 1])}>
-          ← Prev
-        </button>
+        {dayIndex > 0 ? (
+          <button onClick={() => setSelectedDay(days[dayIndex - 1])}>← Prev</button>
+        ) : (
+          <span />
+        )}
         <h2>
           {formatDayLabel(selectedDay)} {selectedDay === today && '· Today'}
         </h2>
-        <button
-          disabled={dayIndex >= days.length - 1}
-          onClick={() => setSelectedDay(days[dayIndex + 1])}
-        >
-          Next →
-        </button>
+        {dayIndex < days.length - 1 ? (
+          <button onClick={() => setSelectedDay(days[dayIndex + 1])}>Next →</button>
+        ) : (
+          <span />
+        )}
       </div>
 
       <textarea
