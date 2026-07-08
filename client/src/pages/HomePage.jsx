@@ -1,0 +1,95 @@
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { api } from '../api'
+
+export function HomePage() {
+  const [trips, setTrips] = useState(null)
+  const [error, setError] = useState(null)
+  const [form, setForm] = useState({
+    name: '',
+    startDate: '',
+    endDate: '',
+    dailyBudget: '',
+    homeCurrency: 'USD',
+  })
+
+  useEffect(() => {
+    api.listTrips().then(setTrips).catch((err) => setError(err.message))
+  }, [])
+
+  async function handleCreate(e) {
+    e.preventDefault()
+    setError(null)
+    try {
+      const trip = await api.createTrip({
+        ...form,
+        dailyBudget: Number(form.dailyBudget),
+      })
+      setTrips((prev) => [...(prev || []), trip])
+      setForm({ name: '', startDate: '', endDate: '', dailyBudget: '', homeCurrency: 'USD' })
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  if (!trips) return <p>Loading...</p>
+
+  return (
+    <div>
+      <h1>Your trips</h1>
+      {error && <p className="error">{error}</p>}
+      {trips.length === 0 && <p>No trips yet — create one below.</p>}
+      <ul className="trip-list">
+        {trips.map((trip) => (
+          <li key={trip.id}>
+            <Link to={`/trips/${trip.id}`}>{trip.name}</Link>
+          </li>
+        ))}
+      </ul>
+
+      <h2>Create a trip</h2>
+      <form onSubmit={handleCreate}>
+        <input
+          type="text"
+          placeholder="Trip name"
+          value={form.name}
+          onChange={(e) => setForm({ ...form, name: e.target.value })}
+          required
+        />
+        <label>
+          Start date
+          <input
+            type="date"
+            value={form.startDate}
+            onChange={(e) => setForm({ ...form, startDate: e.target.value })}
+            required
+          />
+        </label>
+        <label>
+          End date
+          <input
+            type="date"
+            value={form.endDate}
+            onChange={(e) => setForm({ ...form, endDate: e.target.value })}
+            required
+          />
+        </label>
+        <input
+          type="number"
+          placeholder="Daily budget"
+          value={form.dailyBudget}
+          onChange={(e) => setForm({ ...form, dailyBudget: e.target.value })}
+          required
+        />
+        <input
+          type="text"
+          placeholder="Home currency (e.g. USD)"
+          value={form.homeCurrency}
+          onChange={(e) => setForm({ ...form, homeCurrency: e.target.value })}
+          required
+        />
+        <button type="submit">Create trip</button>
+      </form>
+    </div>
+  )
+}

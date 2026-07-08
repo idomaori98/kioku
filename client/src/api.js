@@ -1,0 +1,39 @@
+const TOKEN_KEY = 'kioku_token'
+
+export function getToken() {
+  return localStorage.getItem(TOKEN_KEY)
+}
+
+export function setToken(token) {
+  if (token) localStorage.setItem(TOKEN_KEY, token)
+  else localStorage.removeItem(TOKEN_KEY)
+}
+
+async function request(path, options = {}) {
+  const token = getToken()
+  const res = await fetch(`/api${path}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options.headers,
+    },
+  })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`)
+  return data
+}
+
+export const api = {
+  signup: (body) => request('/auth/signup', { method: 'POST', body: JSON.stringify(body) }),
+  login: (body) => request('/auth/login', { method: 'POST', body: JSON.stringify(body) }),
+  loginWithGoogle: (idToken) =>
+    request('/auth/google', { method: 'POST', body: JSON.stringify({ idToken }) }),
+  me: () => request('/auth/me'),
+  listTrips: () => request('/trips'),
+  createTrip: (body) => request('/trips', { method: 'POST', body: JSON.stringify(body) }),
+  getTrip: (id) => request(`/trips/${id}`),
+  joinTrip: (token) => request(`/trips/join/${token}`, { method: 'POST' }),
+  grantAdmin: (tripId, userId) =>
+    request(`/trips/${tripId}/admins`, { method: 'POST', body: JSON.stringify({ userId }) }),
+}

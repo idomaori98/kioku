@@ -1,0 +1,88 @@
+import { Router } from 'express'
+import bcrypt from 'bcryptjs'
+import { OAuth2Client } from 'google-auth-library'
+import User from '../models/User.js'
+import { signToken, requireAuth } from '../middleware/auth.js'
+
+const router = Router()
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
+
+router.post('/signup', async (req, res) => {
+  const { email, password, name } = req.body
+  if (!email || !password || !name) {
+    return res.status(400).json({ error: 'email, password, and name are required' })
+  }
+
+  const existing = await User.findOne({ email: email.toLowerCase() })
+  if (existing) return res.status(409).json({ error: 'Email already in use' })
+
+  const passwordHash = await bcrypt.hash(password, 10)
+  const user = await User.create({ email, passwordHash, name })
+
+  res.status(201).json({
+    token: signToken(user),
+    user: { id: user._id, email: user.email, name: user.name, photoUrl: user.photoUrl },
+  })
+})
+
+router.post('/login', async (req, res) => {
+  const { email, password } = req.body
+  if (!email || !password) {
+    return res.status(400).json({ error: 'email and password are required' })
+  }
+
+  const user = await User.findOne({ email: email.toLowerCase() })
+  if (!user || !user.passwordHash) {
+    return res.status(401).json({ error: 'Invalid email or password' })
+  }
+
+  const valid = await bcrypt.compare(password, user.passwordHash)
+  if (!valid) return res.status(401).json({ error: 'Invalid email or password' })
+
+  res.json({
+    token: signToken(user),
+    user: { id: user._id, email: user.email, name: user.name, photoUrl: user.photoUrl },
+  })
+})
+
+router.post('/google', async (req, res) => {
+  const { idToken } = req.body
+  if (!idToken) return res.status(400).json({ error: 'idToken is required' })
+
+  let payload
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    })
+    payload = ticket.getPayload()
+  } catch {
+    return res.status(401).json({ error: 'Invalid Google token' })
+  }
+
+  const { sub: googleId, email, name, picture } = payload
+
+  let user = await User.findOne({ googleId })
+  if (!user) {
+    user = await User.findOne({ email: email.toLowerCase() })
+    if (user) {
+      user.googleId = googleId
+      await user.save()
+    } else {
+      user = await User.create({ email, googleId, name, photoUrl: picture || '' })
+    }
+  }
+
+  res.json({
+    token: signToken(user),
+    user: { id: user._id, email: user.email, name: user.name, photoUrl: user.photoUrl },
+  })
+})
+
+router.get('/me', requireAuth, async (req, res) => {
+  const user = await User.findById(req.userId)
+  if (!user) return res.status(404).json({ error: 'User not found' })
+  res.json({ id: user._id, email: user.email, name: user.name, photoUrl: user.photoUrl })
+})
+
+export default router
