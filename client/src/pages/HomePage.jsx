@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api'
+import { japanTodayKey } from '../lib/days'
 
 export function HomePage() {
   const [trips, setTrips] = useState(null)
@@ -21,6 +22,15 @@ export function HomePage() {
   async function handleCreate(e) {
     e.preventDefault()
     setError(null)
+    const todayKey = japanTodayKey()
+    if (form.startDate < todayKey) {
+      setError("Trip start date can't be in the past")
+      return
+    }
+    if (form.endDate < form.startDate) {
+      setError("End date can't be before the start date")
+      return
+    }
     try {
       const trip = await api.createTrip({
         ...form,
@@ -68,6 +78,7 @@ export function HomePage() {
           Start date
           <input
             type="date"
+            min={japanTodayKey()}
             value={form.startDate}
             onChange={(e) => setForm({ ...form, startDate: e.target.value })}
             required
@@ -77,6 +88,7 @@ export function HomePage() {
           End date
           <input
             type="date"
+            min={form.startDate || japanTodayKey()}
             value={form.endDate}
             onChange={(e) => setForm({ ...form, endDate: e.target.value })}
             required

@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import Trip from '../models/Trip.js'
 import { requireAuth } from '../middleware/auth.js'
+import { dayKeyFromDate, japanTodayKey } from '../lib/days.js'
 
 const router = Router()
 router.use(requireAuth)
@@ -40,6 +41,15 @@ router.post('/', async (req, res) => {
   }
   if (tripType && !['shared', 'family'].includes(tripType)) {
     return res.status(400).json({ error: 'tripType must be "shared" or "family"' })
+  }
+
+  const startKey = dayKeyFromDate(startDate)
+  const endKey = dayKeyFromDate(endDate)
+  if (startKey < japanTodayKey()) {
+    return res.status(400).json({ error: 'Trip start date cannot be in the past' })
+  }
+  if (endKey < startKey) {
+    return res.status(400).json({ error: 'Trip end date cannot be before the start date' })
   }
 
   const trip = await Trip.create({
