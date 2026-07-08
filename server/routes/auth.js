@@ -9,15 +9,18 @@ const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 
 router.post('/signup', async (req, res) => {
   const { email, password, name } = req.body
-  if (!email || !password || !name) {
+  if (!email || !password || !name?.trim()) {
     return res.status(400).json({ error: 'email, password, and name are required' })
+  }
+  if (password.length < 8) {
+    return res.status(400).json({ error: 'Password must be at least 8 characters' })
   }
 
   const existing = await User.findOne({ email: email.toLowerCase() })
   if (existing) return res.status(409).json({ error: 'Email already in use' })
 
   const passwordHash = await bcrypt.hash(password, 10)
-  const user = await User.create({ email, passwordHash, name })
+  const user = await User.create({ email, passwordHash, name: name.trim() })
 
   res.status(201).json({
     token: signToken(user),

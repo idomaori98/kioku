@@ -2,6 +2,7 @@ import { Router } from 'express'
 import Trip from '../models/Trip.js'
 import { requireAuth } from '../middleware/auth.js'
 import { dayKeyFromDate, japanTodayKey } from '../lib/days.js'
+import { getJpyRate } from '../lib/exchangeRate.js'
 
 const router = Router()
 router.use(requireAuth)
@@ -34,10 +35,13 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   const { name, startDate, endDate, dailyBudget, homeCurrency, tripType } = req.body
-  if (!name || !startDate || !endDate || !dailyBudget || !homeCurrency) {
+  if (!name?.trim() || !startDate || !endDate || !dailyBudget || !homeCurrency) {
     return res.status(400).json({
       error: 'name, startDate, endDate, dailyBudget, and homeCurrency are required',
     })
+  }
+  if (typeof dailyBudget !== 'number' || dailyBudget <= 0) {
+    return res.status(400).json({ error: 'dailyBudget must be a positive number' })
   }
   if (tripType && !['shared', 'family'].includes(tripType)) {
     return res.status(400).json({ error: 'tripType must be "shared" or "family"' })
@@ -52,8 +56,14 @@ router.post('/', async (req, res) => {
     return res.status(400).json({ error: 'Trip end date cannot be before the start date' })
   }
 
+  try {
+    await getJpyRate(homeCurrency)
+  } catch {
+    return res.status(400).json({ error: `"${homeCurrency}" is not a recognized currency code` })
+  }
+
   const trip = await Trip.create({
-    name,
+    name: name.trim(),
     startDate,
     endDate,
     dailyBudget,

@@ -2,6 +2,7 @@ import { Router } from 'express'
 import Expense, { EXPENSE_CATEGORIES } from '../models/Expense.js'
 import { getJpyRate } from '../lib/exchangeRate.js'
 import { requireTripMembership } from '../middleware/tripMembership.js'
+import { tripDayKeys } from '../lib/days.js'
 
 const router = Router({ mergeParams: true })
 router.use(requireTripMembership)
@@ -34,11 +35,22 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   const { day, name, category, amountYen, paidBy } = req.body
-  if (!day || !name || !amountYen) {
+  if (!day || !name?.trim() || !amountYen) {
     return res.status(400).json({ error: 'day, name, and amountYen are required' })
+  }
+  if (typeof amountYen !== 'number' || amountYen <= 0) {
+    return res.status(400).json({ error: 'amountYen must be a positive number' })
   }
   if (category && !EXPENSE_CATEGORIES.includes(category)) {
     return res.status(400).json({ error: `category must be one of ${EXPENSE_CATEGORIES.join(', ')}` })
+  }
+  if (!tripDayKeys(req.trip).includes(day)) {
+    return res.status(400).json({ error: 'day must fall within the trip dates' })
+  }
+  if (paidBy && req.trip.tripType !== 'family') {
+    if (!req.trip.members.some((m) => m.user.toString() === paidBy)) {
+      return res.status(400).json({ error: 'paidBy must be a member of this trip' })
+    }
   }
 
   const homeCurrency = req.trip.homeCurrency
@@ -46,7 +58,7 @@ router.post('/', async (req, res) => {
   const expense = await Expense.create({
     trip: req.params.tripId,
     day,
-    name,
+    name: name.trim(),
     category: category || 'other',
     amountYen,
     homeCurrency,
