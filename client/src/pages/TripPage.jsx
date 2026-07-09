@@ -6,6 +6,9 @@ import { dayKeyFromDate, formatDayLabel, japanTodayKey, tripDayKeys } from '../l
 import { AddSheet } from '../components/AddSheet'
 import { ExpenseForm, CATEGORIES } from '../components/ExpenseForm'
 import { BudgetBar } from '../components/BudgetBar'
+import { PhotoPicker } from '../components/PhotoPicker'
+
+const PHOTO_PREVIEW_COUNT = 5
 
 const CATEGORY_LABEL = Object.fromEntries(CATEGORIES.map((c) => [c.value, c.label]))
 
@@ -30,8 +33,10 @@ export function TripPage() {
   const [selectedDay, setSelectedDay] = useState(null)
   const [expenses, setExpenses] = useState([])
   const [allExpenses, setAllExpenses] = useState([])
+  const [photos, setPhotos] = useState([])
+  const [showAllPhotos, setShowAllPhotos] = useState(false)
   const [dayNote, setDayNote] = useState('')
-  const [sheet, setSheet] = useState(null) // null | 'add' | 'expense'
+  const [sheet, setSheet] = useState(null) // null | 'add' | 'expense' | 'photo'
   const [placeholderMsg, setPlaceholderMsg] = useState(null)
 
   useEffect(() => {
@@ -68,7 +73,11 @@ export function TripPage() {
       api.getDayNote(id, selectedDay).then((n) => {
         if (!cancelled) setDayNote(n.note)
       }).catch(() => {})
+      api.listPhotos(id, selectedDay).then((p) => {
+        if (!cancelled) setPhotos(p)
+      }).catch(() => {})
     }
+    setShowAllPhotos(false)
     load()
     const interval = setInterval(load, 4000)
     return () => {
@@ -143,18 +152,23 @@ export function TripPage() {
   }
 
   function handleAddSelect(option) {
-    if (option === 'expense') {
-      setSheet('expense')
+    if (option === 'expense' || option === 'photo') {
+      setSheet(option)
       return
     }
     setSheet(null)
-    setPlaceholderMsg(option === 'photo' ? 'Photos arrive in M3' : 'Places arrive in M4')
+    setPlaceholderMsg('Places arrive in M4')
     setTimeout(() => setPlaceholderMsg(null), 2500)
   }
 
   function handleExpenseSaved(expense) {
     setExpenses((prev) => [...prev, expense])
     setAllExpenses((prev) => [...prev, expense])
+    setSheet(null)
+  }
+
+  function handlePhotosSaved(newPhotos) {
+    setPhotos((prev) => [...prev, ...newPhotos])
     setSheet(null)
   }
 
@@ -264,6 +278,27 @@ export function TripPage() {
         onBlur={handleSaveNote}
       />
 
+      <h2>Photos</h2>
+      {photos.length === 0 && <p>No photos yet for this day.</p>}
+      <div className="photo-grid">
+        {(showAllPhotos ? photos : photos.slice(0, PHOTO_PREVIEW_COUNT)).map((p) => (
+          <div key={p.id} className="photo-grid-item">
+            <img src={p.url} alt={p.note || ''} />
+          </div>
+        ))}
+        {!showAllPhotos && photos.length > PHOTO_PREVIEW_COUNT && (
+          <div
+            className="photo-grid-item"
+            onClick={() => setShowAllPhotos(true)}
+            role="button"
+            tabIndex={0}
+          >
+            <img src={photos[PHOTO_PREVIEW_COUNT].url} alt="" />
+            <div className="photo-grid-more">+{photos.length - PHOTO_PREVIEW_COUNT}</div>
+          </div>
+        )}
+      </div>
+
       <div className="spending-card">
         <p>
           Today: ¥{dailyYen.toLocaleString()} ({dailyHome.toFixed(2)} {trip.homeCurrency})
@@ -308,6 +343,14 @@ export function TripPage() {
           members={trip.members}
           currentUserId={user.id}
           onSaved={handleExpenseSaved}
+          onClose={() => setSheet(null)}
+        />
+      )}
+      {sheet === 'photo' && (
+        <PhotoPicker
+          tripId={id}
+          day={selectedDay}
+          onSaved={handlePhotosSaved}
           onClose={() => setSheet(null)}
         />
       )}

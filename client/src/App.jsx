@@ -5,6 +5,7 @@ import { SignupPage } from './pages/SignupPage'
 import { HomePage } from './pages/HomePage'
 import { TripPage } from './pages/TripPage'
 import { JoinPage } from './pages/JoinPage'
+import { ProfilePage } from './pages/ProfilePage'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -24,7 +25,14 @@ function Nav() {
   return (
     <nav className="nav">
       <Link to="/">記憶 Kioku</Link>
-      <span>
+      <span className="nav-user">
+        <Link to="/profile" className="avatar-small">
+          {user.photoUrl ? (
+            <img src={user.photoUrl} alt={user.name} />
+          ) : (
+            <span>{user.name.charAt(0).toUpperCase()}</span>
+          )}
+        </Link>
         {user.name} · <button onClick={logout}>Log out</button>
       </span>
     </nav>
@@ -53,6 +61,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <TripPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
               </ProtectedRoute>
             }
           />

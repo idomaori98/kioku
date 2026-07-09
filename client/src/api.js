@@ -30,6 +30,10 @@ export const api = {
   loginWithGoogle: (idToken) =>
     request('/auth/google', { method: 'POST', body: JSON.stringify({ idToken }) }),
   me: () => request('/auth/me'),
+  getProfilePhotoUploadUrl: (contentType) =>
+    request('/auth/me/photo-upload-url', { method: 'POST', body: JSON.stringify({ contentType }) }),
+  updateProfilePhoto: (photoUrl) =>
+    request('/auth/me', { method: 'PUT', body: JSON.stringify({ photoUrl }) }),
   listTrips: () => request('/trips'),
   createTrip: (body) => request('/trips', { method: 'POST', body: JSON.stringify(body) }),
   getTrip: (id) => request(`/trips/${id}`),
@@ -44,4 +48,17 @@ export const api = {
   getDayNote: (tripId, day) => request(`/trips/${tripId}/day-note?day=${day}`),
   setDayNote: (tripId, day, note) =>
     request(`/trips/${tripId}/day-note`, { method: 'PUT', body: JSON.stringify({ day, note }) }),
+  listPhotos: (tripId, day) => request(`/trips/${tripId}/photos${day ? `?day=${day}` : ''}`),
+  getPhotoUploadUrl: (tripId, contentType) =>
+    request(`/trips/${tripId}/photos/upload-url`, {
+      method: 'POST',
+      body: JSON.stringify({ contentType }),
+    }),
+  createPhoto: (tripId, body) =>
+    request(`/trips/${tripId}/photos`, { method: 'POST', body: JSON.stringify(body) }),
+  updatePhotoNote: (tripId, photoId, note) =>
+    request(`/trips/${tripId}/photos/${photoId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ note }),
+    }),
 }
