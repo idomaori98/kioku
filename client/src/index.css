@@ -117,6 +117,23 @@ button {
   color: crimson;
 }
 
+.loading-state {
+  text-align: center;
+  color: #888;
+  padding: 40px 0;
+}
+
+.empty-state {
+  color: #888;
+  font-size: 15px;
+}
+
+.full-page-error {
+  text-align: center;
+  color: crimson;
+  padding: 40px 20px;
+}
+
 .trip-list,
 .member-list {
   list-style: none;
@@ -151,11 +168,14 @@ button {
 .day-note {
   width: 100%;
   min-height: 60px;
-  font: inherit;
+  font-family: Georgia, 'Iowan Old Style', 'Hiragino Mincho ProN', serif;
+  font-size: 17px;
   font-style: italic;
-  padding: 10px 12px;
+  line-height: 1.5;
+  padding: 12px 14px;
   border-radius: 8px;
-  border: 1px solid #ccc;
+  border: 1px solid #e5e4e7;
+  background: #fdfcf9;
   box-sizing: border-box;
   margin: 12px 0;
   resize: vertical;

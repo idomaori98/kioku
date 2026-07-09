@@ -43,13 +43,13 @@ export function HomePage() {
     }
   }
 
-  if (!trips) return <p>Loading...</p>
+  if (!trips) return <p className="loading-state">Loading...</p>
 
   return (
     <div>
       <h1>Your trips</h1>
       {error && <p className="error">{error}</p>}
-      {trips.length === 0 && <p>No trips yet — create one below.</p>}
+      {trips.length === 0 && <p className="empty-state">No trips yet — create one below.</p>}
       <ul className="trip-list">
         {trips.map((trip) => (
           <li key={trip.id}>

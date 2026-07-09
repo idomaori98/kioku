@@ -176,8 +176,8 @@ export function TripPage() {
     setSheet(null)
   }
 
-  if (error) return <p className="error">{error}</p>
-  if (!trip || !selectedDay) return <p>Loading...</p>
+  if (error) return <p className="full-page-error">{error}</p>
+  if (!trip || !selectedDay) return <p className="loading-state">Loading...</p>
 
   const me = trip.members.find((m) => m.user.id === user?.id)
   const isAdmin = me?.role === 'admin'
@@ -283,7 +283,7 @@ export function TripPage() {
       />
 
       <h2>Photos</h2>
-      {photos.length === 0 && <p>No photos yet for this day.</p>}
+      {photos.length === 0 && <p className="empty-state">No photos yet for this day.</p>}
       <div className="photo-grid">
         {(showAllPhotos ? photos : photos.slice(0, PHOTO_PREVIEW_COUNT)).map((p) => (
           <div key={p.id} className="photo-grid-item">
@@ -315,7 +315,7 @@ export function TripPage() {
 
       <h2>Expenses</h2>
       <ul className="expense-list">
-        {expenses.length === 0 && <p>Nothing logged yet for this day.</p>}
+        {expenses.length === 0 && <p className="empty-state">Nothing logged yet for this day.</p>}
         {expenses.map((e) => (
           <li key={e.id}>
             {CATEGORY_LABEL[e.category]} {e.name} — ¥{e.amountYen.toLocaleString()} (
@@ -335,7 +335,7 @@ export function TripPage() {
       <h2>Places</h2>
       <PlacesMap places={places} />
       <ul className="place-list">
-        {places.length === 0 && <p>No places logged yet for this day.</p>}
+        {places.length === 0 && <p className="empty-state">No places logged yet for this day.</p>}
         {places.map((p) => (
           <li key={p.id}>
             📍 {p.name}

@@ -11,7 +11,7 @@ function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
   const location = useLocation()
 
-  if (loading) return <p>Loading...</p>
+  if (loading) return <p className="loading-state">Loading...</p>
   if (!user) {
     const redirect = encodeURIComponent(location.pathname)
     return <Navigate to={`/login?redirect=${redirect}`} replace />

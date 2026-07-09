@@ -17,7 +17,7 @@ export function JoinPage() {
       .catch((err) => setError(err.message))
   }, [loading, user, token, navigate])
 
-  if (loading) return <p>Loading...</p>
+  if (loading) return <p className="loading-state">Loading...</p>
 
   if (!user) {
     const redirect = `/join/${token}`
@@ -34,6 +34,6 @@ export function JoinPage() {
     )
   }
 
-  if (error) return <p className="error">{error}</p>
-  return <p>Joining trip...</p>
+  if (error) return <p className="full-page-error">{error}</p>
+  return <p className="loading-state">Joining trip...</p>
 }
