@@ -7,6 +7,8 @@ import { AddSheet } from '../components/AddSheet'
 import { ExpenseForm, CATEGORIES } from '../components/ExpenseForm'
 import { BudgetBar } from '../components/BudgetBar'
 import { PhotoPicker } from '../components/PhotoPicker'
+import { PlaceForm } from '../components/PlaceForm'
+import { PlacesMap } from '../components/PlacesMap'
 
 const PHOTO_PREVIEW_COUNT = 5
 
@@ -35,9 +37,9 @@ export function TripPage() {
   const [allExpenses, setAllExpenses] = useState([])
   const [photos, setPhotos] = useState([])
   const [showAllPhotos, setShowAllPhotos] = useState(false)
+  const [places, setPlaces] = useState([])
   const [dayNote, setDayNote] = useState('')
-  const [sheet, setSheet] = useState(null) // null | 'add' | 'expense' | 'photo'
-  const [placeholderMsg, setPlaceholderMsg] = useState(null)
+  const [sheet, setSheet] = useState(null) // null | 'add' | 'expense' | 'photo' | 'place'
 
   useEffect(() => {
     let cancelled = false
@@ -75,6 +77,9 @@ export function TripPage() {
       }).catch(() => {})
       api.listPhotos(id, selectedDay).then((p) => {
         if (!cancelled) setPhotos(p)
+      }).catch(() => {})
+      api.listPlaces(id, selectedDay).then((p) => {
+        if (!cancelled) setPlaces(p)
       }).catch(() => {})
     }
     setShowAllPhotos(false)
@@ -152,13 +157,7 @@ export function TripPage() {
   }
 
   function handleAddSelect(option) {
-    if (option === 'expense' || option === 'photo') {
-      setSheet(option)
-      return
-    }
-    setSheet(null)
-    setPlaceholderMsg('Places arrive in M4')
-    setTimeout(() => setPlaceholderMsg(null), 2500)
+    setSheet(option)
   }
 
   function handleExpenseSaved(expense) {
@@ -169,6 +168,11 @@ export function TripPage() {
 
   function handlePhotosSaved(newPhotos) {
     setPhotos((prev) => [...prev, ...newPhotos])
+    setSheet(null)
+  }
+
+  function handlePlaceSaved(place) {
+    setPlaces((prev) => [...prev, place])
     setSheet(null)
   }
 
@@ -328,7 +332,19 @@ export function TripPage() {
         ))}
       </ul>
 
-      {placeholderMsg && <p className="placeholder-msg">{placeholderMsg}</p>}
+      <h2>Places</h2>
+      <PlacesMap places={places} />
+      <ul className="place-list">
+        {places.length === 0 && <p>No places logged yet for this day.</p>}
+        {places.map((p) => (
+          <li key={p.id}>
+            📍 {p.name}
+            {p.address && ` — ${p.address}`}
+            <br />
+            <small>added by {p.addedBy.name}</small>
+          </li>
+        ))}
+      </ul>
 
       <button className="fab" onClick={() => setSheet('add')}>
         +
@@ -351,6 +367,14 @@ export function TripPage() {
           tripId={id}
           day={selectedDay}
           onSaved={handlePhotosSaved}
+          onClose={() => setSheet(null)}
+        />
+      )}
+      {sheet === 'place' && (
+        <PlaceForm
+          tripId={id}
+          day={selectedDay}
+          onSaved={handlePlaceSaved}
           onClose={() => setSheet(null)}
         />
       )}

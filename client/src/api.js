@@ -61,4 +61,7 @@ export const api = {
       method: 'PUT',
       body: JSON.stringify({ note }),
     }),
+  listPlaces: (tripId, day) => request(`/trips/${tripId}/places${day ? `?day=${day}` : ''}`),
+  createPlace: (tripId, body) =>
+    request(`/trips/${tripId}/places`, { method: 'POST', body: JSON.stringify(body) }),
 }
