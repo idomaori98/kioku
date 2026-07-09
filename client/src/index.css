@@ -461,3 +461,82 @@ button {
   font-size: 14px;
   padding: 10px 12px;
 }
+
+.recap-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 16px 0;
+  text-align: center;
+}
+
+.recap-stats div {
+  background: #f4f3ec;
+  border-radius: 12px;
+  padding: 12px 4px;
+}
+
+.recap-stats strong {
+  display: block;
+  font-size: 22px;
+}
+
+.recap-stats span {
+  font-size: 12px;
+  color: #888;
+}
+
+.category-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.category-bar-row {
+  display: grid;
+  grid-template-columns: 90px 1fr 70px;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.category-bar-track {
+  background: #e5e4e7;
+  border-radius: 999px;
+  height: 10px;
+  overflow: hidden;
+}
+
+.category-bar-fill {
+  background: #111;
+  height: 100%;
+}
+
+.category-bar-amount {
+  text-align: right;
+  font-size: 13px;
+  color: #555;
+}
+
+.recap-map {
+  height: 220px;
+}
+
+.recap-highlights {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.recap-day-page {
+  background: #f4f3ec;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 12px 0;
+}
+
+.day-note-readonly {
+  font-family: Georgia, 'Iowan Old Style', 'Hiragino Mincho ProN', serif;
+  font-size: 17px;
+  font-style: italic;
+  line-height: 1.5;
+}

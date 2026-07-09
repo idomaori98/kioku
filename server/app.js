@@ -6,6 +6,7 @@ import expenseRoutes from './routes/expenses.js'
 import dayNoteRoutes from './routes/dayNotes.js'
 import photoRoutes from './routes/photos.js'
 import placeRoutes from './routes/places.js'
+import recapRoutes from './routes/recap.js'
 import { requireAuth } from './middleware/auth.js'
 
 const app = express()
@@ -32,5 +33,6 @@ app.use('/api/trips/:tripId/expenses', requireAuth, expenseRoutes)
 app.use('/api/trips/:tripId/day-note', requireAuth, dayNoteRoutes)
 app.use('/api/trips/:tripId/photos', requireAuth, photoRoutes)
 app.use('/api/trips/:tripId/places', requireAuth, placeRoutes)
+app.use('/api/trips/:tripId/recap', requireAuth, recapRoutes)
 
 export default app

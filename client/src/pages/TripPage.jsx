@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { api } from '../api'
 import { useAuth } from '../context/AuthContext'
 import { dayKeyFromDate, formatDayLabel, japanTodayKey, tripDayKeys } from '../lib/days'
@@ -240,6 +240,10 @@ export function TripPage() {
           {isAdmin && <button onClick={startEdit}>Edit dates &amp; budget</button>}
         </>
       )}
+
+      <p>
+        <Link to={`/trips/${id}/recap`}>View recap</Link>
+      </p>
 
       <h2>Invite link</h2>
       <button onClick={copyInviteLink}>{copied ? 'Copied!' : 'Copy invite link'}</button>

@@ -6,6 +6,7 @@ import { HomePage } from './pages/HomePage'
 import { TripPage } from './pages/TripPage'
 import { JoinPage } from './pages/JoinPage'
 import { ProfilePage } from './pages/ProfilePage'
+import { RecapPage } from './pages/RecapPage'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -69,6 +70,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/trips/:id/recap"
+            element={
+              <ProtectedRoute>
+                <RecapPage />
               </ProtectedRoute>
             }
           />

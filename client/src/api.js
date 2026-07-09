@@ -69,4 +69,5 @@ export const api = {
   listPlaces: (tripId, day) => request(`/trips/${tripId}/places${day ? `?day=${day}` : ''}`),
   createPlace: (tripId, body) =>
     request(`/trips/${tripId}/places`, { method: 'POST', body: JSON.stringify(body) }),
+  getRecap: (tripId) => request(`/trips/${tripId}/recap`),
 }
