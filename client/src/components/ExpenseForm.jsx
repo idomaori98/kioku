@@ -2,11 +2,11 @@ import { useEffect, useRef, useState } from 'react'
 import { api } from '../api'
 
 const CATEGORIES = [
-  { value: 'food', label: '🍜 Food' },
-  { value: 'transport', label: '🚆 Transit' },
-  { value: 'fun', label: '🎡 Fun' },
-  { value: 'shopping', label: '🛍️ Shopping' },
-  { value: 'other', label: '📦 Other' },
+  { value: 'food', emoji: '🍜', label: 'Food' },
+  { value: 'transport', emoji: '🚆', label: 'Transit' },
+  { value: 'fun', emoji: '🎡', label: 'Fun' },
+  { value: 'shopping', emoji: '🛍️', label: 'Shopping' },
+  { value: 'other', emoji: '📦', label: 'Other' },
 ]
 
 export function ExpenseForm({ tripId, day, tripType, members, currentUserId, onSaved, onClose }) {
@@ -63,10 +63,10 @@ export function ExpenseForm({ tripId, day, tripType, members, currentUserId, onS
             <button
               type="button"
               key={c.value}
-              className={`chip ${category === c.value ? 'chip-selected' : ''}`}
+              className={`chip cat-${c.value} ${category === c.value ? 'chip-selected' : ''}`}
               onClick={() => setCategory(c.value)}
             >
-              {c.label}
+              {c.emoji} {c.label}
             </button>
           ))}
         </div>
