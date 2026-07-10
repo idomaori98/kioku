@@ -12,7 +12,7 @@ import { PlacesMap } from '../components/PlacesMap'
 
 const PHOTO_PREVIEW_COUNT = 5
 
-const CATEGORY_LABEL = Object.fromEntries(CATEGORIES.map((c) => [c.value, c.label]))
+const CATEGORY_EMOJI = Object.fromEntries(CATEGORIES.map((c) => [c.value, c.emoji]))
 
 function sumYen(expenses) {
   return expenses.reduce((sum, e) => sum + e.amountYen, 0)
@@ -194,73 +194,89 @@ export function TripPage() {
     <div>
       <h1>{trip.name}</h1>
 
-      {editing ? (
-        <form onSubmit={handleSaveEdit}>
-          <label>
-            Start date
+      <div className="card trip-meta-card">
+        {editing ? (
+          <form onSubmit={handleSaveEdit}>
+            <label>
+              Start date
+              <input
+                type="date"
+                value={editForm.startDate}
+                onChange={(e) => setEditForm({ ...editForm, startDate: e.target.value })}
+                required
+              />
+            </label>
+            <label>
+              End date
+              <input
+                type="date"
+                min={editForm.startDate}
+                value={editForm.endDate}
+                onChange={(e) => setEditForm({ ...editForm, endDate: e.target.value })}
+                required
+              />
+            </label>
             <input
-              type="date"
-              value={editForm.startDate}
-              onChange={(e) => setEditForm({ ...editForm, startDate: e.target.value })}
+              type="number"
+              placeholder="Daily budget"
+              value={editForm.dailyBudget}
+              onChange={(e) =>
+                setEditForm({ ...editForm, dailyBudget: e.target.value.replace(/^0+(?=\d)/, '') })
+              }
               required
             />
-          </label>
-          <label>
-            End date
-            <input
-              type="date"
-              min={editForm.startDate}
-              value={editForm.endDate}
-              onChange={(e) => setEditForm({ ...editForm, endDate: e.target.value })}
-              required
-            />
-          </label>
-          <input
-            type="number"
-            placeholder="Daily budget"
-            value={editForm.dailyBudget}
-            onChange={(e) =>
-              setEditForm({ ...editForm, dailyBudget: e.target.value.replace(/^0+(?=\d)/, '') })
-            }
-            required
-          />
-          <button type="submit">Save</button>
-          <button type="button" className="sheet-cancel" onClick={() => setEditing(false)}>
-            Cancel
+            <button type="submit">Save</button>
+            <button type="button" className="sheet-cancel" onClick={() => setEditing(false)}>
+              Cancel
+            </button>
+          </form>
+        ) : (
+          <>
+            <p className="trip-meta-row">
+              {new Date(trip.startDate).toLocaleDateString()} –{' '}
+              {new Date(trip.endDate).toLocaleDateString()}
+              <span className="trip-meta-sep">·</span>¥{trip.dailyBudget.toLocaleString()}/day
+            </p>
+            <p className="trip-type-tag">
+              {trip.tripType === 'family' ? 'Family trip · one shared pot' : 'Shared trip · tracks who paid'}
+            </p>
+            <div className="trip-meta-actions">
+              {isAdmin && (
+                <button className="btn-secondary btn-sm" onClick={startEdit}>
+                  Edit dates &amp; budget
+                </button>
+              )}
+              <Link className="btn-secondary btn-sm" to={`/trips/${id}/recap`}>
+                View recap
+              </Link>
+            </div>
+          </>
+        )}
+      </div>
+
+      <details className="trip-settings">
+        <summary>Trip settings</summary>
+        <div className="trip-settings-body">
+          <h3>Invite link</h3>
+          <button className="btn-secondary" onClick={copyInviteLink}>
+            {copied ? 'Copied!' : 'Copy invite link'}
           </button>
-        </form>
-      ) : (
-        <>
-          <p>
-            {new Date(trip.startDate).toLocaleDateString()} –{' '}
-            {new Date(trip.endDate).toLocaleDateString()}
-          </p>
-          <p>Daily budget: ¥{trip.dailyBudget.toLocaleString()}</p>
-          <p>{trip.tripType === 'family' ? 'Family trip · one shared pot' : 'Shared trip · tracks who paid'}</p>
-          {isAdmin && <button onClick={startEdit}>Edit dates &amp; budget</button>}
-        </>
-      )}
 
-      <p>
-        <Link to={`/trips/${id}/recap`}>View recap</Link>
-      </p>
-
-      <h2>Invite link</h2>
-      <button onClick={copyInviteLink}>{copied ? 'Copied!' : 'Copy invite link'}</button>
-
-      <h2>Members</h2>
-      <ul className="member-list">
-        {trip.members.map((m) => (
-          <li key={m.user.id}>
-            {m.user.name} ({m.user.email}) — {m.role}
-            {isAdmin && m.role !== 'admin' && (
-              <button onClick={() => handleGrantAdmin(m.user.id)}>Make admin</button>
-            )}
-          </li>
-        ))}
-      </ul>
-
-      <hr />
+          <h3>Members</h3>
+          <ul className="member-list">
+            {trip.members.map((m) => (
+              <li key={m.user.id}>
+                {m.user.name} ({m.user.email}) — {m.role}
+                {isAdmin && m.role !== 'admin' && (
+                  <button className="btn-secondary btn-sm" onClick={() => handleGrantAdmin(m.user.id)}>
+                    Make admin
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </details>
 
       <div className="day-nav">
         {dayIndex > 0 ? (
@@ -286,28 +302,30 @@ export function TripPage() {
         onBlur={handleSaveNote}
       />
 
-      <h2>Photos</h2>
-      {photos.length === 0 && <p className="empty-state">No photos yet for this day.</p>}
-      <div className="photo-grid">
-        {(showAllPhotos ? photos : photos.slice(0, PHOTO_PREVIEW_COUNT)).map((p) => (
-          <div key={p.id} className="photo-grid-item">
-            <img src={p.url} alt={p.note || ''} />
-          </div>
-        ))}
-        {!showAllPhotos && photos.length > PHOTO_PREVIEW_COUNT && (
-          <div
-            className="photo-grid-item"
-            onClick={() => setShowAllPhotos(true)}
-            role="button"
-            tabIndex={0}
-          >
-            <img src={photos[PHOTO_PREVIEW_COUNT].url} alt="" />
-            <div className="photo-grid-more">+{photos.length - PHOTO_PREVIEW_COUNT}</div>
-          </div>
-        )}
+      <div className="card">
+        <h2 className="section-label">Photos</h2>
+        {photos.length === 0 && <p className="empty-state">No photos yet for this day.</p>}
+        <div className="photo-grid">
+          {(showAllPhotos ? photos : photos.slice(0, PHOTO_PREVIEW_COUNT)).map((p) => (
+            <div key={p.id} className="photo-grid-item">
+              <img src={p.url} alt={p.note || ''} />
+            </div>
+          ))}
+          {!showAllPhotos && photos.length > PHOTO_PREVIEW_COUNT && (
+            <div
+              className="photo-grid-item"
+              onClick={() => setShowAllPhotos(true)}
+              role="button"
+              tabIndex={0}
+            >
+              <img src={photos[PHOTO_PREVIEW_COUNT].url} alt="" />
+              <div className="photo-grid-more">+{photos.length - PHOTO_PREVIEW_COUNT}</div>
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="spending-card">
+      <div className="card spending-card">
         <p>
           Today: ¥{dailyYen.toLocaleString()} ({dailyHome.toFixed(2)} {trip.homeCurrency})
         </p>
@@ -317,38 +335,55 @@ export function TripPage() {
         </p>
       </div>
 
-      <h2>Expenses</h2>
-      <ul className="expense-list">
+      <div className="card">
+        <h2 className="section-label">Expenses</h2>
         {expenses.length === 0 && <p className="empty-state">Nothing logged yet for this day.</p>}
-        {expenses.map((e) => (
-          <li key={e.id}>
-            {CATEGORY_LABEL[e.category]} {e.name} — ¥{e.amountYen.toLocaleString()} (
-            {e.amountHome.toFixed(2)} {e.homeCurrency})
-            {trip.tripType !== 'family' && (
-              <>
-                <br />
-                <small>
-                  paid by {e.paidBy.name} · added by {e.addedBy.name}
-                </small>
-              </>
-            )}
-          </li>
-        ))}
-      </ul>
+        <ul className="expense-list">
+          {expenses.map((e) => (
+            <li key={e.id}>
+              <div className="expense-row">
+                <span className={`expense-icon cat-${e.category}`}>{CATEGORY_EMOJI[e.category]}</span>
+                <div className="expense-info">
+                  <span className="expense-name">{e.name}</span>
+                  {trip.tripType !== 'family' && (
+                    <span className="expense-meta">
+                      paid by {e.paidBy.name} · added by {e.addedBy.name}
+                    </span>
+                  )}
+                </div>
+                <div className="expense-amount">
+                  <span className="expense-amount-yen">¥{e.amountYen.toLocaleString()}</span>
+                  <span className="expense-amount-home">
+                    {e.amountHome.toFixed(2)} {e.homeCurrency}
+                  </span>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
 
-      <h2>Places</h2>
-      <PlacesMap places={places} />
-      <ul className="place-list">
+      <div className="card">
+        <h2 className="section-label">Places</h2>
+        <PlacesMap places={places} />
         {places.length === 0 && <p className="empty-state">No places logged yet for this day.</p>}
-        {places.map((p) => (
-          <li key={p.id}>
-            📍 {p.name}
-            {p.address && ` — ${p.address}`}
-            <br />
-            <small>added by {p.addedBy.name}</small>
-          </li>
-        ))}
-      </ul>
+        <ul className="place-list">
+          {places.map((p) => (
+            <li key={p.id}>
+              <div className="place-row">
+                <span className="place-icon">📍</span>
+                <div className="place-info">
+                  <span className="place-name">
+                    {p.name}
+                    {p.address && ` — ${p.address}`}
+                  </span>
+                  <span className="place-meta">added by {p.addedBy.name}</span>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
 
       <button className="fab" onClick={() => setSheet('add')}>
         +

@@ -50,16 +50,19 @@ export function HomePage() {
       <h1>Your trips</h1>
       {error && <p className="error">{error}</p>}
       {trips.length === 0 && <p className="empty-state">No trips yet — create one below.</p>}
-      <ul className="trip-list">
+      <ul className="trip-card-list">
         {trips.map((trip) => (
           <li key={trip.id}>
-            <Link to={`/trips/${trip.id}`}>{trip.name}</Link>
+            <Link className="trip-card" to={`/trips/${trip.id}`}>
+              <span className="trip-card-icon">🗺️</span>
+              {trip.name}
+            </Link>
           </li>
         ))}
       </ul>
 
-      <h2>Create a trip</h2>
-      <form onSubmit={handleCreate}>
+      <h2 className="section-label">Create a trip</h2>
+      <form className="card" onSubmit={handleCreate}>
         <input
           type="text"
           placeholder="Trip name"

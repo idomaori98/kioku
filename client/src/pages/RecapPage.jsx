@@ -6,6 +6,7 @@ import { CATEGORIES } from '../components/ExpenseForm'
 import { RecapMap } from '../components/RecapMap'
 
 const CATEGORY_LABEL = Object.fromEntries(CATEGORIES.map((c) => [c.value, c.label]))
+const CATEGORY_EMOJI = Object.fromEntries(CATEGORIES.map((c) => [c.value, c.emoji]))
 
 export function RecapPage() {
   const { id } = useParams()
@@ -70,21 +71,23 @@ export function RecapPage() {
           <span>places</span>
         </div>
       </div>
-      <p>
+      <p className="trip-meta-row">
         Total spend: ¥{recap.totals.spendYen.toLocaleString()} ({recap.totals.spendHome.toFixed(2)}{' '}
         {recap.totals.homeCurrency})
       </p>
 
       {recap.spendingByCategory.length > 0 && (
-        <>
-          <h2>Spending by category</h2>
+        <div className="card">
+          <h2 className="section-label">Spending by category</h2>
           <div className="category-bars">
             {recap.spendingByCategory.map((c) => (
               <div className="category-bar-row" key={c.category}>
-                <span className="category-bar-label">{CATEGORY_LABEL[c.category]}</span>
+                <span className="category-bar-label">
+                  {CATEGORY_EMOJI[c.category]} {CATEGORY_LABEL[c.category]}
+                </span>
                 <div className="category-bar-track">
                   <div
-                    className="category-bar-fill"
+                    className={`category-bar-fill cat-${c.category}`}
                     style={{ width: `${(c.yen / maxCategoryYen) * 100}%` }}
                   />
                 </div>
@@ -92,19 +95,19 @@ export function RecapPage() {
               </div>
             ))}
           </div>
-        </>
+        </div>
       )}
 
       {recap.places.length > 0 && (
-        <>
-          <h2>Route</h2>
+        <div className="card">
+          <h2 className="section-label">Route</h2>
           <RecapMap places={recap.places} />
-        </>
+        </div>
       )}
 
       {recap.photos.length > 0 && (
-        <>
-          <h2>Highlights</h2>
+        <div className="card">
+          <h2 className="section-label">Highlights</h2>
           <div className="photo-grid recap-highlights">
             {recap.photos.map((p) => (
               <div key={p.id} className="photo-grid-item">
@@ -112,10 +115,10 @@ export function RecapPage() {
               </div>
             ))}
           </div>
-        </>
+        </div>
       )}
 
-      <h2>Day by day</h2>
+      <h2 className="section-label">Day by day</h2>
       <div className="day-nav">
         {dayIndex > 0 ? (
           <button onClick={() => setDayIndex(dayIndex - 1)}>← Prev</button>
