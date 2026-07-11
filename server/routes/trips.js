@@ -7,6 +7,7 @@ import DayNote from '../models/DayNote.js'
 import { requireAuth } from '../middleware/auth.js'
 import { dayKeyFromDate, japanTodayKey } from '../lib/days.js'
 import { getJpyRate } from '../lib/exchangeRate.js'
+import { deleteObject } from '../lib/s3.js'
 
 const router = Router()
 router.use(requireAuth)
@@ -21,6 +22,7 @@ function serializeTrip(trip) {
     homeCurrency: trip.homeCurrency,
     tripType: trip.tripType,
     inviteToken: trip.inviteToken,
+    createdBy: trip.createdBy,
     members: trip.members.map((m) => ({
       role: m.role,
       joinedAt: m.joinedAt,
@@ -129,6 +131,27 @@ router.put('/:id', async (req, res) => {
   await trip.save()
   await trip.populate('members.user', 'name email photoUrl')
   res.json(serializeTrip(trip))
+})
+
+router.delete('/:id', async (req, res) => {
+  const trip = await Trip.findById(req.params.id)
+  if (!trip) return res.status(404).json({ error: 'Trip not found' })
+  if (trip.createdBy.toString() !== req.userId) {
+    return res.status(403).json({ error: 'Only the person who created this trip can delete it' })
+  }
+
+  const photos = await Photo.find({ trip: trip._id })
+  await Promise.all(photos.map((p) => deleteObject(p.key).catch(() => {})))
+
+  await Promise.all([
+    Expense.deleteMany({ trip: trip._id }),
+    Place.deleteMany({ trip: trip._id }),
+    Photo.deleteMany({ trip: trip._id }),
+    DayNote.deleteMany({ trip: trip._id }),
+  ])
+  await trip.deleteOne()
+
+  res.status(204).end()
 })
 
 router.post('/join/:token', async (req, res) => {

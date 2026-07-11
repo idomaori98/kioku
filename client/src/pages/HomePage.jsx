@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../api'
+import { useAuth } from '../context/AuthContext'
 import { dayKeyFromDate, japanTodayKey } from '../lib/days'
+import { SwipeableRow } from '../components/SwipeableRow'
 
 function tripCountdown(trip) {
   const today = japanTodayKey()
@@ -17,6 +19,7 @@ function tripCountdown(trip) {
 
 export function HomePage() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [trips, setTrips] = useState(null)
   const [error, setError] = useState(null)
   const [form, setForm] = useState({
@@ -55,6 +58,15 @@ export function HomePage() {
     }
   }
 
+  async function handleDeleteTrip(tripId) {
+    try {
+      await api.deleteTrip(tripId)
+      setTrips((prev) => prev.filter((t) => t.id !== tripId))
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
   if (!trips) return <p className="loading-state">Loading...</p>
 
   const nextTrip = trips
@@ -84,14 +96,37 @@ export function HomePage() {
       )}
       {trips.length === 0 && <p className="empty-state">No trips yet — create one below.</p>}
       <ul className="trip-card-list">
-        {trips.map((trip) => (
-          <li key={trip.id}>
+        {trips.map((trip) => {
+          const card = (
             <Link className="trip-card" to={`/trips/${trip.id}`}>
               <span className="trip-card-icon">🗺️</span>
               {trip.name}
             </Link>
-          </li>
-        ))}
+          )
+          const canDelete = trip.createdBy === user?.id
+          return (
+            <li key={trip.id}>
+              {canDelete ? (
+                <SwipeableRow
+                  actions={[
+                    {
+                      key: 'delete-trip',
+                      icon: '🗑️',
+                      label: 'Delete trip',
+                      className: 'swipe-delete',
+                      onClick: () => handleDeleteTrip(trip.id),
+                      confirmMessage: `Delete "${trip.name}"? This removes all its expenses, places, photos, and notes for everyone. This can't be undone.`,
+                    },
+                  ]}
+                >
+                  {card}
+                </SwipeableRow>
+              ) : (
+                card
+              )}
+            </li>
+          )
+        })}
       </ul>
 
       <h2 className="section-label">Create a trip</h2>

@@ -43,6 +43,7 @@ export const api = {
   createTrip: (body) => request('/trips', { method: 'POST', body: JSON.stringify(body) }),
   getTrip: (id) => request(`/trips/${id}`),
   updateTrip: (id, body) => request(`/trips/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+  deleteTrip: (id) => request(`/trips/${id}`, { method: 'DELETE' }),
   joinTrip: (token) => request(`/trips/join/${token}`, { method: 'POST' }),
   grantAdmin: (tripId, userId) =>
     request(`/trips/${tripId}/admins`, { method: 'POST', body: JSON.stringify({ userId }) }),

@@ -968,7 +968,7 @@ button:disabled {
 .swipe-row {
   position: relative;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: var(--radius-card);
 }
 
 .swipe-actions {
