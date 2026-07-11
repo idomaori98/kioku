@@ -13,6 +13,7 @@ const router = Router()
 router.use(requireAuth)
 
 function serializeTrip(trip) {
+  const creatorMember = trip.members.find((m) => m.user._id.toString() === trip.createdBy.toString())
   return {
     id: trip._id,
     name: trip.name,
@@ -23,6 +24,7 @@ function serializeTrip(trip) {
     tripType: trip.tripType,
     inviteToken: trip.inviteToken,
     createdBy: trip.createdBy,
+    createdByName: creatorMember?.user.name || null,
     members: trip.members.map((m) => ({
       role: m.role,
       joinedAt: m.joinedAt,

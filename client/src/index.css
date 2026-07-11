@@ -1003,6 +1003,12 @@ button:disabled {
   color: #fff;
 }
 
+.swipe-disabled {
+  background: var(--surface-alt);
+  color: var(--ink-muted);
+  border: 1px solid var(--border-strong);
+}
+
 .swipe-admin {
   background: var(--accent-soft);
   color: var(--accent);

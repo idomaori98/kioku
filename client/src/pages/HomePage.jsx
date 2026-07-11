@@ -4,6 +4,7 @@ import { api } from '../api'
 import { useAuth } from '../context/AuthContext'
 import { dayKeyFromDate, japanTodayKey } from '../lib/days'
 import { SwipeableRow } from '../components/SwipeableRow'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 
 function tripCountdown(trip) {
   const today = japanTodayKey()
@@ -22,6 +23,7 @@ export function HomePage() {
   const { user } = useAuth()
   const [trips, setTrips] = useState(null)
   const [error, setError] = useState(null)
+  const [blockedMessage, setBlockedMessage] = useState(null)
   const [form, setForm] = useState({
     name: '',
     startDate: '',
@@ -97,37 +99,42 @@ export function HomePage() {
       {trips.length === 0 && <p className="empty-state">No trips yet — create one below.</p>}
       <ul className="trip-card-list">
         {trips.map((trip) => {
-          const card = (
-            <Link className="trip-card" to={`/trips/${trip.id}`}>
-              <span className="trip-card-icon">🗺️</span>
-              {trip.name}
-            </Link>
-          )
           const canDelete = trip.createdBy === user?.id
+          const creatorName = trip.createdByName || 'the trip creator'
           return (
             <li key={trip.id}>
-              {canDelete ? (
-                <SwipeableRow
-                  actions={[
-                    {
-                      key: 'delete-trip',
-                      icon: '🗑️',
-                      label: 'Delete trip',
-                      className: 'swipe-delete',
-                      onClick: () => handleDeleteTrip(trip.id),
-                      confirmMessage: `Delete "${trip.name}"? This removes all its expenses, places, photos, and notes for everyone. This can't be undone.`,
-                    },
-                  ]}
-                >
-                  {card}
-                </SwipeableRow>
-              ) : (
-                card
-              )}
+              <SwipeableRow
+                actions={[
+                  {
+                    key: 'delete-trip',
+                    icon: '🗑️',
+                    label: 'Delete trip',
+                    className: canDelete ? 'swipe-delete' : 'swipe-delete swipe-disabled',
+                    onClick: canDelete
+                      ? () => handleDeleteTrip(trip.id)
+                      : () =>
+                          setBlockedMessage(
+                            `Only the person who created this trip can delete it (${creatorName}).`
+                          ),
+                    confirmMessage: canDelete
+                      ? `Delete "${trip.name}"? This removes all its expenses, places, photos, and notes for everyone. This can't be undone.`
+                      : undefined,
+                  },
+                ]}
+              >
+                <Link className="trip-card" to={`/trips/${trip.id}`}>
+                  <span className="trip-card-icon">🗺️</span>
+                  {trip.name}
+                </Link>
+              </SwipeableRow>
             </li>
           )
         })}
       </ul>
+
+      {blockedMessage && (
+        <ConfirmDialog mode="info" message={blockedMessage} onCancel={() => setBlockedMessage(null)} />
+      )}
 
       <h2 className="section-label">Create a trip</h2>
       <form className="card" onSubmit={handleCreate}>
