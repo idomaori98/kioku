@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import crypto from 'node:crypto'
 
@@ -12,4 +12,8 @@ export async function createUploadUrl(prefix, contentType) {
   const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 300 })
   const publicUrl = `https://${bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`
   return { uploadUrl, key, publicUrl }
+}
+
+export async function deleteObject(key) {
+  await s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }))
 }

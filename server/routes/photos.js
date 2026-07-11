@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import Photo from '../models/Photo.js'
-import { createUploadUrl } from '../lib/s3.js'
+import { createUploadUrl, deleteObject } from '../lib/s3.js'
 import { requireTripMembership } from '../middleware/tripMembership.js'
 import { tripDayKeys } from '../lib/days.js'
 
@@ -69,6 +69,13 @@ router.put('/:photoId', async (req, res) => {
   await photo.save()
   await photo.populate('addedBy', 'name')
   res.json(serializePhoto(photo))
+})
+
+router.delete('/:photoId', async (req, res) => {
+  const photo = await Photo.findOneAndDelete({ _id: req.params.photoId, trip: req.params.tripId })
+  if (!photo) return res.status(404).json({ error: 'Photo not found' })
+  await deleteObject(photo.key).catch(() => {})
+  res.status(204).end()
 })
 
 export default router

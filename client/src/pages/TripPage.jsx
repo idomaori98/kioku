@@ -203,6 +203,11 @@ export function TripPage() {
     setSheet(null)
   }
 
+  async function handleDeletePhoto(photo) {
+    await api.deletePhoto(id, photo.id)
+    setPhotos((prev) => prev.filter((p) => p.id !== photo.id))
+  }
+
   function handlePlaceSaved(place) {
     setPlaces((prev) => upsert(prev, place))
     setSheet(null)
@@ -558,6 +563,7 @@ export function TripPage() {
           photos={visiblePhotos}
           startIndex={lightboxIndex}
           onClose={() => setLightboxIndex(null)}
+          onDelete={handleDeletePhoto}
         />
       )}
     </div>

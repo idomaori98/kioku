@@ -27,6 +27,15 @@ export function RecapPage() {
       .catch((err) => setError(err.message))
   }, [id])
 
+  async function handleDeletePhoto(photo) {
+    await api.deletePhoto(id, photo.id)
+    setRecap((prev) => ({
+      ...prev,
+      photos: prev.photos.filter((p) => p.id !== photo.id),
+      totals: { ...prev.totals, photos: prev.totals.photos - 1 },
+    }))
+  }
+
   async function handleShare() {
     const shareData = {
       title: trip ? `${trip.name} — Kioku recap` : 'Kioku recap',
@@ -156,6 +165,7 @@ export function RecapPage() {
           photos={recap.photos}
           startIndex={lightboxIndex}
           onClose={() => setLightboxIndex(null)}
+          onDelete={handleDeletePhoto}
         />
       )}
     </div>

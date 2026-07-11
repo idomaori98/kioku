@@ -735,6 +735,18 @@ button:disabled {
   right: 8px;
 }
 
+.lightbox-delete {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  margin-top: 16px;
+  font-size: 14px;
+}
+
+.lightbox-delete:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
 .lightbox-caption {
   color: #fff;
   margin-top: 14px;

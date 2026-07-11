@@ -71,6 +71,8 @@ export const api = {
       method: 'PUT',
       body: JSON.stringify({ note }),
     }),
+  deletePhoto: (tripId, photoId) =>
+    request(`/trips/${tripId}/photos/${photoId}`, { method: 'DELETE' }),
   listPlaces: (tripId, day) => request(`/trips/${tripId}/places${day ? `?day=${day}` : ''}`),
   createPlace: (tripId, body) =>
     request(`/trips/${tripId}/places`, { method: 'POST', body: JSON.stringify(body) }),

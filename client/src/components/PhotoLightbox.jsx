@@ -1,9 +1,13 @@
 import { useRef, useState } from 'react'
+import { ConfirmDialog } from './ConfirmDialog'
 
 const SWIPE_THRESHOLD = 50
 
-export function PhotoLightbox({ photos, startIndex, onClose }) {
+export function PhotoLightbox({ photos, startIndex, onClose, onDelete }) {
   const [index, setIndex] = useState(startIndex)
+  const [confirming, setConfirming] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [error, setError] = useState(null)
   const startXRef = useRef(null)
 
   const photo = photos[index]
@@ -37,6 +41,19 @@ export function PhotoLightbox({ photos, startIndex, onClose }) {
     }
   }
 
+  async function handleConfirmDelete() {
+    setDeleting(true)
+    setError(null)
+    try {
+      await onDelete(photo)
+      onClose()
+    } catch (err) {
+      setError(err.message)
+      setDeleting(false)
+      setConfirming(false)
+    }
+  }
+
   return (
     <div className="lightbox-backdrop" onClick={onClose}>
       <div className="lightbox-stage" onClick={(e) => e.stopPropagation()}>
@@ -59,11 +76,32 @@ export function PhotoLightbox({ photos, startIndex, onClose }) {
           </button>
         )}
       </div>
+      {onDelete && (
+        <button
+          type="button"
+          className="lightbox-delete"
+          onClick={(e) => {
+            e.stopPropagation()
+            setConfirming(true)
+          }}
+        >
+          🗑️ Delete photo
+        </button>
+      )}
+      {error && <p className="error">{error}</p>}
       {photo.note && <p className="lightbox-caption">{photo.note}</p>}
       {photos.length > 1 && (
         <p className="lightbox-counter">
           {index + 1} / {photos.length}
         </p>
+      )}
+      {confirming && (
+        <ConfirmDialog
+          message="Delete this photo? This can't be undone."
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setConfirming(false)}
+          pending={deleting}
+        />
       )}
     </div>
   )
