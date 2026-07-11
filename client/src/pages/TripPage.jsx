@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { api } from '../api'
 import { useAuth } from '../context/AuthContext'
@@ -44,7 +44,13 @@ export function TripPage() {
   const [sheet, setSheet] = useState(null) // null | 'add' | 'expense' | 'photo' | 'place' | 'edit-place'
   const [editingExpense, setEditingExpense] = useState(null)
   const [editingPlace, setEditingPlace] = useState(null)
-  const [activePlaceId, setActivePlaceId] = useState(null)
+  const [focusRequest, setFocusRequest] = useState(null)
+  const focusNonceRef = useRef(0)
+
+  function focusPlace(placeId) {
+    focusNonceRef.current += 1
+    setFocusRequest({ id: placeId, nonce: focusNonceRef.current })
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -464,7 +470,7 @@ export function TripPage() {
 
       <div className="card">
         <h2 className="section-label">Places</h2>
-        <PlacesMap places={places} focusedPlaceId={activePlaceId} />
+        <PlacesMap places={places} focusRequest={focusRequest} />
         {places.length === 0 && <p className="empty-state">No places logged yet for this day.</p>}
         <ul className="place-list">
           {places.map((p) => (
@@ -478,7 +484,7 @@ export function TripPage() {
               >
                 <div
                   className="place-row"
-                  onClick={() => setActivePlaceId(p.id)}
+                  onClick={() => focusPlace(p.id)}
                   role="button"
                   tabIndex={0}
                 >

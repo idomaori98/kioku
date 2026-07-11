@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { loadGoogleMaps } from '../lib/googleMaps'
 
-export function PlacesMap({ places, focusedPlaceId }) {
+export function PlacesMap({ places, focusRequest }) {
   const mapRef = useRef(null)
   const mapInstanceRef = useRef(null)
   const markersRef = useRef({})
@@ -42,16 +42,16 @@ export function PlacesMap({ places, focusedPlaceId }) {
   }, [key])
 
   useEffect(() => {
-    if (!focusedPlaceId) return
+    if (!focusRequest) return
     const map = mapInstanceRef.current
-    const marker = markersRef.current[focusedPlaceId]
+    const marker = markersRef.current[focusRequest.id]
     if (!map || !marker) return
     map.panTo(marker.getPosition())
     if (map.getZoom() < 15) map.setZoom(15)
     marker.setAnimation(window.google.maps.Animation.BOUNCE)
     const timeout = setTimeout(() => marker.setAnimation(null), 1400)
     return () => clearTimeout(timeout)
-  }, [focusedPlaceId])
+  }, [focusRequest])
 
   if (places.filter((p) => p.lat != null && p.lng != null).length === 0) return null
 
