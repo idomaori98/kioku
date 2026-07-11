@@ -46,7 +46,7 @@ export function TripPage() {
   const [editingExpense, setEditingExpense] = useState(null)
   const [editingPlace, setEditingPlace] = useState(null)
   const [focusRequest, setFocusRequest] = useState(null)
-  const [lightboxPhoto, setLightboxPhoto] = useState(null)
+  const [lightboxIndex, setLightboxIndex] = useState(null)
   const focusNonceRef = useRef(0)
 
   function focusPlace(placeId) {
@@ -246,6 +246,7 @@ export function TripPage() {
   const dailyHome = sumHome(expenses)
   const tripYen = sumYen(allExpenses)
   const tripHome = sumHome(allExpenses)
+  const visiblePhotos = showAllPhotos ? photos : photos.slice(0, PHOTO_PREVIEW_COUNT)
 
   return (
     <div>
@@ -397,11 +398,11 @@ export function TripPage() {
         <h2 className="section-label">Photos</h2>
         {photos.length === 0 && <p className="empty-state">No photos yet for this day.</p>}
         <div className="photo-grid">
-          {(showAllPhotos ? photos : photos.slice(0, PHOTO_PREVIEW_COUNT)).map((p) => (
+          {visiblePhotos.map((p, i) => (
             <div
               key={p.id}
               className="photo-grid-item"
-              onClick={() => setLightboxPhoto(p)}
+              onClick={() => setLightboxIndex(i)}
               role="button"
               tabIndex={0}
             >
@@ -552,8 +553,12 @@ export function TripPage() {
           }}
         />
       )}
-      {lightboxPhoto && (
-        <PhotoLightbox photo={lightboxPhoto} onClose={() => setLightboxPhoto(null)} />
+      {lightboxIndex !== null && (
+        <PhotoLightbox
+          photos={visiblePhotos}
+          startIndex={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+        />
       )}
     </div>
   )

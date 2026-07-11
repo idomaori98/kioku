@@ -687,11 +687,52 @@ button:disabled {
   box-sizing: border-box;
 }
 
+.lightbox-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
 .lightbox-img {
   max-width: 100%;
   max-height: 80vh;
   border-radius: 12px;
   object-fit: contain;
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.lightbox-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border: none;
+  font-size: 26px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  z-index: 1;
+}
+
+.lightbox-nav:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.lightbox-prev {
+  left: 8px;
+}
+
+.lightbox-next {
+  right: 8px;
 }
 
 .lightbox-caption {
@@ -699,6 +740,12 @@ button:disabled {
   margin-top: 14px;
   font-size: 15px;
   text-align: center;
+}
+
+.lightbox-counter {
+  color: rgba(255, 255, 255, 0.65);
+  margin-top: 6px;
+  font-size: 13px;
 }
 
 .amount-input {

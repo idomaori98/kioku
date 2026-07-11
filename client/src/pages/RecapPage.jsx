@@ -16,7 +16,7 @@ export function RecapPage() {
   const [error, setError] = useState(null)
   const [dayIndex, setDayIndex] = useState(0)
   const [shared, setShared] = useState(false)
-  const [lightboxPhoto, setLightboxPhoto] = useState(null)
+  const [lightboxIndex, setLightboxIndex] = useState(null)
 
   useEffect(() => {
     Promise.all([api.getTrip(id), api.getRecap(id)])
@@ -111,11 +111,11 @@ export function RecapPage() {
         <div className="card">
           <h2 className="section-label">Highlights</h2>
           <div className="photo-grid recap-highlights">
-            {recap.photos.map((p) => (
+            {recap.photos.map((p, i) => (
               <div
                 key={p.id}
                 className="photo-grid-item"
-                onClick={() => setLightboxPhoto(p)}
+                onClick={() => setLightboxIndex(i)}
                 role="button"
                 tabIndex={0}
               >
@@ -151,8 +151,12 @@ export function RecapPage() {
 
       <button onClick={handleShare}>{shared ? 'Link copied!' : 'Share recap'}</button>
 
-      {lightboxPhoto && (
-        <PhotoLightbox photo={lightboxPhoto} onClose={() => setLightboxPhoto(null)} />
+      {lightboxIndex !== null && (
+        <PhotoLightbox
+          photos={recap.photos}
+          startIndex={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+        />
       )}
     </div>
   )
