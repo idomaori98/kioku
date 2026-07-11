@@ -1,8 +1,10 @@
 import { useEffect, useRef } from 'react'
 import { loadGoogleMaps } from '../lib/googleMaps'
 
-export function PlacesMap({ places }) {
+export function PlacesMap({ places, focusedPlaceId }) {
   const mapRef = useRef(null)
+  const mapInstanceRef = useRef(null)
+  const markersRef = useRef({})
   const key = places.map((p) => p.id).join(',')
 
   useEffect(() => {
@@ -17,6 +19,8 @@ export function PlacesMap({ places }) {
         center: { lat: valid[0].lat, lng: valid[0].lng },
         disableDefaultUI: true,
       })
+      mapInstanceRef.current = map
+      markersRef.current = {}
       const bounds = new window.google.maps.LatLngBounds()
       valid.forEach((p, i) => {
         const marker = new window.google.maps.Marker({
@@ -25,6 +29,7 @@ export function PlacesMap({ places }) {
           label: String(i + 1),
           title: p.name,
         })
+        markersRef.current[p.id] = marker
         bounds.extend(marker.getPosition())
       })
       if (valid.length > 1) map.fitBounds(bounds)
@@ -35,6 +40,18 @@ export function PlacesMap({ places }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key])
+
+  useEffect(() => {
+    if (!focusedPlaceId) return
+    const map = mapInstanceRef.current
+    const marker = markersRef.current[focusedPlaceId]
+    if (!map || !marker) return
+    map.panTo(marker.getPosition())
+    if (map.getZoom() < 15) map.setZoom(15)
+    marker.setAnimation(window.google.maps.Animation.BOUNCE)
+    const timeout = setTimeout(() => marker.setAnimation(null), 1400)
+    return () => clearTimeout(timeout)
+  }, [focusedPlaceId])
 
   if (places.filter((p) => p.lat != null && p.lng != null).length === 0) return null
 

@@ -10,6 +10,7 @@ import { PhotoPicker } from '../components/PhotoPicker'
 import { PlaceForm } from '../components/PlaceForm'
 import { PlaceEditSheet } from '../components/PlaceEditSheet'
 import { PlacesMap } from '../components/PlacesMap'
+import { SwipeableRow } from '../components/SwipeableRow'
 
 const PHOTO_PREVIEW_COUNT = 5
 
@@ -43,6 +44,7 @@ export function TripPage() {
   const [sheet, setSheet] = useState(null) // null | 'add' | 'expense' | 'photo' | 'place' | 'edit-place'
   const [editingExpense, setEditingExpense] = useState(null)
   const [editingPlace, setEditingPlace] = useState(null)
+  const [activePlaceId, setActivePlaceId] = useState(null)
 
   useEffect(() => {
     let cancelled = false
@@ -203,6 +205,24 @@ export function TripPage() {
     setPlaces((prev) => prev.filter((p) => p.id !== placeId))
     setSheet(null)
     setEditingPlace(null)
+  }
+
+  async function handleQuickDeleteExpense(expenseId) {
+    try {
+      await api.deleteExpense(id, expenseId)
+      handleExpenseDeleted(expenseId)
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  async function handleQuickDeletePlace(placeId) {
+    try {
+      await api.deletePlace(id, placeId)
+      handlePlaceDeleted(placeId)
+    } catch (err) {
+      setError(err.message)
+    }
   }
 
   if (error) return <p className="full-page-error">{error}</p>
@@ -404,31 +424,39 @@ export function TripPage() {
         <ul className="expense-list">
           {expenses.map((e) => (
             <li key={e.id}>
-              <div
-                className="expense-row"
-                onClick={() => {
+              <SwipeableRow
+                onEdit={() => {
                   setEditingExpense(e)
                   setSheet('expense')
                 }}
-                role="button"
-                tabIndex={0}
+                onDelete={() => handleQuickDeleteExpense(e.id)}
               >
-                <span className={`expense-icon cat-${e.category}`}>{CATEGORY_EMOJI[e.category]}</span>
-                <div className="expense-info">
-                  <span className="expense-name">{e.name}</span>
-                  {trip.tripType !== 'family' && (
-                    <span className="expense-meta">
-                      paid by {e.paidBy.name} · added by {e.addedBy.name}
+                <div
+                  className="expense-row"
+                  onClick={() => {
+                    setEditingExpense(e)
+                    setSheet('expense')
+                  }}
+                  role="button"
+                  tabIndex={0}
+                >
+                  <span className={`expense-icon cat-${e.category}`}>{CATEGORY_EMOJI[e.category]}</span>
+                  <div className="expense-info">
+                    <span className="expense-name">{e.name}</span>
+                    {trip.tripType !== 'family' && (
+                      <span className="expense-meta">
+                        paid by {e.paidBy.name} · added by {e.addedBy.name}
+                      </span>
+                    )}
+                  </div>
+                  <div className="expense-amount">
+                    <span className="expense-amount-yen">¥{e.amountYen.toLocaleString()}</span>
+                    <span className="expense-amount-home">
+                      {e.amountHome.toFixed(2)} {e.homeCurrency}
                     </span>
-                  )}
+                  </div>
                 </div>
-                <div className="expense-amount">
-                  <span className="expense-amount-yen">¥{e.amountYen.toLocaleString()}</span>
-                  <span className="expense-amount-home">
-                    {e.amountHome.toFixed(2)} {e.homeCurrency}
-                  </span>
-                </div>
-              </div>
+              </SwipeableRow>
             </li>
           ))}
         </ul>
@@ -436,29 +464,34 @@ export function TripPage() {
 
       <div className="card">
         <h2 className="section-label">Places</h2>
-        <PlacesMap places={places} />
+        <PlacesMap places={places} focusedPlaceId={activePlaceId} />
         {places.length === 0 && <p className="empty-state">No places logged yet for this day.</p>}
         <ul className="place-list">
           {places.map((p) => (
             <li key={p.id}>
-              <div
-                className="place-row"
-                onClick={() => {
+              <SwipeableRow
+                onEdit={() => {
                   setEditingPlace(p)
                   setSheet('edit-place')
                 }}
-                role="button"
-                tabIndex={0}
+                onDelete={() => handleQuickDeletePlace(p.id)}
               >
-                <span className="place-icon">📍</span>
-                <div className="place-info">
-                  <span className="place-name">
-                    {p.name}
-                    {p.address && ` — ${p.address}`}
-                  </span>
-                  <span className="place-meta">added by {p.addedBy.name}</span>
+                <div
+                  className="place-row"
+                  onClick={() => setActivePlaceId(p.id)}
+                  role="button"
+                  tabIndex={0}
+                >
+                  <span className="place-icon">📍</span>
+                  <div className="place-info">
+                    <span className="place-name">
+                      {p.name}
+                      {p.address && ` — ${p.address}`}
+                    </span>
+                    <span className="place-meta">added by {p.addedBy.name}</span>
+                  </div>
                 </div>
-              </div>
+              </SwipeableRow>
             </li>
           ))}
         </ul>
