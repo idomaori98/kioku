@@ -46,6 +46,7 @@ export const api = {
   joinTrip: (token) => request(`/trips/join/${token}`, { method: 'POST' }),
   grantAdmin: (tripId, userId) =>
     request(`/trips/${tripId}/admins`, { method: 'POST', body: JSON.stringify({ userId }) }),
+  getMemberActivity: (tripId, userId) => request(`/trips/${tripId}/members/${userId}/activity`),
   listExpenses: (tripId, day) =>
     request(`/trips/${tripId}/expenses${day ? `?day=${day}` : ''}`),
   createExpense: (tripId, body) =>

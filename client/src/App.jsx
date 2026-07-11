@@ -8,6 +8,7 @@ import { JoinPage } from './pages/JoinPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { RecapPage } from './pages/RecapPage'
 import { SearchPage } from './pages/SearchPage'
+import { MemberActivityPage } from './pages/MemberActivityPage'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -87,6 +88,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <SearchPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/trips/:id/members/:userId/activity"
+            element={
+              <ProtectedRoute>
+                <MemberActivityPage />
               </ProtectedRoute>
             }
           />

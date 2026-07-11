@@ -1,5 +1,9 @@
 import { Router } from 'express'
 import Trip from '../models/Trip.js'
+import Expense from '../models/Expense.js'
+import Place from '../models/Place.js'
+import Photo from '../models/Photo.js'
+import DayNote from '../models/DayNote.js'
 import { requireAuth } from '../middleware/auth.js'
 import { dayKeyFromDate, japanTodayKey } from '../lib/days.js'
 import { getJpyRate } from '../lib/exchangeRate.js'
@@ -144,6 +148,57 @@ router.post('/join/:token', async (req, res) => {
   )
   if (!existing) return res.status(404).json({ error: 'Invite link is invalid' })
   res.json(serializeTrip(existing))
+})
+
+router.get('/:id/members/:userId/activity', async (req, res) => {
+  const trip = await Trip.findById(req.params.id)
+  if (!trip) return res.status(404).json({ error: 'Trip not found' })
+  if (!trip.members.some((m) => m.user.toString() === req.userId)) {
+    return res.status(403).json({ error: 'Not a member of this trip' })
+  }
+  if (!trip.members.some((m) => m.user.toString() === req.params.userId)) {
+    return res.status(404).json({ error: 'User is not a member of this trip' })
+  }
+
+  const [expenses, places, photos, notes] = await Promise.all([
+    Expense.find({ trip: trip._id, addedBy: req.params.userId }),
+    Place.find({ trip: trip._id, addedBy: req.params.userId }),
+    Photo.find({ trip: trip._id, addedBy: req.params.userId }),
+    DayNote.find({ trip: trip._id, updatedBy: req.params.userId }),
+  ])
+
+  const activity = [
+    ...expenses.map((e) => ({
+      type: 'expense',
+      at: e.createdAt,
+      day: e.day,
+      name: e.name,
+      category: e.category,
+      amountYen: e.amountYen,
+    })),
+    ...places.map((p) => ({
+      type: 'place',
+      at: p.createdAt,
+      day: p.day,
+      name: p.name,
+      address: p.address,
+    })),
+    ...photos.map((p) => ({
+      type: 'photo',
+      at: p.createdAt,
+      day: p.day,
+      url: p.url,
+      note: p.note,
+    })),
+    ...notes.map((n) => ({
+      type: 'note',
+      at: n.updatedAt,
+      day: n.day,
+      note: n.note,
+    })),
+  ].sort((a, b) => new Date(b.at) - new Date(a.at))
+
+  res.json(activity)
 })
 
 router.post('/:id/admins', async (req, res) => {

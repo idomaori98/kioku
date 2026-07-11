@@ -363,7 +363,8 @@ export function TripPage() {
           <ul className="member-list">
             {trip.members.map((m) => (
               <li key={m.user.id}>
-                {m.user.name} ({m.user.email}) — {m.role}
+                <Link to={`/trips/${id}/members/${m.user.id}/activity`}>{m.user.name}</Link>{' '}
+                ({m.user.email}) — {m.role}
                 {isAdmin && m.role !== 'admin' && (
                   <button className="btn-secondary btn-sm" onClick={() => handleGrantAdmin(m.user.id)}>
                     Make admin
