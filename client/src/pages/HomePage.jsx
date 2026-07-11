@@ -1,7 +1,19 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../api'
-import { japanTodayKey } from '../lib/days'
+import { dayKeyFromDate, japanTodayKey } from '../lib/days'
+
+function tripCountdown(trip) {
+  const today = japanTodayKey()
+  const startKey = dayKeyFromDate(trip.startDate)
+  const endKey = dayKeyFromDate(trip.endDate)
+  if (today >= startKey && today <= endKey) return { status: 'ongoing' }
+  if (today < startKey) {
+    const days = Math.round((new Date(startKey) - new Date(today)) / 86400000)
+    return { status: 'upcoming', days }
+  }
+  return { status: 'past' }
+}
 
 export function HomePage() {
   const navigate = useNavigate()
@@ -45,10 +57,31 @@ export function HomePage() {
 
   if (!trips) return <p className="loading-state">Loading...</p>
 
+  const nextTrip = trips
+    .map((trip) => ({ trip, countdown: tripCountdown(trip) }))
+    .filter((x) => x.countdown.status !== 'past')
+    .sort((a, b) => {
+      if (a.countdown.status === 'ongoing') return -1
+      if (b.countdown.status === 'ongoing') return 1
+      return a.countdown.days - b.countdown.days
+    })[0]
+
   return (
     <div>
       <h1>Your trips</h1>
       {error && <p className="error">{error}</p>}
+      {nextTrip && (
+        <div className="card countdown-banner">
+          {nextTrip.countdown.status === 'ongoing' ? (
+            <p>✈️ {nextTrip.trip.name} is happening now!</p>
+          ) : (
+            <p>
+              ✈️ <strong>{nextTrip.countdown.days}</strong> day
+              {nextTrip.countdown.days === 1 ? '' : 's'} until {nextTrip.trip.name}
+            </p>
+          )}
+        </div>
+      )}
       {trips.length === 0 && <p className="empty-state">No trips yet — create one below.</p>}
       <ul className="trip-card-list">
         {trips.map((trip) => (

@@ -7,6 +7,7 @@ import { TripPage } from './pages/TripPage'
 import { JoinPage } from './pages/JoinPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { RecapPage } from './pages/RecapPage'
+import { SearchPage } from './pages/SearchPage'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -78,6 +79,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <RecapPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/trips/:id/search"
+            element={
+              <ProtectedRoute>
+                <SearchPage />
               </ProtectedRoute>
             }
           />

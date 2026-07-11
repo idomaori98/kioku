@@ -71,4 +71,47 @@ router.post('/', async (req, res) => {
   res.status(201).json(serializeExpense(expense, req.trip.tripType))
 })
 
+router.put('/:expenseId', async (req, res) => {
+  const { day, name, category, amountYen, paidBy } = req.body
+  const expense = await Expense.findOne({ _id: req.params.expenseId, trip: req.params.tripId })
+  if (!expense) return res.status(404).json({ error: 'Expense not found' })
+
+  if (day !== undefined && !tripDayKeys(req.trip).includes(day)) {
+    return res.status(400).json({ error: 'day must fall within the trip dates' })
+  }
+  if (amountYen !== undefined && (typeof amountYen !== 'number' || amountYen <= 0)) {
+    return res.status(400).json({ error: 'amountYen must be a positive number' })
+  }
+  if (category !== undefined && !EXPENSE_CATEGORIES.includes(category)) {
+    return res.status(400).json({ error: `category must be one of ${EXPENSE_CATEGORIES.join(', ')}` })
+  }
+  if (name !== undefined && !name.trim()) {
+    return res.status(400).json({ error: 'name cannot be blank' })
+  }
+  if (paidBy && req.trip.tripType !== 'family') {
+    if (!req.trip.members.some((m) => m.user.toString() === paidBy)) {
+      return res.status(400).json({ error: 'paidBy must be a member of this trip' })
+    }
+  }
+
+  if (day !== undefined) expense.day = day
+  if (name !== undefined) expense.name = name.trim()
+  if (category !== undefined) expense.category = category
+  if (amountYen !== undefined) {
+    expense.amountYen = amountYen
+    expense.amountHome = Math.round(amountYen * expense.exchangeRate * 100) / 100
+  }
+  if (paidBy !== undefined && req.trip.tripType !== 'family') expense.paidBy = paidBy
+
+  await expense.save()
+  await expense.populate('paidBy addedBy', 'name')
+  res.json(serializeExpense(expense, req.trip.tripType))
+})
+
+router.delete('/:expenseId', async (req, res) => {
+  const expense = await Expense.findOneAndDelete({ _id: req.params.expenseId, trip: req.params.tripId })
+  if (!expense) return res.status(404).json({ error: 'Expense not found' })
+  res.status(204).end()
+})
+
 export default router

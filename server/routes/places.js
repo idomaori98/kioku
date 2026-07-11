@@ -60,4 +60,24 @@ router.post('/', async (req, res) => {
   res.status(201).json(serializePlace(place))
 })
 
+router.put('/:placeId', async (req, res) => {
+  const { name } = req.body
+  if (!name?.trim()) {
+    return res.status(400).json({ error: 'name is required' })
+  }
+  const place = await Place.findOne({ _id: req.params.placeId, trip: req.params.tripId })
+  if (!place) return res.status(404).json({ error: 'Place not found' })
+
+  place.name = name.trim()
+  await place.save()
+  await place.populate('addedBy', 'name')
+  res.json(serializePlace(place))
+})
+
+router.delete('/:placeId', async (req, res) => {
+  const place = await Place.findOneAndDelete({ _id: req.params.placeId, trip: req.params.tripId })
+  if (!place) return res.status(404).json({ error: 'Place not found' })
+  res.status(204).end()
+})
+
 export default router

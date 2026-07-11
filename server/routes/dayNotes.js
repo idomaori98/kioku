@@ -7,9 +7,12 @@ router.use(requireTripMembership)
 
 router.get('/', async (req, res) => {
   const { day } = req.query
-  if (!day) return res.status(400).json({ error: 'day query param is required' })
-  const note = await DayNote.findOne({ trip: req.params.tripId, day })
-  res.json({ day, note: note?.note || '' })
+  if (day) {
+    const note = await DayNote.findOne({ trip: req.params.tripId, day })
+    return res.json({ day, note: note?.note || '' })
+  }
+  const notes = await DayNote.find({ trip: req.params.tripId }).sort({ day: 1 })
+  res.json(notes.map((n) => ({ day: n.day, note: n.note })))
 })
 
 router.put('/', async (req, res) => {

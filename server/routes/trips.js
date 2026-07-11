@@ -87,7 +87,7 @@ router.get('/:id', async (req, res) => {
 })
 
 router.put('/:id', async (req, res) => {
-  const { startDate, endDate, dailyBudget } = req.body
+  const { startDate, endDate, dailyBudget, homeCurrency, tripType } = req.body
 
   const trip = await Trip.findById(req.params.id)
   if (!trip) return res.status(404).json({ error: 'Trip not found' })
@@ -105,10 +105,22 @@ router.put('/:id', async (req, res) => {
   if (dailyBudget !== undefined && (typeof dailyBudget !== 'number' || dailyBudget <= 0)) {
     return res.status(400).json({ error: 'dailyBudget must be a positive number' })
   }
+  if (tripType !== undefined && !['shared', 'family'].includes(tripType)) {
+    return res.status(400).json({ error: 'tripType must be "shared" or "family"' })
+  }
+  if (homeCurrency !== undefined) {
+    try {
+      await getJpyRate(homeCurrency)
+    } catch {
+      return res.status(400).json({ error: `"${homeCurrency}" is not a recognized currency code` })
+    }
+  }
 
   trip.startDate = nextStartDate
   trip.endDate = nextEndDate
   if (dailyBudget !== undefined) trip.dailyBudget = dailyBudget
+  if (homeCurrency !== undefined) trip.homeCurrency = homeCurrency
+  if (tripType !== undefined) trip.tripType = tripType
 
   await trip.save()
   await trip.populate('members.user', 'name email photoUrl')

@@ -8,6 +8,7 @@ import { ExpenseForm, CATEGORIES } from '../components/ExpenseForm'
 import { BudgetBar } from '../components/BudgetBar'
 import { PhotoPicker } from '../components/PhotoPicker'
 import { PlaceForm } from '../components/PlaceForm'
+import { PlaceEditSheet } from '../components/PlaceEditSheet'
 import { PlacesMap } from '../components/PlacesMap'
 
 const PHOTO_PREVIEW_COUNT = 5
@@ -39,7 +40,9 @@ export function TripPage() {
   const [showAllPhotos, setShowAllPhotos] = useState(false)
   const [places, setPlaces] = useState([])
   const [dayNote, setDayNote] = useState('')
-  const [sheet, setSheet] = useState(null) // null | 'add' | 'expense' | 'photo' | 'place'
+  const [sheet, setSheet] = useState(null) // null | 'add' | 'expense' | 'photo' | 'place' | 'edit-place'
+  const [editingExpense, setEditingExpense] = useState(null)
+  const [editingPlace, setEditingPlace] = useState(null)
 
   useEffect(() => {
     let cancelled = false
@@ -121,6 +124,8 @@ export function TripPage() {
       startDate: dayKeyFromDate(trip.startDate),
       endDate: dayKeyFromDate(trip.endDate),
       dailyBudget: String(trip.dailyBudget),
+      homeCurrency: trip.homeCurrency,
+      tripType: trip.tripType,
     })
     setEditing(true)
   }
@@ -133,6 +138,8 @@ export function TripPage() {
         startDate: editForm.startDate,
         endDate: editForm.endDate,
         dailyBudget: Number(editForm.dailyBudget),
+        homeCurrency: editForm.homeCurrency,
+        tripType: editForm.tripType,
       })
       setTrip(updated)
       setEditing(false)
@@ -157,13 +164,28 @@ export function TripPage() {
   }
 
   function handleAddSelect(option) {
+    setEditingExpense(null)
+    setEditingPlace(null)
     setSheet(option)
   }
 
+  function upsert(list, item) {
+    const exists = list.some((x) => x.id === item.id)
+    return exists ? list.map((x) => (x.id === item.id ? item : x)) : [...list, item]
+  }
+
   function handleExpenseSaved(expense) {
-    setExpenses((prev) => [...prev, expense])
-    setAllExpenses((prev) => [...prev, expense])
+    setExpenses((prev) => upsert(prev, expense))
+    setAllExpenses((prev) => upsert(prev, expense))
     setSheet(null)
+    setEditingExpense(null)
+  }
+
+  function handleExpenseDeleted(expenseId) {
+    setExpenses((prev) => prev.filter((e) => e.id !== expenseId))
+    setAllExpenses((prev) => prev.filter((e) => e.id !== expenseId))
+    setSheet(null)
+    setEditingExpense(null)
   }
 
   function handlePhotosSaved(newPhotos) {
@@ -172,8 +194,15 @@ export function TripPage() {
   }
 
   function handlePlaceSaved(place) {
-    setPlaces((prev) => [...prev, place])
+    setPlaces((prev) => upsert(prev, place))
     setSheet(null)
+    setEditingPlace(null)
+  }
+
+  function handlePlaceDeleted(placeId) {
+    setPlaces((prev) => prev.filter((p) => p.id !== placeId))
+    setSheet(null)
+    setEditingPlace(null)
   }
 
   if (error) return <p className="full-page-error">{error}</p>
@@ -225,6 +254,35 @@ export function TripPage() {
               }
               required
             />
+            <input
+              type="text"
+              placeholder="Home currency (e.g. USD)"
+              value={editForm.homeCurrency}
+              onChange={(e) => setEditForm({ ...editForm, homeCurrency: e.target.value })}
+              required
+            />
+            <div className="trip-type-choice">
+              <label>
+                <input
+                  type="radio"
+                  name="editTripType"
+                  value="shared"
+                  checked={editForm.tripType === 'shared'}
+                  onChange={(e) => setEditForm({ ...editForm, tripType: e.target.value })}
+                />
+                Shared trip — track who paid for each expense
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="editTripType"
+                  value="family"
+                  checked={editForm.tripType === 'family'}
+                  onChange={(e) => setEditForm({ ...editForm, tripType: e.target.value })}
+                />
+                Family trip — one pot, just log the spending
+              </label>
+            </div>
             <button type="submit">Save</button>
             <button type="button" className="sheet-cancel" onClick={() => setEditing(false)}>
               Cancel
@@ -239,15 +297,20 @@ export function TripPage() {
             </p>
             <p className="trip-type-tag">
               {trip.tripType === 'family' ? 'Family trip · one shared pot' : 'Shared trip · tracks who paid'}
+              {' · '}
+              {trip.homeCurrency}
             </p>
             <div className="trip-meta-actions">
               {isAdmin && (
                 <button className="btn-secondary btn-sm" onClick={startEdit}>
-                  Edit dates &amp; budget
+                  Edit trip settings
                 </button>
               )}
               <Link className="btn-secondary btn-sm" to={`/trips/${id}/recap`}>
                 View recap
+              </Link>
+              <Link className="btn-secondary btn-sm" to={`/trips/${id}/search`}>
+                🔍 Search
               </Link>
             </div>
           </>
@@ -341,7 +404,15 @@ export function TripPage() {
         <ul className="expense-list">
           {expenses.map((e) => (
             <li key={e.id}>
-              <div className="expense-row">
+              <div
+                className="expense-row"
+                onClick={() => {
+                  setEditingExpense(e)
+                  setSheet('expense')
+                }}
+                role="button"
+                tabIndex={0}
+              >
                 <span className={`expense-icon cat-${e.category}`}>{CATEGORY_EMOJI[e.category]}</span>
                 <div className="expense-info">
                   <span className="expense-name">{e.name}</span>
@@ -370,7 +441,15 @@ export function TripPage() {
         <ul className="place-list">
           {places.map((p) => (
             <li key={p.id}>
-              <div className="place-row">
+              <div
+                className="place-row"
+                onClick={() => {
+                  setEditingPlace(p)
+                  setSheet('edit-place')
+                }}
+                role="button"
+                tabIndex={0}
+              >
                 <span className="place-icon">📍</span>
                 <div className="place-info">
                   <span className="place-name">
@@ -397,8 +476,13 @@ export function TripPage() {
           tripType={trip.tripType}
           members={trip.members}
           currentUserId={user.id}
+          expense={editingExpense}
           onSaved={handleExpenseSaved}
-          onClose={() => setSheet(null)}
+          onDeleted={handleExpenseDeleted}
+          onClose={() => {
+            setSheet(null)
+            setEditingExpense(null)
+          }}
         />
       )}
       {sheet === 'photo' && (
@@ -415,6 +499,18 @@ export function TripPage() {
           day={selectedDay}
           onSaved={handlePlaceSaved}
           onClose={() => setSheet(null)}
+        />
+      )}
+      {sheet === 'edit-place' && editingPlace && (
+        <PlaceEditSheet
+          tripId={id}
+          place={editingPlace}
+          onSaved={handlePlaceSaved}
+          onDeleted={handlePlaceDeleted}
+          onClose={() => {
+            setSheet(null)
+            setEditingPlace(null)
+          }}
         />
       )}
     </div>
