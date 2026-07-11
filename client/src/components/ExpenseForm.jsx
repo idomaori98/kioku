@@ -17,7 +17,6 @@ export function ExpenseForm({
   currentUserId,
   expense,
   onSaved,
-  onDeleted,
   onClose,
 }) {
   const [amountYen, setAmountYen] = useState(expense ? String(expense.amountYen) : '')
@@ -25,7 +24,6 @@ export function ExpenseForm({
   const [category, setCategory] = useState(expense?.category ?? 'food')
   const [paidBy, setPaidBy] = useState(expense?.paidBy?.id ?? currentUserId)
   const [error, setError] = useState(null)
-  const [deleting, setDeleting] = useState(false)
   const amountRef = useRef(null)
 
   useEffect(() => {
@@ -49,18 +47,6 @@ export function ExpenseForm({
       onSaved(saved)
     } catch (err) {
       setError(err.message)
-    }
-  }
-
-  async function handleDelete() {
-    setError(null)
-    setDeleting(true)
-    try {
-      await api.deleteExpense(tripId, expense.id)
-      onDeleted(expense.id)
-    } catch (err) {
-      setError(err.message)
-      setDeleting(false)
     }
   }
 
@@ -109,20 +95,8 @@ export function ExpenseForm({
           </label>
         )}
         {error && <p className="error">{error}</p>}
-        <button type="submit" disabled={deleting}>
-          {expense ? 'Save changes' : 'Add expense'}
-        </button>
-        {expense && (
-          <button
-            type="button"
-            className="btn-secondary"
-            onClick={handleDelete}
-            disabled={deleting}
-          >
-            {deleting ? 'Deleting...' : 'Delete expense'}
-          </button>
-        )}
-        <button type="button" className="sheet-cancel" onClick={onClose} disabled={deleting}>
+        <button type="submit">{expense ? 'Save changes' : 'Add expense'}</button>
+        <button type="button" className="sheet-cancel" onClick={onClose}>
           Cancel
         </button>
       </form>

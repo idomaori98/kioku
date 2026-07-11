@@ -634,6 +634,73 @@ button:disabled {
   background: var(--surface-alt);
 }
 
+.btn-danger {
+  background: var(--danger);
+  color: #fff;
+}
+
+.btn-danger:hover {
+  opacity: 0.9;
+}
+
+.confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(43, 38, 32, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  padding: 24px;
+}
+
+.confirm-dialog {
+  background: var(--surface);
+  border-radius: var(--radius-card);
+  padding: 20px;
+  max-width: 320px;
+  width: 100%;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.confirm-dialog p {
+  margin: 0 0 6px;
+  font-size: 15px;
+  color: var(--ink);
+}
+
+.lightbox-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 8, 6, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 30;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.lightbox-img {
+  max-width: 100%;
+  max-height: 80vh;
+  border-radius: 12px;
+  object-fit: contain;
+}
+
+.lightbox-caption {
+  color: #fff;
+  margin-top: 14px;
+  font-size: 15px;
+  text-align: center;
+}
+
 .amount-input {
   font-size: 28px;
   font-weight: 600;

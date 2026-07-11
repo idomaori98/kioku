@@ -15,6 +15,7 @@ export function RecapMap({ places }) {
         zoom: 12,
         center: { lat: places[0].lat, lng: places[0].lng },
         disableDefaultUI: true,
+        gestureHandling: 'greedy',
       })
       const bounds = new window.google.maps.LatLngBounds()
       const path = []

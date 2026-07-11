@@ -18,6 +18,7 @@ export function PlacesMap({ places, focusRequest }) {
         zoom: 13,
         center: { lat: valid[0].lat, lng: valid[0].lng },
         disableDefaultUI: true,
+        gestureHandling: 'greedy',
       })
       mapInstanceRef.current = map
       markersRef.current = {}

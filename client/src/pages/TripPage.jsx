@@ -11,6 +11,7 @@ import { PlaceForm } from '../components/PlaceForm'
 import { PlaceEditSheet } from '../components/PlaceEditSheet'
 import { PlacesMap } from '../components/PlacesMap'
 import { SwipeableRow } from '../components/SwipeableRow'
+import { PhotoLightbox } from '../components/PhotoLightbox'
 
 const PHOTO_PREVIEW_COUNT = 5
 
@@ -45,6 +46,7 @@ export function TripPage() {
   const [editingExpense, setEditingExpense] = useState(null)
   const [editingPlace, setEditingPlace] = useState(null)
   const [focusRequest, setFocusRequest] = useState(null)
+  const [lightboxPhoto, setLightboxPhoto] = useState(null)
   const focusNonceRef = useRef(0)
 
   function focusPlace(placeId) {
@@ -396,7 +398,13 @@ export function TripPage() {
         {photos.length === 0 && <p className="empty-state">No photos yet for this day.</p>}
         <div className="photo-grid">
           {(showAllPhotos ? photos : photos.slice(0, PHOTO_PREVIEW_COUNT)).map((p) => (
-            <div key={p.id} className="photo-grid-item">
+            <div
+              key={p.id}
+              className="photo-grid-item"
+              onClick={() => setLightboxPhoto(p)}
+              role="button"
+              tabIndex={0}
+            >
               <img src={p.url} alt={p.note || ''} />
             </div>
           ))}
@@ -436,16 +444,9 @@ export function TripPage() {
                   setSheet('expense')
                 }}
                 onDelete={() => handleQuickDeleteExpense(e.id)}
+                deleteMessage={`Delete "${e.name}"?`}
               >
-                <div
-                  className="expense-row"
-                  onClick={() => {
-                    setEditingExpense(e)
-                    setSheet('expense')
-                  }}
-                  role="button"
-                  tabIndex={0}
-                >
+                <div className="expense-row">
                   <span className={`expense-icon cat-${e.category}`}>{CATEGORY_EMOJI[e.category]}</span>
                   <div className="expense-info">
                     <span className="expense-name">{e.name}</span>
@@ -481,6 +482,7 @@ export function TripPage() {
                   setSheet('edit-place')
                 }}
                 onDelete={() => handleQuickDeletePlace(p.id)}
+                deleteMessage={`Delete "${p.name}"?`}
               >
                 <div
                   className="place-row"
@@ -517,7 +519,6 @@ export function TripPage() {
           currentUserId={user.id}
           expense={editingExpense}
           onSaved={handleExpenseSaved}
-          onDeleted={handleExpenseDeleted}
           onClose={() => {
             setSheet(null)
             setEditingExpense(null)
@@ -545,12 +546,14 @@ export function TripPage() {
           tripId={id}
           place={editingPlace}
           onSaved={handlePlaceSaved}
-          onDeleted={handlePlaceDeleted}
           onClose={() => {
             setSheet(null)
             setEditingPlace(null)
           }}
         />
+      )}
+      {lightboxPhoto && (
+        <PhotoLightbox photo={lightboxPhoto} onClose={() => setLightboxPhoto(null)} />
       )}
     </div>
   )

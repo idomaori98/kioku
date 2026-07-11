@@ -1,11 +1,13 @@
 import { useRef, useState } from 'react'
+import { ConfirmDialog } from './ConfirmDialog'
 
 const REVEAL_WIDTH = 132
 const OPEN_THRESHOLD = 40
 
-export function SwipeableRow({ onEdit, onDelete, children }) {
+export function SwipeableRow({ onEdit, onDelete, deleteMessage, children }) {
   const [dragX, setDragX] = useState(0)
   const [open, setOpen] = useState(false)
+  const [confirming, setConfirming] = useState(false)
   const startXRef = useRef(null)
   const draggingRef = useRef(false)
 
@@ -67,7 +69,7 @@ export function SwipeableRow({ onEdit, onDelete, children }) {
           type="button"
           className="swipe-action swipe-delete"
           aria-label="Delete"
-          onClick={() => onDelete()}
+          onClick={() => setConfirming(true)}
         >
           🗑️
         </button>
@@ -83,6 +85,17 @@ export function SwipeableRow({ onEdit, onDelete, children }) {
       >
         {children}
       </div>
+      {confirming && (
+        <ConfirmDialog
+          message={deleteMessage || 'Delete this?'}
+          onConfirm={() => {
+            setConfirming(false)
+            close()
+            onDelete()
+          }}
+          onCancel={() => setConfirming(false)}
+        />
+      )}
     </div>
   )
 }
