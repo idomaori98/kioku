@@ -364,20 +364,28 @@ button:disabled {
   margin: 0;
 }
 
-.trip-list li,
-.member-list li {
+.trip-list li {
   padding: 10px 0;
   border-bottom: 1px solid var(--border);
   font-size: 14px;
 }
 
-.trip-list li:last-child,
-.member-list li:last-child {
+.trip-list li:last-child {
   border-bottom: none;
 }
 
-.member-list li button {
-  margin-left: 10px;
+.member-row {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.member-role {
+  color: var(--ink-muted);
+}
+
+.member-list li:last-child .member-row {
+  border-bottom: none;
 }
 
 .trip-card-list {
@@ -993,6 +1001,12 @@ button:disabled {
 .swipe-delete {
   background: var(--danger);
   color: #fff;
+}
+
+.swipe-admin {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid var(--accent);
 }
 
 .swipe-content {

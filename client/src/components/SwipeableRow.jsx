@@ -1,13 +1,36 @@
 import { useRef, useState } from 'react'
 import { ConfirmDialog } from './ConfirmDialog'
 
-const REVEAL_WIDTH = 132
+const ACTION_WIDTH = 56
+const ACTION_GAP = 8
 const OPEN_THRESHOLD = 40
 
-export function SwipeableRow({ onEdit, onDelete, deleteMessage, children }) {
+function buildActions({ actions, onEdit, onDelete, deleteMessage }) {
+  if (actions) return actions
+  const built = []
+  if (onEdit) {
+    built.push({ key: 'edit', icon: '✏️', label: 'Edit', className: 'swipe-edit', onClick: onEdit })
+  }
+  if (onDelete) {
+    built.push({
+      key: 'delete',
+      icon: '🗑️',
+      label: 'Delete',
+      className: 'swipe-delete',
+      onClick: onDelete,
+      confirmMessage: deleteMessage || 'Delete this?',
+    })
+  }
+  return built
+}
+
+export function SwipeableRow({ actions, onEdit, onDelete, deleteMessage, children }) {
+  const resolvedActions = buildActions({ actions, onEdit, onDelete, deleteMessage })
+  const revealWidth = resolvedActions.length * ACTION_WIDTH + (resolvedActions.length - 1) * ACTION_GAP + 8
+
   const [dragX, setDragX] = useState(0)
   const [open, setOpen] = useState(false)
-  const [confirming, setConfirming] = useState(false)
+  const [pendingAction, setPendingAction] = useState(null)
   const startXRef = useRef(null)
   const draggingRef = useRef(false)
 
@@ -20,8 +43,8 @@ export function SwipeableRow({ onEdit, onDelete, deleteMessage, children }) {
     if (startXRef.current === null) return
     const delta = e.clientX - startXRef.current
     if (Math.abs(delta) > 5) draggingRef.current = true
-    const base = open ? REVEAL_WIDTH : 0
-    const next = Math.min(REVEAL_WIDTH, Math.max(0, base + delta))
+    const base = open ? revealWidth : 0
+    const next = Math.min(revealWidth, Math.max(0, base + delta))
     setDragX(next)
   }
 
@@ -29,7 +52,7 @@ export function SwipeableRow({ onEdit, onDelete, deleteMessage, children }) {
     if (startXRef.current === null) return
     const shouldOpen = dragX > OPEN_THRESHOLD
     setOpen(shouldOpen)
-    setDragX(shouldOpen ? REVEAL_WIDTH : 0)
+    setDragX(shouldOpen ? revealWidth : 0)
     startXRef.current = null
   }
 
@@ -51,28 +74,38 @@ export function SwipeableRow({ onEdit, onDelete, deleteMessage, children }) {
     setDragX(0)
   }
 
+  function handleActionClick(action) {
+    if (action.confirmMessage) {
+      setPendingAction(action)
+    } else {
+      close()
+      action.onClick()
+    }
+  }
+
+  function handleConfirm() {
+    const action = pendingAction
+    setPendingAction(null)
+    close()
+    action.onClick()
+  }
+
+  if (resolvedActions.length === 0) return children
+
   return (
     <div className="swipe-row">
       <div className="swipe-actions">
-        <button
-          type="button"
-          className="swipe-action swipe-edit"
-          aria-label="Edit"
-          onClick={() => {
-            close()
-            onEdit()
-          }}
-        >
-          ✏️
-        </button>
-        <button
-          type="button"
-          className="swipe-action swipe-delete"
-          aria-label="Delete"
-          onClick={() => setConfirming(true)}
-        >
-          🗑️
-        </button>
+        {resolvedActions.map((action) => (
+          <button
+            key={action.key}
+            type="button"
+            className={`swipe-action ${action.className || ''}`}
+            aria-label={action.label}
+            onClick={() => handleActionClick(action)}
+          >
+            {action.icon}
+          </button>
+        ))}
       </div>
       <div
         className="swipe-content"
@@ -85,15 +118,11 @@ export function SwipeableRow({ onEdit, onDelete, deleteMessage, children }) {
       >
         {children}
       </div>
-      {confirming && (
+      {pendingAction && (
         <ConfirmDialog
-          message={deleteMessage || 'Delete this?'}
-          onConfirm={() => {
-            setConfirming(false)
-            close()
-            onDelete()
-          }}
-          onCancel={() => setConfirming(false)}
+          message={pendingAction.confirmMessage}
+          onConfirm={handleConfirm}
+          onCancel={() => setPendingAction(null)}
         />
       )}
     </div>

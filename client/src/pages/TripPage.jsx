@@ -361,17 +361,36 @@ export function TripPage() {
 
           <h3>Members</h3>
           <ul className="member-list">
-            {trip.members.map((m) => (
-              <li key={m.user.id}>
-                <Link to={`/trips/${id}/members/${m.user.id}/activity`}>{m.user.name}</Link>{' '}
-                — {m.role}
-                {isAdmin && m.role !== 'admin' && (
-                  <button className="btn-secondary btn-sm" onClick={() => handleGrantAdmin(m.user.id)}>
-                    Make admin
-                  </button>
-                )}
-              </li>
-            ))}
+            {trip.members.map((m) => {
+              const row = (
+                <div className="member-row">
+                  <Link to={`/trips/${id}/members/${m.user.id}/activity`}>{m.user.name}</Link>
+                  <span className="member-role"> — {m.role}</span>
+                </div>
+              )
+              const canPromote = isAdmin && m.role !== 'admin'
+              return (
+                <li key={m.user.id}>
+                  {canPromote ? (
+                    <SwipeableRow
+                      actions={[
+                        {
+                          key: 'make-admin',
+                          icon: '⭐',
+                          label: 'Make admin',
+                          className: 'swipe-admin',
+                          onClick: () => handleGrantAdmin(m.user.id),
+                        },
+                      ]}
+                    >
+                      {row}
+                    </SwipeableRow>
+                  ) : (
+                    row
+                  )}
+                </li>
+              )
+            })}
           </ul>
         </div>
       </details>
