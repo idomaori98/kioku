@@ -99,4 +99,7 @@ export const api = {
       body: JSON.stringify({ day, orderedIds }),
     }),
   getRecap: (tripId) => request(`/trips/${tripId}/recap`),
+  listMessages: (tripId) => request(`/trips/${tripId}/messages`),
+  sendMessage: (tripId, text) =>
+    request(`/trips/${tripId}/messages`, { method: 'POST', body: JSON.stringify({ text }) }),
 }

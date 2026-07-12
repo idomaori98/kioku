@@ -4,6 +4,7 @@ import Expense from '../models/Expense.js'
 import Place from '../models/Place.js'
 import Photo from '../models/Photo.js'
 import DayNote from '../models/DayNote.js'
+import Message from '../models/Message.js'
 import { requireAuth } from '../middleware/auth.js'
 import { dayKeyFromDate, japanTodayKey } from '../lib/days.js'
 import { getJpyRate } from '../lib/exchangeRate.js'
@@ -154,6 +155,7 @@ router.delete('/:id', async (req, res) => {
     Place.deleteMany({ trip: trip._id }),
     Photo.deleteMany({ trip: trip._id }),
     DayNote.deleteMany({ trip: trip._id }),
+    Message.deleteMany({ trip: trip._id }),
   ])
   await trip.deleteOne()
 

@@ -407,6 +407,9 @@ export function TripPage() {
               <Link className="btn-secondary btn-sm" to={`/trips/${id}/search`}>
                 🔍 Search
               </Link>
+              <Link className="btn-secondary btn-sm" to={`/trips/${id}/chat`}>
+                💬 Chat
+              </Link>
               {isCreator && !isEnded && (
                 <button className="btn-secondary btn-sm btn-danger-outline" onClick={() => setConfirmingEnd(true)}>
                   End trip
