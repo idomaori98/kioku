@@ -47,7 +47,13 @@ export function TripPage() {
   const [editingPlace, setEditingPlace] = useState(null)
   const [focusRequest, setFocusRequest] = useState(null)
   const [lightboxIndex, setLightboxIndex] = useState(null)
+  const [direction, setDirection] = useState('next')
   const focusNonceRef = useRef(0)
+
+  function goToDay(day, dir) {
+    setDirection(dir)
+    setSelectedDay(day)
+  }
 
   function focusPlace(placeId) {
     focusNonceRef.current += 1
@@ -397,7 +403,7 @@ export function TripPage() {
 
       <div className="day-nav">
         {dayIndex > 0 ? (
-          <button onClick={() => setSelectedDay(days[dayIndex - 1])}>← Prev</button>
+          <button onClick={() => goToDay(days[dayIndex - 1], 'prev')}>← Prev</button>
         ) : (
           <span />
         )}
@@ -405,130 +411,132 @@ export function TripPage() {
           {formatDayLabel(selectedDay)} {selectedDay === today && '· Today'}
         </h2>
         {dayIndex < days.length - 1 ? (
-          <button onClick={() => setSelectedDay(days[dayIndex + 1])}>Next →</button>
+          <button onClick={() => goToDay(days[dayIndex + 1], 'next')}>Next →</button>
         ) : (
           <span />
         )}
       </div>
 
-      <textarea
-        className="day-note"
-        placeholder="Add a note about today..."
-        value={dayNote}
-        onChange={(e) => setDayNote(e.target.value)}
-        onBlur={handleSaveNote}
-      />
+      <div key={selectedDay} className="day-page" data-direction={direction}>
+        <textarea
+          className="day-note"
+          placeholder="Add a note about today..."
+          value={dayNote}
+          onChange={(e) => setDayNote(e.target.value)}
+          onBlur={handleSaveNote}
+        />
 
-      <div className="card">
-        <h2 className="section-label">Photos</h2>
-        {photos.length === 0 && <p className="empty-state">No photos yet for this day.</p>}
-        <div className="photo-grid">
-          {visiblePhotos.map((p, i) => (
-            <div
-              key={p.id}
-              className="photo-grid-item"
-              onClick={() => setLightboxIndex(i)}
-              role="button"
-              tabIndex={0}
-            >
-              <img src={p.url} alt={p.note || ''} />
-            </div>
-          ))}
-          {!showAllPhotos && photos.length > PHOTO_PREVIEW_COUNT && (
-            <div
-              className="photo-grid-item"
-              onClick={() => setShowAllPhotos(true)}
-              role="button"
-              tabIndex={0}
-            >
-              <img src={photos[PHOTO_PREVIEW_COUNT].url} alt="" />
-              <div className="photo-grid-more">+{photos.length - PHOTO_PREVIEW_COUNT}</div>
-            </div>
-          )}
+        <div className="card">
+          <h2 className="section-label">Photos</h2>
+          {photos.length === 0 && <p className="empty-state">No photos yet for this day.</p>}
+          <div className="photo-grid">
+            {visiblePhotos.map((p, i) => (
+              <div
+                key={p.id}
+                className="photo-grid-item"
+                onClick={() => setLightboxIndex(i)}
+                role="button"
+                tabIndex={0}
+              >
+                <img src={p.url} alt={p.note || ''} />
+              </div>
+            ))}
+            {!showAllPhotos && photos.length > PHOTO_PREVIEW_COUNT && (
+              <div
+                className="photo-grid-item"
+                onClick={() => setShowAllPhotos(true)}
+                role="button"
+                tabIndex={0}
+              >
+                <img src={photos[PHOTO_PREVIEW_COUNT].url} alt="" />
+                <div className="photo-grid-more">+{photos.length - PHOTO_PREVIEW_COUNT}</div>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
 
-      <div className="card spending-card">
-        <p>
-          Today: ¥{dailyYen.toLocaleString()} ({dailyHome.toFixed(2)} {trip.homeCurrency})
-        </p>
-        <BudgetBar spent={dailyYen} budget={trip.dailyBudget} />
-        <p>
-          Trip total: ¥{tripYen.toLocaleString()} ({tripHome.toFixed(2)} {trip.homeCurrency})
-        </p>
-      </div>
+        <div className="card spending-card">
+          <p>
+            Today: ¥{dailyYen.toLocaleString()} ({dailyHome.toFixed(2)} {trip.homeCurrency})
+          </p>
+          <BudgetBar spent={dailyYen} budget={trip.dailyBudget} />
+          <p>
+            Trip total: ¥{tripYen.toLocaleString()} ({tripHome.toFixed(2)} {trip.homeCurrency})
+          </p>
+        </div>
 
-      <div className="card">
-        <h2 className="section-label">Expenses</h2>
-        {expenses.length === 0 && <p className="empty-state">Nothing logged yet for this day.</p>}
-        <ul className="expense-list">
-          {expenses.map((e) => (
-            <li key={e.id}>
-              <SwipeableRow
-                onEdit={() => {
-                  setEditingExpense(e)
-                  setSheet('expense')
-                }}
-                onDelete={() => handleQuickDeleteExpense(e.id)}
-                deleteMessage={`Delete "${e.name}"?`}
-              >
-                <div className="expense-row">
-                  <span className={`expense-icon cat-${e.category}`}>{CATEGORY_EMOJI[e.category]}</span>
-                  <div className="expense-info">
-                    <span className="expense-name">{e.name}</span>
-                    {trip.tripType !== 'family' && (
-                      <span className="expense-meta">
-                        paid by {e.paidBy.name} · added by {e.addedBy.name}
-                      </span>
-                    )}
-                  </div>
-                  <div className="expense-amount">
-                    <span className="expense-amount-yen">¥{e.amountYen.toLocaleString()}</span>
-                    <span className="expense-amount-home">
-                      {e.amountHome.toFixed(2)} {e.homeCurrency}
-                    </span>
-                  </div>
-                </div>
-              </SwipeableRow>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <div className="card">
-        <h2 className="section-label">Places</h2>
-        <PlacesMap places={places} focusRequest={focusRequest} />
-        {places.length === 0 && <p className="empty-state">No places logged yet for this day.</p>}
-        <ul className="place-list">
-          {places.map((p) => (
-            <li key={p.id}>
-              <SwipeableRow
-                onEdit={() => {
-                  setEditingPlace(p)
-                  setSheet('edit-place')
-                }}
-                onDelete={() => handleQuickDeletePlace(p.id)}
-                deleteMessage={`Delete "${p.name}"?`}
-              >
-                <div
-                  className="place-row"
-                  onClick={() => focusPlace(p.id)}
-                  role="button"
-                  tabIndex={0}
+        <div className="card">
+          <h2 className="section-label">Expenses</h2>
+          {expenses.length === 0 && <p className="empty-state">Nothing logged yet for this day.</p>}
+          <ul className="expense-list">
+            {expenses.map((e) => (
+              <li key={e.id}>
+                <SwipeableRow
+                  onEdit={() => {
+                    setEditingExpense(e)
+                    setSheet('expense')
+                  }}
+                  onDelete={() => handleQuickDeleteExpense(e.id)}
+                  deleteMessage={`Delete "${e.name}"?`}
                 >
-                  <span className="place-icon">📍</span>
-                  <div className="place-info">
-                    <span className="place-name">
-                      {p.name}
-                      {p.address && ` — ${p.address}`}
-                    </span>
-                    <span className="place-meta">added by {p.addedBy.name}</span>
+                  <div className="expense-row">
+                    <span className={`expense-icon cat-${e.category}`}>{CATEGORY_EMOJI[e.category]}</span>
+                    <div className="expense-info">
+                      <span className="expense-name">{e.name}</span>
+                      {trip.tripType !== 'family' && (
+                        <span className="expense-meta">
+                          paid by {e.paidBy.name} · added by {e.addedBy.name}
+                        </span>
+                      )}
+                    </div>
+                    <div className="expense-amount">
+                      <span className="expense-amount-yen">¥{e.amountYen.toLocaleString()}</span>
+                      <span className="expense-amount-home">
+                        {e.amountHome.toFixed(2)} {e.homeCurrency}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </SwipeableRow>
-            </li>
-          ))}
-        </ul>
+                </SwipeableRow>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="card">
+          <h2 className="section-label">Places</h2>
+          <PlacesMap places={places} focusRequest={focusRequest} />
+          {places.length === 0 && <p className="empty-state">No places logged yet for this day.</p>}
+          <ul className="place-list">
+            {places.map((p) => (
+              <li key={p.id}>
+                <SwipeableRow
+                  onEdit={() => {
+                    setEditingPlace(p)
+                    setSheet('edit-place')
+                  }}
+                  onDelete={() => handleQuickDeletePlace(p.id)}
+                  deleteMessage={`Delete "${p.name}"?`}
+                >
+                  <div
+                    className="place-row"
+                    onClick={() => focusPlace(p.id)}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    <span className="place-icon">📍</span>
+                    <div className="place-info">
+                      <span className="place-name">
+                        {p.name}
+                        {p.address && ` — ${p.address}`}
+                      </span>
+                      <span className="place-meta">added by {p.addedBy.name}</span>
+                    </div>
+                  </div>
+                </SwipeableRow>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
 
       <button className="fab" onClick={() => setSheet('add')}>

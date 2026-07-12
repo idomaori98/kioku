@@ -87,6 +87,7 @@ body {
   padding: 24px;
   padding-bottom: 100px;
   box-sizing: border-box;
+  perspective: 1000px;
 }
 
 h1,
@@ -448,6 +449,52 @@ button:disabled {
   margin: 0;
   text-align: center;
   flex: 1;
+}
+
+.day-page {
+  transform-style: preserve-3d;
+  transform-origin: left center;
+  animation-duration: 0.36s;
+  animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
+  animation-fill-mode: both;
+}
+
+.day-page[data-direction='next'] {
+  animation-name: page-in-next;
+  transform-origin: left center;
+}
+
+.day-page[data-direction='prev'] {
+  animation-name: page-in-prev;
+  transform-origin: right center;
+}
+
+@keyframes page-in-next {
+  from {
+    transform: translateX(28px) rotateY(-10deg);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0) rotateY(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes page-in-prev {
+  from {
+    transform: translateX(-28px) rotateY(10deg);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0) rotateY(0deg);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .day-page {
+    animation: none;
+  }
 }
 
 .day-note {

@@ -17,6 +17,12 @@ export function RecapPage() {
   const [dayIndex, setDayIndex] = useState(0)
   const [shared, setShared] = useState(false)
   const [lightboxIndex, setLightboxIndex] = useState(null)
+  const [direction, setDirection] = useState('next')
+
+  function goToDayIndex(index, dir) {
+    setDirection(dir)
+    setDayIndex(index)
+  }
 
   useEffect(() => {
     Promise.all([api.getTrip(id), api.getRecap(id)])
@@ -138,18 +144,18 @@ export function RecapPage() {
       <h2 className="section-label">Day by day</h2>
       <div className="day-nav">
         {dayIndex > 0 ? (
-          <button onClick={() => setDayIndex(dayIndex - 1)}>← Prev</button>
+          <button onClick={() => goToDayIndex(dayIndex - 1, 'prev')}>← Prev</button>
         ) : (
           <span />
         )}
         <h3>{formatDayLabel(day.day)}</h3>
         {dayIndex < recap.days.length - 1 ? (
-          <button onClick={() => setDayIndex(dayIndex + 1)}>Next →</button>
+          <button onClick={() => goToDayIndex(dayIndex + 1, 'next')}>Next →</button>
         ) : (
           <span />
         )}
       </div>
-      <div className="recap-day-page">
+      <div key={day.day} className="recap-day-page day-page" data-direction={direction}>
         {day.note ? <p className="day-note-readonly">{day.note}</p> : <p className="empty-state">No note for this day.</p>}
         <p>
           ¥{day.expenseYen.toLocaleString()} ({day.expenseHome.toFixed(2)} {recap.totals.homeCurrency})
