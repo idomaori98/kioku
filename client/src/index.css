@@ -1475,3 +1475,71 @@ button:disabled {
   border-radius: var(--radius);
   margin-bottom: 8px;
 }
+
+.balance-list,
+.settlement-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.balance-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.balance-row:last-child {
+  border-bottom: none;
+}
+
+.balance-name {
+  font-weight: 500;
+}
+
+.balance-amount {
+  font-size: 14px;
+}
+
+.balance-positive {
+  color: var(--success);
+}
+
+.balance-negative {
+  color: var(--danger);
+}
+
+.balance-settled {
+  color: var(--ink-muted);
+}
+
+.settlement-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.settlement-row:last-child {
+  border-bottom: none;
+}
+
+.settlement-from,
+.settlement-to {
+  font-weight: 500;
+}
+
+.settlement-arrow {
+  color: var(--ink-muted);
+}
+
+.settlement-amount {
+  margin-left: auto;
+  color: var(--accent);
+  font-weight: 500;
+}

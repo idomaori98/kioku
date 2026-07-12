@@ -410,6 +410,11 @@ export function TripPage() {
               <Link className="btn-secondary btn-sm" to={`/trips/${id}/chat`}>
                 💬 Chat
               </Link>
+              {trip.tripType !== 'family' && (
+                <Link className="btn-secondary btn-sm" to={`/trips/${id}/balances`}>
+                  ⚖️ Balances
+                </Link>
+              )}
               {isCreator && !isEnded && (
                 <button className="btn-secondary btn-sm btn-danger-outline" onClick={() => setConfirmingEnd(true)}>
                   End trip

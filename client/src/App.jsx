@@ -10,6 +10,7 @@ import { RecapPage } from './pages/RecapPage'
 import { SearchPage } from './pages/SearchPage'
 import { MemberActivityPage } from './pages/MemberActivityPage'
 import { ChatPage } from './pages/ChatPage'
+import { BalancesPage } from './pages/BalancesPage'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -97,6 +98,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <ChatPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/trips/:id/balances"
+            element={
+              <ProtectedRoute>
+                <BalancesPage />
               </ProtectedRoute>
             }
           />

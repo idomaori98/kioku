@@ -102,4 +102,5 @@ export const api = {
   listMessages: (tripId) => request(`/trips/${tripId}/messages`),
   sendMessage: (tripId, text) =>
     request(`/trips/${tripId}/messages`, { method: 'POST', body: JSON.stringify({ text }) }),
+  getBalances: (tripId) => request(`/trips/${tripId}/balances`),
 }
