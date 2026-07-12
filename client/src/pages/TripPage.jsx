@@ -505,6 +505,8 @@ export function TripPage() {
                   src={p.url}
                   alt={p.note || ''}
                   onClick={() => setLightboxIndex(i)}
+                  onContextMenu={(e) => e.preventDefault()}
+                  draggable={false}
                   role="button"
                   tabIndex={0}
                 />
