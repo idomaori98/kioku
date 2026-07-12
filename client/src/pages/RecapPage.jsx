@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { api } from '../api'
+import { useAuth } from '../context/AuthContext'
 import { formatDayLabel } from '../lib/days'
 import { CATEGORIES } from '../components/ExpenseForm'
 import { RecapMap } from '../components/RecapMap'
@@ -11,6 +12,7 @@ const CATEGORY_EMOJI = Object.fromEntries(CATEGORIES.map((c) => [c.value, c.emoj
 
 export function RecapPage() {
   const { id } = useParams()
+  const { user } = useAuth()
   const [trip, setTrip] = useState(null)
   const [recap, setRecap] = useState(null)
   const [error, setError] = useState(null)
@@ -65,6 +67,8 @@ export function RecapPage() {
 
   const maxCategoryYen = Math.max(...recap.spendingByCategory.map((c) => c.yen), 1)
   const day = recap.days[dayIndex]
+  const me = trip.members.find((m) => m.user.id === user?.id)
+  const canEdit = me?.role === 'admin' && !trip.endedAt
 
   return (
     <div>
@@ -171,7 +175,7 @@ export function RecapPage() {
           photos={recap.photos}
           startIndex={lightboxIndex}
           onClose={() => setLightboxIndex(null)}
-          onDelete={trip.endedAt ? undefined : handleDeletePhoto}
+          onDelete={canEdit ? handleDeletePhoto : undefined}
         />
       )}
     </div>

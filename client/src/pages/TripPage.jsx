@@ -298,6 +298,7 @@ export function TripPage() {
   const isAdmin = me?.role === 'admin'
   const isCreator = trip.createdBy === user?.id
   const isEnded = !!trip.endedAt
+  const canEdit = isAdmin && !isEnded
   const days = tripDayKeys(trip)
   const dayIndex = days.indexOf(selectedDay)
   const today = japanTodayKey()
@@ -504,7 +505,7 @@ export function TripPage() {
             className="photo-grid"
             itemClassName="photo-grid-item"
             items={visiblePhotos}
-            disabled={!isAdmin || isEnded || (!showAllPhotos && photos.length > PHOTO_PREVIEW_COUNT)}
+            disabled={!canEdit || (!showAllPhotos && photos.length > PHOTO_PREVIEW_COUNT)}
             onReorder={handleReorderPhotos}
             renderItem={(p) => {
               const i = visiblePhotos.findIndex((x) => x.id === p.id)
@@ -552,19 +553,19 @@ export function TripPage() {
           <DragReorderList
             className="expense-list"
             items={expenses}
-            disabled={!isAdmin || isEnded}
+            disabled={!canEdit}
             onReorder={handleReorderExpenses}
             renderItem={(e) => (
               <SwipeableRow
                 onEdit={
-                  isEnded
+                  !canEdit
                     ? undefined
                     : () => {
                         setEditingExpense(e)
                         setSheet('expense')
                       }
                 }
-                onDelete={isEnded ? undefined : () => handleQuickDeleteExpense(e.id)}
+                onDelete={!canEdit ? undefined : () => handleQuickDeleteExpense(e.id)}
                 deleteMessage={`Delete "${e.name}"?`}
               >
                 <div className="expense-row">
@@ -596,19 +597,19 @@ export function TripPage() {
           <DragReorderList
             className="place-list"
             items={places}
-            disabled={!isAdmin || isEnded}
+            disabled={!canEdit}
             onReorder={handleReorderPlaces}
             renderItem={(p) => (
               <SwipeableRow
                 onEdit={
-                  isEnded
+                  !canEdit
                     ? undefined
                     : () => {
                         setEditingPlace(p)
                         setSheet('edit-place')
                       }
                 }
-                onDelete={isEnded ? undefined : () => handleQuickDeletePlace(p.id)}
+                onDelete={!canEdit ? undefined : () => handleQuickDeletePlace(p.id)}
                 deleteMessage={`Delete "${p.name}"?`}
               >
                 <div
@@ -632,7 +633,7 @@ export function TripPage() {
         </div>
       </div>
 
-      {!isEnded && (
+      {canEdit && (
         <button className="fab" onClick={() => setSheet('add')}>
           +
         </button>
@@ -686,7 +687,7 @@ export function TripPage() {
           photos={visiblePhotos}
           startIndex={lightboxIndex}
           onClose={() => setLightboxIndex(null)}
-          onDelete={isEnded ? undefined : handleDeletePhoto}
+          onDelete={!canEdit ? undefined : handleDeletePhoto}
         />
       )}
 

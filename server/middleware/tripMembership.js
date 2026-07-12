@@ -16,3 +16,11 @@ export function requireTripNotEnded(req, res, next) {
   }
   next()
 }
+
+export function requireTripAdmin(req, res, next) {
+  const requester = req.trip.members.find((m) => m.user.toString() === req.userId)
+  if (!requester || requester.role !== 'admin') {
+    return res.status(403).json({ error: 'Only an admin can do this' })
+  }
+  next()
+}

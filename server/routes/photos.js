@@ -1,7 +1,11 @@
 import { Router } from 'express'
 import Photo from '../models/Photo.js'
 import { createUploadUrl, deleteObject } from '../lib/s3.js'
-import { requireTripMembership, requireTripNotEnded } from '../middleware/tripMembership.js'
+import {
+  requireTripMembership,
+  requireTripNotEnded,
+  requireTripAdmin,
+} from '../middleware/tripMembership.js'
 import { tripDayKeys } from '../lib/days.js'
 
 const ALLOWED_CONTENT_TYPES = ['image/jpeg', 'image/png']
@@ -20,7 +24,7 @@ function serializePhoto(p) {
   }
 }
 
-router.post('/upload-url', requireTripNotEnded, async (req, res) => {
+router.post('/upload-url', requireTripNotEnded, requireTripAdmin, async (req, res) => {
   const { contentType } = req.body
   if (!ALLOWED_CONTENT_TYPES.includes(contentType)) {
     return res.status(400).json({ error: 'contentType must be image/jpeg or image/png' })
@@ -40,11 +44,7 @@ router.get('/', async (req, res) => {
   res.json(photos.map(serializePhoto))
 })
 
-router.put('/reorder', requireTripNotEnded, async (req, res) => {
-  const requester = req.trip.members.find((m) => m.user.toString() === req.userId)
-  if (!requester || requester.role !== 'admin') {
-    return res.status(403).json({ error: 'Only an admin can reorder photos' })
-  }
+router.put('/reorder', requireTripNotEnded, requireTripAdmin, async (req, res) => {
   const { day, orderedIds } = req.body
   if (!day || !Array.isArray(orderedIds)) {
     return res.status(400).json({ error: 'day and orderedIds are required' })
@@ -57,7 +57,7 @@ router.put('/reorder', requireTripNotEnded, async (req, res) => {
   res.status(204).end()
 })
 
-router.post('/', requireTripNotEnded, async (req, res) => {
+router.post('/', requireTripNotEnded, requireTripAdmin, async (req, res) => {
   const { day, key, publicUrl, note } = req.body
   if (!day || !key || !publicUrl) {
     return res.status(400).json({ error: 'day, key, and publicUrl are required' })
@@ -80,7 +80,7 @@ router.post('/', requireTripNotEnded, async (req, res) => {
   res.status(201).json(serializePhoto(photo))
 })
 
-router.put('/:photoId', requireTripNotEnded, async (req, res) => {
+router.put('/:photoId', requireTripNotEnded, requireTripAdmin, async (req, res) => {
   const { note } = req.body
   const photo = await Photo.findOne({ _id: req.params.photoId, trip: req.params.tripId })
   if (!photo) return res.status(404).json({ error: 'Photo not found' })
@@ -91,7 +91,7 @@ router.put('/:photoId', requireTripNotEnded, async (req, res) => {
   res.json(serializePhoto(photo))
 })
 
-router.delete('/:photoId', requireTripNotEnded, async (req, res) => {
+router.delete('/:photoId', requireTripNotEnded, requireTripAdmin, async (req, res) => {
   const photo = await Photo.findOneAndDelete({ _id: req.params.photoId, trip: req.params.tripId })
   if (!photo) return res.status(404).json({ error: 'Photo not found' })
   await deleteObject(photo.key).catch(() => {})

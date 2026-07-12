@@ -1,6 +1,10 @@
 import { Router } from 'express'
 import Place from '../models/Place.js'
-import { requireTripMembership, requireTripNotEnded } from '../middleware/tripMembership.js'
+import {
+  requireTripMembership,
+  requireTripNotEnded,
+  requireTripAdmin,
+} from '../middleware/tripMembership.js'
 import { tripDayKeys } from '../lib/days.js'
 
 const router = Router({ mergeParams: true })
@@ -28,11 +32,7 @@ router.get('/', async (req, res) => {
   res.json(places.map(serializePlace))
 })
 
-router.put('/reorder', requireTripNotEnded, async (req, res) => {
-  const requester = req.trip.members.find((m) => m.user.toString() === req.userId)
-  if (!requester || requester.role !== 'admin') {
-    return res.status(403).json({ error: 'Only an admin can reorder places' })
-  }
+router.put('/reorder', requireTripNotEnded, requireTripAdmin, async (req, res) => {
   const { day, orderedIds } = req.body
   if (!day || !Array.isArray(orderedIds)) {
     return res.status(400).json({ error: 'day and orderedIds are required' })
@@ -45,7 +45,7 @@ router.put('/reorder', requireTripNotEnded, async (req, res) => {
   res.status(204).end()
 })
 
-router.post('/', requireTripNotEnded, async (req, res) => {
+router.post('/', requireTripNotEnded, requireTripAdmin, async (req, res) => {
   const { day, name, source, googlePlaceId, address, lat, lng } = req.body
   if (!day || !name?.trim() || !source) {
     return res.status(400).json({ error: 'day, name, and source are required' })
@@ -80,7 +80,7 @@ router.post('/', requireTripNotEnded, async (req, res) => {
   res.status(201).json(serializePlace(place))
 })
 
-router.put('/:placeId', requireTripNotEnded, async (req, res) => {
+router.put('/:placeId', requireTripNotEnded, requireTripAdmin, async (req, res) => {
   const { name } = req.body
   if (!name?.trim()) {
     return res.status(400).json({ error: 'name is required' })
@@ -94,7 +94,7 @@ router.put('/:placeId', requireTripNotEnded, async (req, res) => {
   res.json(serializePlace(place))
 })
 
-router.delete('/:placeId', requireTripNotEnded, async (req, res) => {
+router.delete('/:placeId', requireTripNotEnded, requireTripAdmin, async (req, res) => {
   const place = await Place.findOneAndDelete({ _id: req.params.placeId, trip: req.params.tripId })
   if (!place) return res.status(404).json({ error: 'Place not found' })
   res.status(204).end()
