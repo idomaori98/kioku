@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import Place from '../models/Place.js'
-import { requireTripMembership } from '../middleware/tripMembership.js'
+import { requireTripMembership, requireTripNotEnded } from '../middleware/tripMembership.js'
 import { tripDayKeys } from '../lib/days.js'
 
 const router = Router({ mergeParams: true })
@@ -27,7 +27,7 @@ router.get('/', async (req, res) => {
   res.json(places.map(serializePlace))
 })
 
-router.post('/', async (req, res) => {
+router.post('/', requireTripNotEnded, async (req, res) => {
   const { day, name, source, googlePlaceId, address, lat, lng } = req.body
   if (!day || !name?.trim() || !source) {
     return res.status(400).json({ error: 'day, name, and source are required' })
@@ -60,7 +60,7 @@ router.post('/', async (req, res) => {
   res.status(201).json(serializePlace(place))
 })
 
-router.put('/:placeId', async (req, res) => {
+router.put('/:placeId', requireTripNotEnded, async (req, res) => {
   const { name } = req.body
   if (!name?.trim()) {
     return res.status(400).json({ error: 'name is required' })
@@ -74,7 +74,7 @@ router.put('/:placeId', async (req, res) => {
   res.json(serializePlace(place))
 })
 
-router.delete('/:placeId', async (req, res) => {
+router.delete('/:placeId', requireTripNotEnded, async (req, res) => {
   const place = await Place.findOneAndDelete({ _id: req.params.placeId, trip: req.params.tripId })
   if (!place) return res.status(404).json({ error: 'Place not found' })
   res.status(204).end()

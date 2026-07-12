@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import Photo from '../models/Photo.js'
 import { createUploadUrl, deleteObject } from '../lib/s3.js'
-import { requireTripMembership } from '../middleware/tripMembership.js'
+import { requireTripMembership, requireTripNotEnded } from '../middleware/tripMembership.js'
 import { tripDayKeys } from '../lib/days.js'
 
 const ALLOWED_CONTENT_TYPES = ['image/jpeg', 'image/png']
@@ -20,7 +20,7 @@ function serializePhoto(p) {
   }
 }
 
-router.post('/upload-url', async (req, res) => {
+router.post('/upload-url', requireTripNotEnded, async (req, res) => {
   const { contentType } = req.body
   if (!ALLOWED_CONTENT_TYPES.includes(contentType)) {
     return res.status(400).json({ error: 'contentType must be image/jpeg or image/png' })
@@ -39,7 +39,7 @@ router.get('/', async (req, res) => {
   res.json(photos.map(serializePhoto))
 })
 
-router.post('/', async (req, res) => {
+router.post('/', requireTripNotEnded, async (req, res) => {
   const { day, key, publicUrl, note } = req.body
   if (!day || !key || !publicUrl) {
     return res.status(400).json({ error: 'day, key, and publicUrl are required' })
@@ -60,7 +60,7 @@ router.post('/', async (req, res) => {
   res.status(201).json(serializePhoto(photo))
 })
 
-router.put('/:photoId', async (req, res) => {
+router.put('/:photoId', requireTripNotEnded, async (req, res) => {
   const { note } = req.body
   const photo = await Photo.findOne({ _id: req.params.photoId, trip: req.params.tripId })
   if (!photo) return res.status(404).json({ error: 'Photo not found' })
@@ -71,7 +71,7 @@ router.put('/:photoId', async (req, res) => {
   res.json(serializePhoto(photo))
 })
 
-router.delete('/:photoId', async (req, res) => {
+router.delete('/:photoId', requireTripNotEnded, async (req, res) => {
   const photo = await Photo.findOneAndDelete({ _id: req.params.photoId, trip: req.params.tripId })
   if (!photo) return res.status(404).json({ error: 'Photo not found' })
   await deleteObject(photo.key).catch(() => {})

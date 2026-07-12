@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import Expense, { EXPENSE_CATEGORIES } from '../models/Expense.js'
 import { getJpyRate } from '../lib/exchangeRate.js'
-import { requireTripMembership } from '../middleware/tripMembership.js'
+import { requireTripMembership, requireTripNotEnded } from '../middleware/tripMembership.js'
 import { tripDayKeys } from '../lib/days.js'
 
 const router = Router({ mergeParams: true })
@@ -33,7 +33,7 @@ router.get('/', async (req, res) => {
   res.json(expenses.map((e) => serializeExpense(e, req.trip.tripType)))
 })
 
-router.post('/', async (req, res) => {
+router.post('/', requireTripNotEnded, async (req, res) => {
   const { day, name, category, amountYen, paidBy } = req.body
   if (!day || !name?.trim() || !amountYen) {
     return res.status(400).json({ error: 'day, name, and amountYen are required' })
@@ -71,7 +71,7 @@ router.post('/', async (req, res) => {
   res.status(201).json(serializeExpense(expense, req.trip.tripType))
 })
 
-router.put('/:expenseId', async (req, res) => {
+router.put('/:expenseId', requireTripNotEnded, async (req, res) => {
   const { day, name, category, amountYen, paidBy } = req.body
   const expense = await Expense.findOne({ _id: req.params.expenseId, trip: req.params.tripId })
   if (!expense) return res.status(404).json({ error: 'Expense not found' })
@@ -108,7 +108,7 @@ router.put('/:expenseId', async (req, res) => {
   res.json(serializeExpense(expense, req.trip.tripType))
 })
 
-router.delete('/:expenseId', async (req, res) => {
+router.delete('/:expenseId', requireTripNotEnded, async (req, res) => {
   const expense = await Expense.findOneAndDelete({ _id: req.params.expenseId, trip: req.params.tripId })
   if (!expense) return res.status(404).json({ error: 'Expense not found' })
   res.status(204).end()

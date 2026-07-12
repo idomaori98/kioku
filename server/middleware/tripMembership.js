@@ -9,3 +9,10 @@ export async function requireTripMembership(req, res, next) {
   req.trip = trip
   next()
 }
+
+export function requireTripNotEnded(req, res, next) {
+  if (req.trip.endedAt) {
+    return res.status(403).json({ error: 'This trip has ended and is now read-only.' })
+  }
+  next()
+}

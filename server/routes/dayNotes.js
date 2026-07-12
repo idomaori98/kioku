@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import DayNote from '../models/DayNote.js'
-import { requireTripMembership } from '../middleware/tripMembership.js'
+import { requireTripMembership, requireTripNotEnded } from '../middleware/tripMembership.js'
 
 const router = Router({ mergeParams: true })
 router.use(requireTripMembership)
@@ -15,7 +15,7 @@ router.get('/', async (req, res) => {
   res.json(notes.map((n) => ({ day: n.day, note: n.note })))
 })
 
-router.put('/', async (req, res) => {
+router.put('/', requireTripNotEnded, async (req, res) => {
   const { day, note } = req.body
   if (!day) return res.status(400).json({ error: 'day is required' })
   const updated = await DayNote.findOneAndUpdate(

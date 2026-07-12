@@ -171,7 +171,7 @@ export function RecapPage() {
           photos={recap.photos}
           startIndex={lightboxIndex}
           onClose={() => setLightboxIndex(null)}
-          onDelete={handleDeletePhoto}
+          onDelete={trip.endedAt ? undefined : handleDeletePhoto}
         />
       )}
     </div>

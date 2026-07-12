@@ -419,10 +419,25 @@ button:disabled {
   font-size: 20px;
 }
 
+.trip-card-ended {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-muted);
+}
+
 .countdown-banner {
   text-align: center;
   background: var(--accent-soft);
   box-shadow: none;
+}
+
+.trip-ended-banner {
+  background: var(--surface-alt);
+}
+
+.trip-ended-banner p {
+  color: var(--ink-muted);
 }
 
 .countdown-banner p {
@@ -696,6 +711,17 @@ button:disabled {
 
 .btn-danger:hover {
   opacity: 0.9;
+}
+
+.btn-danger-outline {
+  background: transparent;
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.btn-danger-outline:hover {
+  background: var(--danger);
+  color: #fff;
 }
 
 .confirm-backdrop {

@@ -12,6 +12,7 @@ import { PlaceEditSheet } from '../components/PlaceEditSheet'
 import { PlacesMap } from '../components/PlacesMap'
 import { SwipeableRow } from '../components/SwipeableRow'
 import { PhotoLightbox } from '../components/PhotoLightbox'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 
 const PHOTO_PREVIEW_COUNT = 5
 
@@ -48,6 +49,8 @@ export function TripPage() {
   const [focusRequest, setFocusRequest] = useState(null)
   const [lightboxIndex, setLightboxIndex] = useState(null)
   const [direction, setDirection] = useState('next')
+  const [confirmingEnd, setConfirmingEnd] = useState(false)
+  const [ending, setEnding] = useState(false)
   const focusNonceRef = useRef(0)
 
   function goToDay(day, dir) {
@@ -132,6 +135,19 @@ export function TripPage() {
       setTrip(updated)
     } catch (err) {
       setError(err.message)
+    }
+  }
+
+  async function handleEndTrip() {
+    setEnding(true)
+    try {
+      const updated = await api.endTrip(id)
+      setTrip(updated)
+      setConfirmingEnd(false)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setEnding(false)
     }
   }
 
@@ -249,6 +265,8 @@ export function TripPage() {
 
   const me = trip.members.find((m) => m.user.id === user?.id)
   const isAdmin = me?.role === 'admin'
+  const isCreator = trip.createdBy === user?.id
+  const isEnded = !!trip.endedAt
   const days = tripDayKeys(trip)
   const dayIndex = days.indexOf(selectedDay)
   const today = japanTodayKey()
@@ -262,6 +280,12 @@ export function TripPage() {
   return (
     <div>
       <h1>{trip.name}</h1>
+
+      {isEnded && (
+        <div className="card countdown-banner trip-ended-banner">
+          <p>🔒 This trip ended on {new Date(trip.endedAt).toLocaleDateString()} — read only.</p>
+        </div>
+      )}
 
       <div className="card trip-meta-card">
         {editing ? (
@@ -341,7 +365,7 @@ export function TripPage() {
               {trip.homeCurrency}
             </p>
             <div className="trip-meta-actions">
-              {isAdmin && (
+              {isAdmin && !isEnded && (
                 <button className="btn-secondary btn-sm" onClick={startEdit}>
                   Edit trip settings
                 </button>
@@ -352,6 +376,11 @@ export function TripPage() {
               <Link className="btn-secondary btn-sm" to={`/trips/${id}/search`}>
                 🔍 Search
               </Link>
+              {isCreator && !isEnded && (
+                <button className="btn-secondary btn-sm btn-danger-outline" onClick={() => setConfirmingEnd(true)}>
+                  End trip
+                </button>
+              )}
             </div>
           </>
         )}
@@ -374,7 +403,7 @@ export function TripPage() {
                   <span className="member-role"> — {m.role}</span>
                 </div>
               )
-              const canPromote = isAdmin && m.role !== 'admin'
+              const canPromote = isAdmin && m.role !== 'admin' && !isEnded
               return (
                 <li key={m.user.id}>
                   {canPromote ? (
@@ -424,6 +453,7 @@ export function TripPage() {
           value={dayNote}
           onChange={(e) => setDayNote(e.target.value)}
           onBlur={handleSaveNote}
+          readOnly={isEnded}
         />
 
         <div className="card">
@@ -472,11 +502,15 @@ export function TripPage() {
             {expenses.map((e) => (
               <li key={e.id}>
                 <SwipeableRow
-                  onEdit={() => {
-                    setEditingExpense(e)
-                    setSheet('expense')
-                  }}
-                  onDelete={() => handleQuickDeleteExpense(e.id)}
+                  onEdit={
+                    isEnded
+                      ? undefined
+                      : () => {
+                          setEditingExpense(e)
+                          setSheet('expense')
+                        }
+                  }
+                  onDelete={isEnded ? undefined : () => handleQuickDeleteExpense(e.id)}
                   deleteMessage={`Delete "${e.name}"?`}
                 >
                   <div className="expense-row">
@@ -510,11 +544,15 @@ export function TripPage() {
             {places.map((p) => (
               <li key={p.id}>
                 <SwipeableRow
-                  onEdit={() => {
-                    setEditingPlace(p)
-                    setSheet('edit-place')
-                  }}
-                  onDelete={() => handleQuickDeletePlace(p.id)}
+                  onEdit={
+                    isEnded
+                      ? undefined
+                      : () => {
+                          setEditingPlace(p)
+                          setSheet('edit-place')
+                        }
+                  }
+                  onDelete={isEnded ? undefined : () => handleQuickDeletePlace(p.id)}
                   deleteMessage={`Delete "${p.name}"?`}
                 >
                   <div
@@ -539,9 +577,11 @@ export function TripPage() {
         </div>
       </div>
 
-      <button className="fab" onClick={() => setSheet('add')}>
-        +
-      </button>
+      {!isEnded && (
+        <button className="fab" onClick={() => setSheet('add')}>
+          +
+        </button>
+      )}
 
       {sheet === 'add' && <AddSheet onSelect={handleAddSelect} onClose={() => setSheet(null)} />}
       {sheet === 'expense' && (
@@ -591,7 +631,18 @@ export function TripPage() {
           photos={visiblePhotos}
           startIndex={lightboxIndex}
           onClose={() => setLightboxIndex(null)}
-          onDelete={handleDeletePhoto}
+          onDelete={isEnded ? undefined : handleDeletePhoto}
+        />
+      )}
+
+      {confirmingEnd && (
+        <ConfirmDialog
+          message="End this trip? It will become read-only for everyone — no more adding or editing expenses, places, photos, or notes. This can't be undone."
+          onConfirm={handleEndTrip}
+          onCancel={() => setConfirmingEnd(false)}
+          pending={ending}
+          confirmLabel="End trip"
+          pendingLabel="Ending..."
         />
       )}
     </div>

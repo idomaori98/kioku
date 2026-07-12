@@ -19,6 +19,7 @@ const tripSchema = new mongoose.Schema(
     homeCurrency: { type: String, required: true, uppercase: true, trim: true },
     tripType: { type: String, enum: ['shared', 'family'], default: 'shared' },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    endedAt: { type: Date, default: null },
     members: { type: [memberSchema], default: [] },
     inviteToken: {
       type: String,

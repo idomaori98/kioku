@@ -73,7 +73,7 @@ export function HomePage() {
 
   const nextTrip = trips
     .map((trip) => ({ trip, countdown: tripCountdown(trip) }))
-    .filter((x) => x.countdown.status !== 'past')
+    .filter((x) => x.countdown.status !== 'past' && !x.trip.endedAt)
     .sort((a, b) => {
       if (a.countdown.status === 'ongoing') return -1
       if (b.countdown.status === 'ongoing') return 1
@@ -125,6 +125,7 @@ export function HomePage() {
                 <Link className="trip-card" to={`/trips/${trip.id}`}>
                   <span className="trip-card-icon">🗺️</span>
                   {trip.name}
+                  {trip.endedAt && <span className="trip-card-ended">🔒 Ended</span>}
                 </Link>
               </SwipeableRow>
             </li>

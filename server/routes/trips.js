@@ -25,6 +25,7 @@ function serializeTrip(trip) {
     inviteToken: trip.inviteToken,
     createdBy: trip.createdBy,
     createdByName: creatorMember?.user.name || null,
+    endedAt: trip.endedAt || null,
     members: trip.members.map((m) => ({
       role: m.role,
       joinedAt: m.joinedAt,
@@ -104,6 +105,9 @@ router.put('/:id', async (req, res) => {
   if (!requester || requester.role !== 'admin') {
     return res.status(403).json({ error: 'Only an admin can edit trip settings' })
   }
+  if (trip.endedAt) {
+    return res.status(403).json({ error: 'This trip has ended and is now read-only.' })
+  }
 
   const nextStartDate = startDate ?? trip.startDate
   const nextEndDate = endDate ?? trip.endDate
@@ -154,6 +158,19 @@ router.delete('/:id', async (req, res) => {
   await trip.deleteOne()
 
   res.status(204).end()
+})
+
+router.post('/:id/end', async (req, res) => {
+  const trip = await Trip.findById(req.params.id)
+  if (!trip) return res.status(404).json({ error: 'Trip not found' })
+  if (trip.createdBy.toString() !== req.userId) {
+    return res.status(403).json({ error: 'Only the person who created this trip can end it' })
+  }
+
+  trip.endedAt = new Date()
+  await trip.save()
+  await trip.populate('members.user', 'name email photoUrl')
+  res.json(serializeTrip(trip))
 })
 
 router.post('/join/:token', async (req, res) => {
@@ -236,6 +253,9 @@ router.post('/:id/admins', async (req, res) => {
   const requester = trip.members.find((m) => m.user.toString() === req.userId)
   if (!requester || requester.role !== 'admin') {
     return res.status(403).json({ error: 'Only an admin can grant admin rights' })
+  }
+  if (trip.endedAt) {
+    return res.status(403).json({ error: 'This trip has ended and is now read-only.' })
   }
 
   const target = trip.members.find((m) => m.user.toString() === userId)
