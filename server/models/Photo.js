@@ -8,6 +8,7 @@ const photoSchema = new mongoose.Schema(
     url: { type: String, required: true },
     note: { type: String, default: '' },
     addedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    order: { type: Number, default: 0 },
   },
   { timestamps: true }
 )

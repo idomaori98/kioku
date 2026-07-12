@@ -23,8 +23,26 @@ function serializePlace(p) {
 router.get('/', async (req, res) => {
   const filter = { trip: req.params.tripId }
   if (req.query.day) filter.day = req.query.day
-  const places = await Place.find(filter).sort({ createdAt: 1 }).populate('addedBy', 'name')
+  const sort = req.query.day ? { order: 1, createdAt: 1 } : { createdAt: 1 }
+  const places = await Place.find(filter).sort(sort).populate('addedBy', 'name')
   res.json(places.map(serializePlace))
+})
+
+router.put('/reorder', requireTripNotEnded, async (req, res) => {
+  const requester = req.trip.members.find((m) => m.user.toString() === req.userId)
+  if (!requester || requester.role !== 'admin') {
+    return res.status(403).json({ error: 'Only an admin can reorder places' })
+  }
+  const { day, orderedIds } = req.body
+  if (!day || !Array.isArray(orderedIds)) {
+    return res.status(400).json({ error: 'day and orderedIds are required' })
+  }
+  await Promise.all(
+    orderedIds.map((placeId, index) =>
+      Place.updateOne({ _id: placeId, trip: req.params.tripId, day }, { order: index })
+    )
+  )
+  res.status(204).end()
 })
 
 router.post('/', requireTripNotEnded, async (req, res) => {
@@ -45,6 +63,7 @@ router.post('/', requireTripNotEnded, async (req, res) => {
     return res.status(400).json({ error: 'lng must be a number between -180 and 180' })
   }
 
+  const order = await Place.countDocuments({ trip: req.params.tripId, day })
   const place = await Place.create({
     trip: req.params.tripId,
     day,
@@ -55,6 +74,7 @@ router.post('/', requireTripNotEnded, async (req, res) => {
     lat,
     lng,
     addedBy: req.userId,
+    order,
   })
   await place.populate('addedBy', 'name')
   res.status(201).json(serializePlace(place))

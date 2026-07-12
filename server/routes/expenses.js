@@ -29,8 +29,26 @@ function serializeExpense(e, tripType) {
 router.get('/', async (req, res) => {
   const filter = { trip: req.params.tripId }
   if (req.query.day) filter.day = req.query.day
-  const expenses = await Expense.find(filter).sort({ createdAt: 1 }).populate('paidBy addedBy', 'name')
+  const sort = req.query.day ? { order: 1, createdAt: 1 } : { createdAt: 1 }
+  const expenses = await Expense.find(filter).sort(sort).populate('paidBy addedBy', 'name')
   res.json(expenses.map((e) => serializeExpense(e, req.trip.tripType)))
+})
+
+router.put('/reorder', requireTripNotEnded, async (req, res) => {
+  const requester = req.trip.members.find((m) => m.user.toString() === req.userId)
+  if (!requester || requester.role !== 'admin') {
+    return res.status(403).json({ error: 'Only an admin can reorder expenses' })
+  }
+  const { day, orderedIds } = req.body
+  if (!day || !Array.isArray(orderedIds)) {
+    return res.status(400).json({ error: 'day and orderedIds are required' })
+  }
+  await Promise.all(
+    orderedIds.map((expenseId, index) =>
+      Expense.updateOne({ _id: expenseId, trip: req.params.tripId, day }, { order: index })
+    )
+  )
+  res.status(204).end()
 })
 
 router.post('/', requireTripNotEnded, async (req, res) => {
@@ -55,6 +73,7 @@ router.post('/', requireTripNotEnded, async (req, res) => {
 
   const homeCurrency = req.trip.homeCurrency
   const rate = await getJpyRate(homeCurrency)
+  const order = await Expense.countDocuments({ trip: req.params.tripId, day })
   const expense = await Expense.create({
     trip: req.params.tripId,
     day,
@@ -66,6 +85,7 @@ router.post('/', requireTripNotEnded, async (req, res) => {
     amountHome: Math.round(amountYen * rate * 100) / 100,
     paidBy: req.trip.tripType === 'family' ? req.userId : paidBy || req.userId,
     addedBy: req.userId,
+    order,
   })
   await expense.populate('paidBy addedBy', 'name')
   res.status(201).json(serializeExpense(expense, req.trip.tripType))

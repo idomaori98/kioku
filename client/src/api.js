@@ -57,6 +57,11 @@ export const api = {
     request(`/trips/${tripId}/expenses/${expenseId}`, { method: 'PUT', body: JSON.stringify(body) }),
   deleteExpense: (tripId, expenseId) =>
     request(`/trips/${tripId}/expenses/${expenseId}`, { method: 'DELETE' }),
+  reorderExpenses: (tripId, day, orderedIds) =>
+    request(`/trips/${tripId}/expenses/reorder`, {
+      method: 'PUT',
+      body: JSON.stringify({ day, orderedIds }),
+    }),
   getDayNote: (tripId, day) => request(`/trips/${tripId}/day-note?day=${day}`),
   listDayNotes: (tripId) => request(`/trips/${tripId}/day-note`),
   setDayNote: (tripId, day, note) =>
@@ -76,6 +81,11 @@ export const api = {
     }),
   deletePhoto: (tripId, photoId) =>
     request(`/trips/${tripId}/photos/${photoId}`, { method: 'DELETE' }),
+  reorderPhotos: (tripId, day, orderedIds) =>
+    request(`/trips/${tripId}/photos/reorder`, {
+      method: 'PUT',
+      body: JSON.stringify({ day, orderedIds }),
+    }),
   listPlaces: (tripId, day) => request(`/trips/${tripId}/places${day ? `?day=${day}` : ''}`),
   createPlace: (tripId, body) =>
     request(`/trips/${tripId}/places`, { method: 'POST', body: JSON.stringify(body) }),
@@ -83,5 +93,10 @@ export const api = {
     request(`/trips/${tripId}/places/${placeId}`, { method: 'PUT', body: JSON.stringify(body) }),
   deletePlace: (tripId, placeId) =>
     request(`/trips/${tripId}/places/${placeId}`, { method: 'DELETE' }),
+  reorderPlaces: (tripId, day, orderedIds) =>
+    request(`/trips/${tripId}/places/reorder`, {
+      method: 'PUT',
+      body: JSON.stringify({ day, orderedIds }),
+    }),
   getRecap: (tripId) => request(`/trips/${tripId}/recap`),
 }

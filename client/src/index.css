@@ -1038,6 +1038,15 @@ button:disabled {
   border-bottom: none;
 }
 
+.drag-item-dragging {
+  touch-action: none;
+  user-select: none;
+  pointer-events: none;
+  opacity: 0.95;
+  box-shadow: var(--shadow-card);
+  scale: 1.03;
+}
+
 .swipe-row {
   position: relative;
   overflow: hidden;

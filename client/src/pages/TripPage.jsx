@@ -13,6 +13,7 @@ import { PlacesMap } from '../components/PlacesMap'
 import { SwipeableRow } from '../components/SwipeableRow'
 import { PhotoLightbox } from '../components/PhotoLightbox'
 import { ConfirmDialog } from '../components/ConfirmDialog'
+import { DragReorderList } from '../components/DragReorderList'
 
 const PHOTO_PREVIEW_COUNT = 5
 
@@ -260,6 +261,36 @@ export function TripPage() {
     }
   }
 
+  async function handleReorderExpenses(reordered) {
+    setExpenses(reordered)
+    try {
+      await api.reorderExpenses(id, selectedDay, reordered.map((e) => e.id))
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  async function handleReorderPlaces(reordered) {
+    setPlaces(reordered)
+    try {
+      await api.reorderPlaces(id, selectedDay, reordered.map((p) => p.id))
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  async function handleReorderPhotos(reordered) {
+    setPhotos((prev) => {
+      const rest = prev.slice(reordered.length)
+      return [...reordered, ...rest]
+    })
+    try {
+      await api.reorderPhotos(id, selectedDay, reordered.map((p) => p.id))
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
   if (error) return <p className="full-page-error">{error}</p>
   if (!trip || !selectedDay) return <p className="loading-state">Loading...</p>
 
@@ -459,30 +490,40 @@ export function TripPage() {
         <div className="card">
           <h2 className="section-label">Photos</h2>
           {photos.length === 0 && <p className="empty-state">No photos yet for this day.</p>}
-          <div className="photo-grid">
-            {visiblePhotos.map((p, i) => (
-              <div
-                key={p.id}
-                className="photo-grid-item"
-                onClick={() => setLightboxIndex(i)}
-                role="button"
-                tabIndex={0}
-              >
-                <img src={p.url} alt={p.note || ''} />
-              </div>
-            ))}
-            {!showAllPhotos && photos.length > PHOTO_PREVIEW_COUNT && (
-              <div
-                className="photo-grid-item"
-                onClick={() => setShowAllPhotos(true)}
-                role="button"
-                tabIndex={0}
-              >
-                <img src={photos[PHOTO_PREVIEW_COUNT].url} alt="" />
-                <div className="photo-grid-more">+{photos.length - PHOTO_PREVIEW_COUNT}</div>
-              </div>
-            )}
-          </div>
+          <DragReorderList
+            as="div"
+            itemAs="div"
+            className="photo-grid"
+            itemClassName="photo-grid-item"
+            items={visiblePhotos}
+            disabled={!isAdmin || isEnded || (!showAllPhotos && photos.length > PHOTO_PREVIEW_COUNT)}
+            onReorder={handleReorderPhotos}
+            renderItem={(p) => {
+              const i = visiblePhotos.findIndex((x) => x.id === p.id)
+              return (
+                <img
+                  src={p.url}
+                  alt={p.note || ''}
+                  onClick={() => setLightboxIndex(i)}
+                  role="button"
+                  tabIndex={0}
+                />
+              )
+            }}
+            trailing={
+              !showAllPhotos && photos.length > PHOTO_PREVIEW_COUNT ? (
+                <div
+                  className="photo-grid-item"
+                  onClick={() => setShowAllPhotos(true)}
+                  role="button"
+                  tabIndex={0}
+                >
+                  <img src={photos[PHOTO_PREVIEW_COUNT].url} alt="" />
+                  <div className="photo-grid-more">+{photos.length - PHOTO_PREVIEW_COUNT}</div>
+                </div>
+              ) : null
+            }
+          />
         </div>
 
         <div className="card spending-card">
@@ -498,82 +539,86 @@ export function TripPage() {
         <div className="card">
           <h2 className="section-label">Expenses</h2>
           {expenses.length === 0 && <p className="empty-state">Nothing logged yet for this day.</p>}
-          <ul className="expense-list">
-            {expenses.map((e) => (
-              <li key={e.id}>
-                <SwipeableRow
-                  onEdit={
-                    isEnded
-                      ? undefined
-                      : () => {
-                          setEditingExpense(e)
-                          setSheet('expense')
-                        }
-                  }
-                  onDelete={isEnded ? undefined : () => handleQuickDeleteExpense(e.id)}
-                  deleteMessage={`Delete "${e.name}"?`}
-                >
-                  <div className="expense-row">
-                    <span className={`expense-icon cat-${e.category}`}>{CATEGORY_EMOJI[e.category]}</span>
-                    <div className="expense-info">
-                      <span className="expense-name">{e.name}</span>
-                      {trip.tripType !== 'family' && (
-                        <span className="expense-meta">
-                          paid by {e.paidBy.name} · added by {e.addedBy.name}
-                        </span>
-                      )}
-                    </div>
-                    <div className="expense-amount">
-                      <span className="expense-amount-yen">¥{e.amountYen.toLocaleString()}</span>
-                      <span className="expense-amount-home">
-                        {e.amountHome.toFixed(2)} {e.homeCurrency}
+          <DragReorderList
+            className="expense-list"
+            items={expenses}
+            disabled={!isAdmin || isEnded}
+            onReorder={handleReorderExpenses}
+            renderItem={(e) => (
+              <SwipeableRow
+                onEdit={
+                  isEnded
+                    ? undefined
+                    : () => {
+                        setEditingExpense(e)
+                        setSheet('expense')
+                      }
+                }
+                onDelete={isEnded ? undefined : () => handleQuickDeleteExpense(e.id)}
+                deleteMessage={`Delete "${e.name}"?`}
+              >
+                <div className="expense-row">
+                  <span className={`expense-icon cat-${e.category}`}>{CATEGORY_EMOJI[e.category]}</span>
+                  <div className="expense-info">
+                    <span className="expense-name">{e.name}</span>
+                    {trip.tripType !== 'family' && (
+                      <span className="expense-meta">
+                        paid by {e.paidBy.name} · added by {e.addedBy.name}
                       </span>
-                    </div>
+                    )}
                   </div>
-                </SwipeableRow>
-              </li>
-            ))}
-          </ul>
+                  <div className="expense-amount">
+                    <span className="expense-amount-yen">¥{e.amountYen.toLocaleString()}</span>
+                    <span className="expense-amount-home">
+                      {e.amountHome.toFixed(2)} {e.homeCurrency}
+                    </span>
+                  </div>
+                </div>
+              </SwipeableRow>
+            )}
+          />
         </div>
 
         <div className="card">
           <h2 className="section-label">Places</h2>
           <PlacesMap places={places} focusRequest={focusRequest} />
           {places.length === 0 && <p className="empty-state">No places logged yet for this day.</p>}
-          <ul className="place-list">
-            {places.map((p) => (
-              <li key={p.id}>
-                <SwipeableRow
-                  onEdit={
-                    isEnded
-                      ? undefined
-                      : () => {
-                          setEditingPlace(p)
-                          setSheet('edit-place')
-                        }
-                  }
-                  onDelete={isEnded ? undefined : () => handleQuickDeletePlace(p.id)}
-                  deleteMessage={`Delete "${p.name}"?`}
+          <DragReorderList
+            className="place-list"
+            items={places}
+            disabled={!isAdmin || isEnded}
+            onReorder={handleReorderPlaces}
+            renderItem={(p) => (
+              <SwipeableRow
+                onEdit={
+                  isEnded
+                    ? undefined
+                    : () => {
+                        setEditingPlace(p)
+                        setSheet('edit-place')
+                      }
+                }
+                onDelete={isEnded ? undefined : () => handleQuickDeletePlace(p.id)}
+                deleteMessage={`Delete "${p.name}"?`}
+              >
+                <div
+                  className="place-row"
+                  onClick={() => focusPlace(p.id)}
+                  role="button"
+                  tabIndex={0}
                 >
-                  <div
-                    className="place-row"
-                    onClick={() => focusPlace(p.id)}
-                    role="button"
-                    tabIndex={0}
-                  >
-                    <span className="place-icon">📍</span>
-                    <div className="place-info">
-                      <span className="place-name">
-                        {p.name}
-                        {p.address && ` — ${p.address}`}
-                      </span>
-                      <span className="place-meta">added by {p.addedBy.name}</span>
-                    </div>
+                  <span className="place-icon">📍</span>
+                  <div className="place-info">
+                    <span className="place-name">
+                      {p.name}
+                      {p.address && ` — ${p.address}`}
+                    </span>
+                    <span className="place-meta">added by {p.addedBy.name}</span>
                   </div>
-                </SwipeableRow>
-              </li>
-            ))}
-          </ul>
+                </div>
+              </SwipeableRow>
+            )}
+          />
         </div>
       </div>
 

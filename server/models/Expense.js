@@ -14,6 +14,7 @@ const expenseSchema = new mongoose.Schema(
     amountHome: { type: Number, required: true },
     paidBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     addedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    order: { type: Number, default: 0 },
   },
   { timestamps: true }
 )
