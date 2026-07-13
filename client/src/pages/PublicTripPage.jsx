@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { api } from '../api'
 import { formatDayLabel } from '../lib/days'
 import { CATEGORIES } from '../components/ExpenseForm'
@@ -56,13 +56,18 @@ export function PublicTripPage() {
         {trip.tripType === 'family' ? 'Family trip' : 'Shared trip'}
       </p>
       {trip.createdByName && <p className="public-byline">Published by {trip.createdByName}</p>}
-      <button
-        type="button"
-        className={`discover-like-btn ${trip.likedByMe ? 'discover-like-btn-active' : ''}`}
-        onClick={toggleLike}
-      >
-        {trip.likedByMe ? '❤️' : '🤍'} {trip.likesCount}
-      </button>
+      <div className="public-trip-actions">
+        <button
+          type="button"
+          className={`discover-like-btn ${trip.likedByMe ? 'discover-like-btn-active' : ''}`}
+          onClick={toggleLike}
+        >
+          {trip.likedByMe ? '❤️' : '🤍'} {trip.likesCount}
+        </button>
+        <Link className="btn-secondary btn-sm" to={`/trips/${id}/copy`}>
+          📋 Copy this trip
+        </Link>
+      </div>
 
       <div className="recap-stats">
         <div>

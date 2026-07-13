@@ -1746,3 +1746,28 @@ button:disabled {
   border-color: var(--accent);
   color: var(--accent);
 }
+
+.public-trip-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.wizard-step-label {
+  color: var(--ink-muted);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.wizard-day-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.wizard-day-header h3 {
+  margin: 0;
+}

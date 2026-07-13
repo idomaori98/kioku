@@ -32,6 +32,8 @@ function serializeTrip(trip) {
     endedAt: trip.endedAt || null,
     published: trip.published || false,
     publishedAt: trip.publishedAt || null,
+    copiedFromName: trip.copiedFromName || '',
+    copiedFromCreatorName: trip.copiedFromCreatorName || '',
     members: trip.members.map((m) => ({
       role: m.role,
       joinedAt: m.joinedAt,
@@ -417,6 +419,79 @@ router.get('/:id/public', async (req, res) => {
     },
     days: dayPages,
   })
+})
+
+router.post('/:id/copy', async (req, res) => {
+  const { startDate, endDate } = req.body
+  if (!startDate || !endDate) {
+    return res.status(400).json({ error: 'startDate and endDate are required' })
+  }
+
+  const original = await Trip.findById(req.params.id).populate('members.user', 'name')
+  if (!original || !original.published) {
+    return res.status(404).json({ error: 'Trip not found' })
+  }
+
+  const startKey = dayKeyFromDate(startDate)
+  const endKey = dayKeyFromDate(endDate)
+  if (startKey < japanTodayKey()) {
+    return res.status(400).json({ error: 'Trip start date cannot be in the past' })
+  }
+  if (endKey < startKey) {
+    return res.status(400).json({ error: 'Trip end date cannot be before the start date' })
+  }
+
+  const creatorMember = original.members.find(
+    (m) => m.user._id.toString() === original.createdBy.toString()
+  )
+
+  const copy = await Trip.create({
+    name: `${original.name} (copy)`,
+    destination: original.destination,
+    startDate,
+    endDate,
+    dailyBudget: original.dailyBudget,
+    homeCurrency: original.homeCurrency,
+    tripType: original.tripType,
+    travelType: original.travelType,
+    createdBy: req.userId,
+    members: [{ user: req.userId, role: 'admin' }],
+    copiedFrom: original._id,
+    copiedFromName: original.name,
+    copiedFromCreatorName: creatorMember?.user.name || '',
+  })
+
+  // Map each place onto the new trip by day INDEX (day 1 -> day 1, etc.),
+  // dropping any that fall past the new range if it's shorter.
+  const originalDays = tripDayKeys(original)
+  const newDays = tripDayKeys(copy)
+  const places = await Place.find({ trip: original._id })
+
+  const copiedPlaces = places
+    .map((p) => {
+      const dayIndex = originalDays.indexOf(p.day)
+      if (dayIndex === -1 || dayIndex >= newDays.length) return null
+      return {
+        trip: copy._id,
+        day: newDays[dayIndex],
+        name: p.name,
+        source: p.source,
+        googlePlaceId: p.googlePlaceId,
+        address: p.address,
+        lat: p.lat,
+        lng: p.lng,
+        addedBy: req.userId,
+        order: p.order,
+      }
+    })
+    .filter(Boolean)
+
+  if (copiedPlaces.length > 0) {
+    await Place.insertMany(copiedPlaces)
+  }
+
+  await copy.populate('members.user', 'name email photoUrl')
+  res.status(201).json(serializeTrip(copy))
 })
 
 router.post('/join/:token', async (req, res) => {

@@ -445,6 +445,11 @@ export function TripPage() {
         ) : (
           <>
             {trip.destination && <p className="trip-destination">📍 {trip.destination}</p>}
+            {trip.copiedFromName && (
+              <p className="public-byline">
+                Based on a trip by {trip.copiedFromCreatorName || 'another traveler'}
+              </p>
+            )}
             <p className="trip-meta-row">
               {new Date(trip.startDate).toLocaleDateString()} –{' '}
               {new Date(trip.endDate).toLocaleDateString()}

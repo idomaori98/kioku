@@ -14,6 +14,7 @@ import { BalancesPage } from './pages/BalancesPage'
 import { PublicationEditPage } from './pages/PublicationEditPage'
 import { PublicTripPage } from './pages/PublicTripPage'
 import { DiscoverPage } from './pages/DiscoverPage'
+import { CopyTripWizardPage } from './pages/CopyTripWizardPage'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -136,6 +137,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <DiscoverPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/trips/:id/copy"
+            element={
+              <ProtectedRoute>
+                <CopyTripWizardPage />
               </ProtectedRoute>
             }
           />

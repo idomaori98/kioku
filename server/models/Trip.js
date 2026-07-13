@@ -28,6 +28,9 @@ const tripSchema = new mongoose.Schema(
     endedAt: { type: Date, default: null },
     published: { type: Boolean, default: false },
     publishedAt: { type: Date, default: null },
+    copiedFrom: { type: mongoose.Schema.Types.ObjectId, ref: 'Trip', default: null },
+    copiedFromName: { type: String, default: '' },
+    copiedFromCreatorName: { type: String, default: '' },
     members: { type: [memberSchema], default: [] },
     inviteToken: {
       type: String,

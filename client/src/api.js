@@ -50,6 +50,7 @@ export const api = {
   updatePublication: (id, body) =>
     request(`/trips/${id}/publication`, { method: 'PUT', body: JSON.stringify(body) }),
   getPublicTrip: (id) => request(`/trips/${id}/public`),
+  copyTrip: (id, body) => request(`/trips/${id}/copy`, { method: 'POST', body: JSON.stringify(body) }),
   likeTrip: (id) => request(`/trips/${id}/like`, { method: 'POST' }),
   unlikeTrip: (id) => request(`/trips/${id}/like`, { method: 'DELETE' }),
   getFeed: () => request('/trips/feed'),
