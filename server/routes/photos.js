@@ -21,6 +21,7 @@ function serializePhoto(p) {
     note: p.note,
     addedBy: { id: p.addedBy._id, name: p.addedBy.name },
     createdAt: p.createdAt,
+    hiddenFromPublic: p.hiddenFromPublic,
   }
 }
 

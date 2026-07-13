@@ -21,6 +21,7 @@ function serializeExpense(e, tripType) {
     homeCurrency: e.homeCurrency,
     amountHome: e.amountHome,
     createdAt: e.createdAt,
+    hiddenFromPublic: e.hiddenFromPublic,
   }
   if (tripType === 'family') return base
   return {

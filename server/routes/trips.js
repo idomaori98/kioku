@@ -6,7 +6,7 @@ import Photo from '../models/Photo.js'
 import DayNote from '../models/DayNote.js'
 import Message from '../models/Message.js'
 import { requireAuth } from '../middleware/auth.js'
-import { dayKeyFromDate, japanTodayKey } from '../lib/days.js'
+import { dayKeyFromDate, japanTodayKey, tripDayKeys } from '../lib/days.js'
 import { getJpyRate } from '../lib/exchangeRate.js'
 import { deleteObject } from '../lib/s3.js'
 
@@ -27,6 +27,8 @@ function serializeTrip(trip) {
     createdBy: trip.createdBy,
     createdByName: creatorMember?.user.name || null,
     endedAt: trip.endedAt || null,
+    published: trip.published || false,
+    publishedAt: trip.publishedAt || null,
     members: trip.members.map((m) => ({
       role: m.role,
       joinedAt: m.joinedAt,
@@ -173,6 +175,130 @@ router.post('/:id/end', async (req, res) => {
   await trip.save()
   await trip.populate('members.user', 'name email photoUrl')
   res.json(serializeTrip(trip))
+})
+
+router.post('/:id/publish', async (req, res) => {
+  const trip = await Trip.findById(req.params.id)
+  if (!trip) return res.status(404).json({ error: 'Trip not found' })
+  if (trip.createdBy.toString() !== req.userId) {
+    return res.status(403).json({ error: 'Only the person who created this trip can publish it' })
+  }
+
+  trip.published = true
+  trip.publishedAt = new Date()
+  await trip.save()
+  await trip.populate('members.user', 'name email photoUrl')
+  res.json(serializeTrip(trip))
+})
+
+router.post('/:id/unpublish', async (req, res) => {
+  const trip = await Trip.findById(req.params.id)
+  if (!trip) return res.status(404).json({ error: 'Trip not found' })
+  if (trip.createdBy.toString() !== req.userId) {
+    return res.status(403).json({ error: 'Only the person who created this trip can unpublish it' })
+  }
+
+  trip.published = false
+  await trip.save()
+  await trip.populate('members.user', 'name email photoUrl')
+  res.json(serializeTrip(trip))
+})
+
+router.put('/:id/publication', async (req, res) => {
+  const trip = await Trip.findById(req.params.id)
+  if (!trip) return res.status(404).json({ error: 'Trip not found' })
+  if (trip.createdBy.toString() !== req.userId) {
+    return res.status(403).json({ error: 'Only the person who created this trip can edit publication' })
+  }
+
+  const { hiddenExpenseIds, hiddenPhotoIds } = req.body
+  if (!Array.isArray(hiddenExpenseIds) || !Array.isArray(hiddenPhotoIds)) {
+    return res.status(400).json({ error: 'hiddenExpenseIds and hiddenPhotoIds must be arrays' })
+  }
+
+  // Each pair must run in order (reset before re-hiding) since both target
+  // the same collection — Promise.all would race the two writes.
+  await Promise.all([
+    Expense.updateMany({ trip: trip._id }, { hiddenFromPublic: false }).then(() =>
+      Expense.updateMany(
+        { trip: trip._id, _id: { $in: hiddenExpenseIds } },
+        { hiddenFromPublic: true }
+      )
+    ),
+    Photo.updateMany({ trip: trip._id }, { hiddenFromPublic: false }).then(() =>
+      Photo.updateMany({ trip: trip._id, _id: { $in: hiddenPhotoIds } }, { hiddenFromPublic: true })
+    ),
+  ])
+
+  res.status(204).end()
+})
+
+router.get('/:id/public', async (req, res) => {
+  const trip = await Trip.findById(req.params.id).populate('members.user', 'name')
+  if (!trip || !trip.published) return res.status(404).json({ error: 'Trip not found' })
+
+  const creatorMember = trip.members.find((m) => m.user._id.toString() === trip.createdBy.toString())
+
+  const [expenses, places, photos, notes] = await Promise.all([
+    Expense.find({ trip: trip._id, hiddenFromPublic: { $ne: true } }).populate('addedBy', 'name'),
+    Place.find({ trip: trip._id }).populate('addedBy', 'name'),
+    Photo.find({ trip: trip._id, hiddenFromPublic: { $ne: true } })
+      .sort({ day: 1, order: 1, createdAt: 1 })
+      .populate('addedBy', 'name'),
+    DayNote.find({ trip: trip._id }),
+  ])
+
+  const notesByDay = Object.fromEntries(notes.map((n) => [n.day, n.note]))
+  const days = tripDayKeys(trip)
+
+  const dayPages = days.map((day) => ({
+    day,
+    note: notesByDay[day] || '',
+    places: places
+      .filter((p) => p.day === day)
+      .map((p) => ({
+        id: p._id,
+        name: p.name,
+        address: p.address,
+        lat: p.lat,
+        lng: p.lng,
+        addedByName: p.addedBy.name,
+      })),
+    expenses: expenses
+      .filter((e) => e.day === day)
+      .map((e) => ({
+        id: e._id,
+        name: e.name,
+        category: e.category,
+        amountYen: e.amountYen,
+        amountHome: e.amountHome,
+        addedByName: e.addedBy.name,
+      })),
+    photos: photos
+      .filter((p) => p.day === day)
+      .map((p) => ({ id: p._id, url: p.url, note: p.note, addedByName: p.addedBy.name })),
+  }))
+
+  res.json({
+    id: trip._id,
+    name: trip.name,
+    startDate: trip.startDate,
+    endDate: trip.endDate,
+    dailyBudget: trip.dailyBudget,
+    homeCurrency: trip.homeCurrency,
+    tripType: trip.tripType,
+    createdByName: creatorMember?.user.name || null,
+    publishedAt: trip.publishedAt,
+    stats: {
+      days: days.length,
+      travelers: trip.members.length,
+      photos: photos.length,
+      places: places.length,
+      spendYen: expenses.reduce((sum, e) => sum + e.amountYen, 0),
+      spendHome: expenses.reduce((sum, e) => sum + e.amountHome, 0),
+    },
+    days: dayPages,
+  })
 })
 
 router.post('/join/:token', async (req, res) => {

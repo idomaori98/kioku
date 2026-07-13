@@ -11,6 +11,8 @@ import { SearchPage } from './pages/SearchPage'
 import { MemberActivityPage } from './pages/MemberActivityPage'
 import { ChatPage } from './pages/ChatPage'
 import { BalancesPage } from './pages/BalancesPage'
+import { PublicationEditPage } from './pages/PublicationEditPage'
+import { PublicTripPage } from './pages/PublicTripPage'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -106,6 +108,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <BalancesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/trips/:id/publication"
+            element={
+              <ProtectedRoute>
+                <PublicationEditPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/trips/:id/public"
+            element={
+              <ProtectedRoute>
+                <PublicTripPage />
               </ProtectedRoute>
             }
           />

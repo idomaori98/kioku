@@ -20,6 +20,8 @@ const tripSchema = new mongoose.Schema(
     tripType: { type: String, enum: ['shared', 'family'], default: 'shared' },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     endedAt: { type: Date, default: null },
+    published: { type: Boolean, default: false },
+    publishedAt: { type: Date, default: null },
     members: { type: [memberSchema], default: [] },
     inviteToken: {
       type: String,

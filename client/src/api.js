@@ -45,6 +45,11 @@ export const api = {
   updateTrip: (id, body) => request(`/trips/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
   deleteTrip: (id) => request(`/trips/${id}`, { method: 'DELETE' }),
   endTrip: (id) => request(`/trips/${id}/end`, { method: 'POST' }),
+  publishTrip: (id) => request(`/trips/${id}/publish`, { method: 'POST' }),
+  unpublishTrip: (id) => request(`/trips/${id}/unpublish`, { method: 'POST' }),
+  updatePublication: (id, body) =>
+    request(`/trips/${id}/publication`, { method: 'PUT', body: JSON.stringify(body) }),
+  getPublicTrip: (id) => request(`/trips/${id}/public`),
   joinTrip: (token) => request(`/trips/join/${token}`, { method: 'POST' }),
   grantAdmin: (tripId, userId) =>
     request(`/trips/${tripId}/admins`, { method: 'POST', body: JSON.stringify({ userId }) }),

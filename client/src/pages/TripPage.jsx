@@ -51,6 +51,9 @@ export function TripPage() {
   const [lightboxIndex, setLightboxIndex] = useState(null)
   const [direction, setDirection] = useState('next')
   const [confirmingEnd, setConfirmingEnd] = useState(false)
+  const [showPublishPrompt, setShowPublishPrompt] = useState(false)
+  const [publishing, setPublishing] = useState(false)
+  const [copiedPublicLink, setCopiedPublicLink] = useState(false)
   const [ending, setEnding] = useState(false)
   const focusNonceRef = useRef(0)
 
@@ -150,6 +153,37 @@ export function TripPage() {
     } finally {
       setEnding(false)
     }
+  }
+
+  async function handlePublishEverything() {
+    setPublishing(true)
+    try {
+      const updated = await api.publishTrip(id)
+      setTrip(updated)
+      setShowPublishPrompt(false)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setPublishing(false)
+    }
+  }
+
+  async function handleUnpublish() {
+    setPublishing(true)
+    try {
+      const updated = await api.unpublishTrip(id)
+      setTrip(updated)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setPublishing(false)
+    }
+  }
+
+  function copyPublicLink() {
+    navigator.clipboard.writeText(`${window.location.origin}/trips/${id}/public`)
+    setCopiedPublicLink(true)
+    setTimeout(() => setCopiedPublicLink(false), 2000)
   }
 
   function startEdit() {
@@ -416,12 +450,31 @@ export function TripPage() {
                   ⚖️ Balances
                 </Link>
               )}
+              {isCreator && !trip.published && (
+                <button className="btn-secondary btn-sm" onClick={() => setShowPublishPrompt(true)}>
+                  🌐 Publish trip
+                </button>
+              )}
+              {isCreator && trip.published && (
+                <>
+                  <Link className="btn-secondary btn-sm" to={`/trips/${id}/publication`}>
+                    Edit publication
+                  </Link>
+                  <button className="btn-secondary btn-sm" onClick={copyPublicLink}>
+                    {copiedPublicLink ? 'Link copied!' : '🔗 Copy public link'}
+                  </button>
+                  <button className="btn-secondary btn-sm" onClick={handleUnpublish} disabled={publishing}>
+                    Unpublish
+                  </button>
+                </>
+              )}
               {isCreator && !isEnded && (
                 <button className="btn-secondary btn-sm btn-danger-outline" onClick={() => setConfirmingEnd(true)}>
                   End trip
                 </button>
               )}
             </div>
+            {trip.published && <p className="publish-status">🌐 This trip is published — anyone signed in can view it read-only.</p>}
           </>
         )}
       </div>
@@ -700,6 +753,27 @@ export function TripPage() {
           confirmLabel="End trip"
           pendingLabel="Ending..."
         />
+      )}
+
+      {showPublishPrompt && (
+        <div className="confirm-backdrop" onClick={() => setShowPublishPrompt(false)}>
+          <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
+            <p>Publish everything? Anyone signed in will be able to view this trip's days, places, notes, photos, and expenses (read-only).</p>
+            <button type="button" onClick={handlePublishEverything} disabled={publishing}>
+              {publishing ? 'Publishing...' : 'Publish everything'}
+            </button>
+            <Link
+              className="btn-secondary"
+              to={`/trips/${id}/publication`}
+              onClick={() => setShowPublishPrompt(false)}
+            >
+              Choose what to include
+            </Link>
+            <button type="button" className="sheet-cancel" onClick={() => setShowPublishPrompt(false)}>
+              Cancel
+            </button>
+          </div>
+        </div>
       )}
     </div>
   )

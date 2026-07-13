@@ -15,6 +15,7 @@ const expenseSchema = new mongoose.Schema(
     paidBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     addedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     order: { type: Number, default: 0 },
+    hiddenFromPublic: { type: Boolean, default: false },
   },
   { timestamps: true }
 )
