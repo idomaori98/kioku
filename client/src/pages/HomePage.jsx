@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import { dayKeyFromDate, japanTodayKey } from '../lib/days'
 import { SwipeableRow } from '../components/SwipeableRow'
 import { ConfirmDialog } from '../components/ConfirmDialog'
+import { TRAVEL_TYPES } from '../lib/travelTypes'
 
 function tripCountdown(trip) {
   const today = japanTodayKey()
@@ -26,11 +27,13 @@ export function HomePage() {
   const [blockedMessage, setBlockedMessage] = useState(null)
   const [form, setForm] = useState({
     name: '',
+    destination: '',
     startDate: '',
     endDate: '',
     dailyBudget: '',
     homeCurrency: 'USD',
     tripType: 'shared',
+    travelType: 'family',
   })
 
   useEffect(() => {
@@ -146,6 +149,12 @@ export function HomePage() {
           onChange={(e) => setForm({ ...form, name: e.target.value })}
           required
         />
+        <input
+          type="text"
+          placeholder="Destination (e.g. Tokyo, Japan) — optional, helps others find it if published"
+          value={form.destination}
+          onChange={(e) => setForm({ ...form, destination: e.target.value })}
+        />
         <label>
           Start date
           <input
@@ -204,6 +213,19 @@ export function HomePage() {
             Family trip — one pot, just log the spending
           </label>
         </div>
+        <label>
+          Who's traveling?
+          <select
+            value={form.travelType}
+            onChange={(e) => setForm({ ...form, travelType: e.target.value })}
+          >
+            {TRAVEL_TYPES.map((t) => (
+              <option key={t.value} value={t.value}>
+                {t.label}
+              </option>
+            ))}
+          </select>
+        </label>
         <button type="submit">Create trip</button>
       </form>
     </div>

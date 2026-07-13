@@ -1,5 +1,6 @@
 import { Router } from 'express'
-import Trip from '../models/Trip.js'
+import Trip, { TRAVEL_TYPES } from '../models/Trip.js'
+import Like from '../models/Like.js'
 import Expense from '../models/Expense.js'
 import Place from '../models/Place.js'
 import Photo from '../models/Photo.js'
@@ -23,6 +24,8 @@ function serializeTrip(trip) {
     dailyBudget: trip.dailyBudget,
     homeCurrency: trip.homeCurrency,
     tripType: trip.tripType,
+    destination: trip.destination || '',
+    travelType: trip.travelType,
     inviteToken: trip.inviteToken,
     createdBy: trip.createdBy,
     createdByName: creatorMember?.user.name || null,
@@ -46,7 +49,8 @@ router.get('/', async (req, res) => {
 })
 
 router.post('/', async (req, res) => {
-  const { name, startDate, endDate, dailyBudget, homeCurrency, tripType } = req.body
+  const { name, startDate, endDate, dailyBudget, homeCurrency, tripType, destination, travelType } =
+    req.body
   if (!name?.trim() || !startDate || !endDate || !dailyBudget || !homeCurrency) {
     return res.status(400).json({
       error: 'name, startDate, endDate, dailyBudget, and homeCurrency are required',
@@ -57,6 +61,9 @@ router.post('/', async (req, res) => {
   }
   if (tripType && !['shared', 'family'].includes(tripType)) {
     return res.status(400).json({ error: 'tripType must be "shared" or "family"' })
+  }
+  if (travelType && !TRAVEL_TYPES.includes(travelType)) {
+    return res.status(400).json({ error: `travelType must be one of ${TRAVEL_TYPES.join(', ')}` })
   }
 
   const startKey = dayKeyFromDate(startDate)
@@ -81,12 +88,87 @@ router.post('/', async (req, res) => {
     dailyBudget,
     homeCurrency,
     tripType: tripType || 'shared',
+    destination: destination?.trim() || '',
+    travelType: travelType || 'family',
     createdBy: req.userId,
     members: [{ user: req.userId, role: 'admin' }],
   })
   await trip.populate('members.user', 'name email photoUrl')
 
   res.status(201).json(serializeTrip(trip))
+})
+
+async function attachCardData(trips, userId) {
+  const tripIds = trips.map((t) => t._id)
+  const [coverPhotos, likeCounts, myLikes] = await Promise.all([
+    Photo.aggregate([
+      { $match: { trip: { $in: tripIds }, hiddenFromPublic: { $ne: true } } },
+      { $sort: { day: 1, order: 1, createdAt: 1 } },
+      { $group: { _id: '$trip', url: { $first: '$url' } } },
+    ]),
+    Like.aggregate([
+      { $match: { trip: { $in: tripIds } } },
+      { $group: { _id: '$trip', count: { $sum: 1 } } },
+    ]),
+    Like.find({ trip: { $in: tripIds }, user: userId }),
+  ])
+  const coverByTrip = Object.fromEntries(coverPhotos.map((c) => [c._id.toString(), c.url]))
+  const likesByTrip = Object.fromEntries(likeCounts.map((c) => [c._id.toString(), c.count]))
+  const likedSet = new Set(myLikes.map((l) => l.trip.toString()))
+
+  return trips.map((trip) => ({
+    id: trip._id,
+    name: trip.name,
+    destination: trip.destination || '',
+    travelType: trip.travelType,
+    days: tripDayKeys(trip).length,
+    dailyBudget: trip.dailyBudget,
+    homeCurrency: trip.homeCurrency,
+    coverPhotoUrl: coverByTrip[trip._id.toString()] || null,
+    likesCount: likesByTrip[trip._id.toString()] || 0,
+    likedByMe: likedSet.has(trip._id.toString()),
+    publishedAt: trip.publishedAt,
+  }))
+}
+
+router.get('/feed', async (req, res) => {
+  const trips = await Trip.find({ published: true })
+  const cards = await attachCardData(trips, req.userId)
+  cards.sort(
+    (a, b) => b.likesCount - a.likesCount || new Date(b.publishedAt) - new Date(a.publishedAt)
+  )
+  res.json(cards)
+})
+
+router.get('/search', async (req, res) => {
+  const { q, travelType, minBudget, maxBudget, minLength, maxLength } = req.query
+  const filter = { published: true }
+  if (travelType) filter.travelType = travelType
+  if (q?.trim()) {
+    const escaped = q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const regex = new RegExp(escaped, 'i')
+    filter.$or = [{ destination: regex }, { name: regex }]
+  }
+
+  const trips = await Trip.find(filter)
+  let cards = await attachCardData(trips, req.userId)
+
+  const min = minBudget !== undefined ? Number(minBudget) : null
+  const max = maxBudget !== undefined ? Number(maxBudget) : null
+  const minLen = minLength !== undefined ? Number(minLength) : null
+  const maxLen = maxLength !== undefined ? Number(maxLength) : null
+
+  cards = cards.filter((c) => {
+    const totalBudget = c.dailyBudget * c.days
+    if (min !== null && totalBudget < min) return false
+    if (max !== null && totalBudget > max) return false
+    if (minLen !== null && c.days < minLen) return false
+    if (maxLen !== null && c.days > maxLen) return false
+    return true
+  })
+
+  cards.sort((a, b) => b.likesCount - a.likesCount)
+  res.json(cards)
 })
 
 router.get('/:id', async (req, res) => {
@@ -98,8 +180,30 @@ router.get('/:id', async (req, res) => {
   res.json(serializeTrip(trip))
 })
 
+router.post('/:id/like', async (req, res) => {
+  const trip = await Trip.findById(req.params.id)
+  if (!trip || !trip.published) return res.status(404).json({ error: 'Trip not found' })
+
+  await Like.updateOne(
+    { trip: trip._id, user: req.userId },
+    { trip: trip._id, user: req.userId },
+    { upsert: true }
+  )
+  const likesCount = await Like.countDocuments({ trip: trip._id })
+  res.json({ likesCount, likedByMe: true })
+})
+
+router.delete('/:id/like', async (req, res) => {
+  const trip = await Trip.findById(req.params.id)
+  if (!trip) return res.status(404).json({ error: 'Trip not found' })
+
+  await Like.deleteOne({ trip: trip._id, user: req.userId })
+  const likesCount = await Like.countDocuments({ trip: trip._id })
+  res.json({ likesCount, likedByMe: false })
+})
+
 router.put('/:id', async (req, res) => {
-  const { startDate, endDate, dailyBudget, homeCurrency, tripType } = req.body
+  const { startDate, endDate, dailyBudget, homeCurrency, tripType, destination, travelType } = req.body
 
   const trip = await Trip.findById(req.params.id)
   if (!trip) return res.status(404).json({ error: 'Trip not found' })
@@ -123,6 +227,9 @@ router.put('/:id', async (req, res) => {
   if (tripType !== undefined && !['shared', 'family'].includes(tripType)) {
     return res.status(400).json({ error: 'tripType must be "shared" or "family"' })
   }
+  if (travelType !== undefined && !TRAVEL_TYPES.includes(travelType)) {
+    return res.status(400).json({ error: `travelType must be one of ${TRAVEL_TYPES.join(', ')}` })
+  }
   if (homeCurrency !== undefined) {
     try {
       await getJpyRate(homeCurrency)
@@ -136,6 +243,8 @@ router.put('/:id', async (req, res) => {
   if (dailyBudget !== undefined) trip.dailyBudget = dailyBudget
   if (homeCurrency !== undefined) trip.homeCurrency = homeCurrency
   if (tripType !== undefined) trip.tripType = tripType
+  if (destination !== undefined) trip.destination = destination.trim()
+  if (travelType !== undefined) trip.travelType = travelType
 
   await trip.save()
   await trip.populate('members.user', 'name email photoUrl')
@@ -158,6 +267,7 @@ router.delete('/:id', async (req, res) => {
     Photo.deleteMany({ trip: trip._id }),
     DayNote.deleteMany({ trip: trip._id }),
     Message.deleteMany({ trip: trip._id }),
+    Like.deleteMany({ trip: trip._id }),
   ])
   await trip.deleteOne()
 
@@ -250,6 +360,10 @@ router.get('/:id/public', async (req, res) => {
 
   const notesByDay = Object.fromEntries(notes.map((n) => [n.day, n.note]))
   const days = tripDayKeys(trip)
+  const [likesCount, myLike] = await Promise.all([
+    Like.countDocuments({ trip: trip._id }),
+    Like.findOne({ trip: trip._id, user: req.userId }),
+  ])
 
   const dayPages = days.map((day) => ({
     day,
@@ -287,8 +401,12 @@ router.get('/:id/public', async (req, res) => {
     dailyBudget: trip.dailyBudget,
     homeCurrency: trip.homeCurrency,
     tripType: trip.tripType,
+    destination: trip.destination || '',
+    travelType: trip.travelType,
     createdByName: creatorMember?.user.name || null,
     publishedAt: trip.publishedAt,
+    likesCount,
+    likedByMe: !!myLike,
     stats: {
       days: days.length,
       travelers: trip.members.length,

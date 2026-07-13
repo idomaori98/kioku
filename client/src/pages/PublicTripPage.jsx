@@ -26,6 +26,21 @@ export function PublicTripPage() {
     setFocusRequest({ id: placeId, nonce: focusNonceRef.current })
   }
 
+  async function toggleLike() {
+    const wasLiked = trip.likedByMe
+    setTrip((prev) => ({
+      ...prev,
+      likedByMe: !wasLiked,
+      likesCount: prev.likesCount + (wasLiked ? -1 : 1),
+    }))
+    try {
+      const result = wasLiked ? await api.unlikeTrip(id) : await api.likeTrip(id)
+      setTrip((prev) => ({ ...prev, likesCount: result.likesCount, likedByMe: result.likedByMe }))
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
   if (error) return <p className="full-page-error">{error}</p>
   if (!trip) return <p className="loading-state">Loading...</p>
 
@@ -34,12 +49,20 @@ export function PublicTripPage() {
   return (
     <div>
       <h1>{trip.name}</h1>
+      {trip.destination && <p className="trip-destination">📍 {trip.destination}</p>}
       <p className="trip-meta-row">
         {new Date(trip.startDate).toLocaleDateString()} – {new Date(trip.endDate).toLocaleDateString()}
         <span className="trip-meta-sep">·</span>
         {trip.tripType === 'family' ? 'Family trip' : 'Shared trip'}
       </p>
       {trip.createdByName && <p className="public-byline">Published by {trip.createdByName}</p>}
+      <button
+        type="button"
+        className={`discover-like-btn ${trip.likedByMe ? 'discover-like-btn-active' : ''}`}
+        onClick={toggleLike}
+      >
+        {trip.likedByMe ? '❤️' : '🤍'} {trip.likesCount}
+      </button>
 
       <div className="recap-stats">
         <div>

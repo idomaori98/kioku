@@ -50,6 +50,15 @@ export const api = {
   updatePublication: (id, body) =>
     request(`/trips/${id}/publication`, { method: 'PUT', body: JSON.stringify(body) }),
   getPublicTrip: (id) => request(`/trips/${id}/public`),
+  likeTrip: (id) => request(`/trips/${id}/like`, { method: 'POST' }),
+  unlikeTrip: (id) => request(`/trips/${id}/like`, { method: 'DELETE' }),
+  getFeed: () => request('/trips/feed'),
+  searchDiscover: (params) => {
+    const query = new URLSearchParams(
+      Object.fromEntries(Object.entries(params || {}).filter(([, v]) => v !== '' && v != null))
+    ).toString()
+    return request(`/trips/search${query ? `?${query}` : ''}`)
+  },
   joinTrip: (token) => request(`/trips/join/${token}`, { method: 'POST' }),
   grantAdmin: (tripId, userId) =>
     request(`/trips/${tripId}/admins`, { method: 'POST', body: JSON.stringify({ userId }) }),

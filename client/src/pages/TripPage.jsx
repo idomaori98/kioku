@@ -14,6 +14,7 @@ import { SwipeableRow } from '../components/SwipeableRow'
 import { PhotoLightbox } from '../components/PhotoLightbox'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { DragReorderList } from '../components/DragReorderList'
+import { TRAVEL_TYPES } from '../lib/travelTypes'
 
 const PHOTO_PREVIEW_COUNT = 5
 
@@ -188,11 +189,13 @@ export function TripPage() {
 
   function startEdit() {
     setEditForm({
+      destination: trip.destination || '',
       startDate: dayKeyFromDate(trip.startDate),
       endDate: dayKeyFromDate(trip.endDate),
       dailyBudget: String(trip.dailyBudget),
       homeCurrency: trip.homeCurrency,
       tripType: trip.tripType,
+      travelType: trip.travelType,
     })
     setEditing(true)
   }
@@ -202,11 +205,13 @@ export function TripPage() {
     setError(null)
     try {
       const updated = await api.updateTrip(id, {
+        destination: editForm.destination,
         startDate: editForm.startDate,
         endDate: editForm.endDate,
         dailyBudget: Number(editForm.dailyBudget),
         homeCurrency: editForm.homeCurrency,
         tripType: editForm.tripType,
+        travelType: editForm.travelType,
       })
       setTrip(updated)
       setEditing(false)
@@ -356,6 +361,12 @@ export function TripPage() {
       <div className="card trip-meta-card">
         {editing ? (
           <form onSubmit={handleSaveEdit}>
+            <input
+              type="text"
+              placeholder="Destination (e.g. Tokyo, Japan)"
+              value={editForm.destination}
+              onChange={(e) => setEditForm({ ...editForm, destination: e.target.value })}
+            />
             <label>
               Start date
               <input
@@ -413,6 +424,19 @@ export function TripPage() {
                 Family trip — one pot, just log the spending
               </label>
             </div>
+            <label>
+              Who's traveling?
+              <select
+                value={editForm.travelType}
+                onChange={(e) => setEditForm({ ...editForm, travelType: e.target.value })}
+              >
+                {TRAVEL_TYPES.map((t) => (
+                  <option key={t.value} value={t.value}>
+                    {t.label}
+                  </option>
+                ))}
+              </select>
+            </label>
             <button type="submit">Save</button>
             <button type="button" className="sheet-cancel" onClick={() => setEditing(false)}>
               Cancel
@@ -420,6 +444,7 @@ export function TripPage() {
           </form>
         ) : (
           <>
+            {trip.destination && <p className="trip-destination">📍 {trip.destination}</p>}
             <p className="trip-meta-row">
               {new Date(trip.startDate).toLocaleDateString()} –{' '}
               {new Date(trip.endDate).toLocaleDateString()}

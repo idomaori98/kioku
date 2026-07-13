@@ -13,6 +13,7 @@ import { ChatPage } from './pages/ChatPage'
 import { BalancesPage } from './pages/BalancesPage'
 import { PublicationEditPage } from './pages/PublicationEditPage'
 import { PublicTripPage } from './pages/PublicTripPage'
+import { DiscoverPage } from './pages/DiscoverPage'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -33,6 +34,9 @@ function Nav() {
     <nav className="nav">
       <Link to="/">記憶 Kioku</Link>
       <span className="nav-user">
+        <Link to="/discover" className="btn-secondary btn-sm">
+          🔍 Discover
+        </Link>
         <Link to="/profile" className="avatar-small">
           {user.photoUrl ? (
             <img src={user.photoUrl} alt={user.name} />
@@ -124,6 +128,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <PublicTripPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/discover"
+            element={
+              <ProtectedRoute>
+                <DiscoverPage />
               </ProtectedRoute>
             }
           />
