@@ -4,6 +4,7 @@ import { api } from '../api'
 import { EmptyState } from '../components/EmptyState'
 import { ErrorState } from '../components/ErrorState'
 import { MessageCircleIcon, UsersIcon } from '../components/icons'
+import { timeAgo } from '../lib/timeAgo'
 
 export function DirectMessagesPage() {
   const [conversations, setConversations] = useState(null)
@@ -45,22 +46,36 @@ export function DirectMessagesPage() {
           actionTo="/friends"
         />
       ) : (
-        <ul className="friend-list">
+        <ul className="conversation-list">
           {conversations.map((c) => (
-            <li key={c.user.id} className="friend-row">
+            <li key={c.user.id}>
               <Link
                 to={`/messages/${c.user.id}`}
-                className={`conversation-link ${c.unreadCount > 0 ? 'conversation-unread' : ''}`}
+                className={`conversation-card ${c.unreadCount > 0 ? 'conversation-card-unread' : ''}`}
               >
-                <span className="conversation-text">
-                  <span className="friend-name">{c.user.name}</span>
-                  <span className="conversation-preview">{c.lastMessage}</span>
+                <span className="conversation-avatar">
+                  {c.user.photoUrl ? (
+                    <img src={c.user.photoUrl} alt="" />
+                  ) : (
+                    <span>{c.user.name.charAt(0).toUpperCase()}</span>
+                  )}
                 </span>
-                {c.unreadCount > 0 && (
-                  <span className="conversation-badge" aria-label={`${c.unreadCount} unread`}>
-                    {c.unreadCount > 9 ? '9+' : c.unreadCount}
+                <span className="conversation-main">
+                  <span className="conversation-top">
+                    <span className="conversation-name">{c.user.name}</span>
+                    {c.lastMessageAt && (
+                      <span className="conversation-time">{timeAgo(c.lastMessageAt)}</span>
+                    )}
                   </span>
-                )}
+                  <span className="conversation-bottom">
+                    <span className="conversation-preview">{c.lastMessage}</span>
+                    {c.unreadCount > 0 && (
+                      <span className="conversation-badge" aria-label={`${c.unreadCount} unread`}>
+                        {c.unreadCount > 9 ? '9+' : c.unreadCount}
+                      </span>
+                    )}
+                  </span>
+                </span>
               </Link>
             </li>
           ))}

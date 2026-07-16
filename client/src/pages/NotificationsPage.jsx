@@ -4,6 +4,7 @@ import { api } from '../api'
 import { EmptyState } from '../components/EmptyState'
 import { ErrorState } from '../components/ErrorState'
 import { BellIcon } from '../components/icons'
+import { timeAgo } from '../lib/timeAgo'
 
 function notificationText(n) {
   switch (n.type) {
@@ -34,18 +35,6 @@ function notificationTarget(n) {
     default:
       return '/'
   }
-}
-
-function timeAgo(dateString) {
-  const seconds = Math.floor((Date.now() - new Date(dateString)) / 1000)
-  if (seconds < 60) return 'just now'
-  const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `${minutes}m ago`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
-  const days = Math.floor(hours / 24)
-  if (days < 7) return `${days}d ago`
-  return new Date(dateString).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 }
 
 export function NotificationsPage() {
