@@ -7,6 +7,15 @@ import { CATEGORIES } from '../components/ExpenseForm'
 import { PlacesMap } from '../components/PlacesMap'
 import { PhotoLightbox } from '../components/PhotoLightbox'
 import { ConfirmDialog } from '../components/ConfirmDialog'
+import { ErrorState } from '../components/ErrorState'
+import {
+  BookmarkIcon,
+  ClipboardIcon,
+  FlagIcon,
+  HeartIcon,
+  PinIcon,
+  ShareIcon,
+} from '../components/icons'
 
 const CATEGORY_EMOJI = Object.fromEntries(CATEGORIES.map((c) => [c.value, c.emoji]))
 
@@ -149,7 +158,14 @@ export function PublicTripPage() {
     }
   }
 
-  if (error) return <p className="full-page-error">{error}</p>
+  function retryLoad() {
+    setError(null)
+    setTrip(null)
+    api.getPublicTrip(id).then(setTrip).catch((err) => setError(err.message))
+    api.listComments(id).then(setComments).catch(() => {})
+  }
+
+  if (error && !trip) return <ErrorState message={error} onRetry={retryLoad} />
   if (!trip) return <p className="loading-state">Loading...</p>
 
   const day = trip.days[dayIndex]
@@ -157,7 +173,12 @@ export function PublicTripPage() {
   return (
     <div>
       <h1>{trip.name}</h1>
-      {trip.destination && <p className="trip-destination">📍 {trip.destination}</p>}
+      {error && <p className="error">{error}</p>}
+      {trip.destination && (
+        <p className="trip-destination">
+          <PinIcon /> {trip.destination}
+        </p>
+      )}
       <p className="trip-meta-row">
         {new Date(trip.startDate).toLocaleDateString()} – {new Date(trip.endDate).toLocaleDateString()}
         <span className="trip-meta-sep">·</span>
@@ -167,26 +188,28 @@ export function PublicTripPage() {
       <div className="public-trip-actions">
         <button
           type="button"
-          className={`discover-like-btn ${trip.likedByMe ? 'discover-like-btn-active' : ''}`}
+          className={`discover-like ${trip.likedByMe ? 'discover-like-active' : ''}`}
           onClick={toggleLike}
+          aria-pressed={trip.likedByMe}
         >
-          {trip.likedByMe ? '❤️' : '🤍'} {trip.likesCount}
+          <HeartIcon filled={trip.likedByMe} /> {trip.likesCount}
         </button>
         <button
           type="button"
-          className={`discover-like-btn ${trip.favoritedByMe ? 'discover-like-btn-active' : ''}`}
+          className={`discover-like ${trip.favoritedByMe ? 'discover-like-active' : ''}`}
           onClick={toggleFavorite}
+          aria-pressed={trip.favoritedByMe}
         >
-          {trip.favoritedByMe ? '🔖' : '📑'} {trip.favoritedByMe ? 'Saved' : 'Save'}
+          <BookmarkIcon size={16} /> {trip.favoritedByMe ? 'Saved' : 'Save'}
         </button>
-        <Link className="btn-secondary btn-sm" to={`/trips/${id}/copy`}>
-          📋 Copy this trip
+        <Link className="btn-secondary btn-sm nav-inline-link" to={`/trips/${id}/copy`}>
+          <ClipboardIcon size={15} /> Copy this trip
         </Link>
-        <button type="button" className="btn-secondary btn-sm" onClick={openSharePicker}>
-          📤 Share
+        <button type="button" className="btn-secondary btn-sm nav-inline-link" onClick={openSharePicker}>
+          <ShareIcon size={15} /> Share
         </button>
-        <button type="button" className="btn-secondary btn-sm" onClick={() => setReportingTrip(true)}>
-          ⚠️ Report
+        <button type="button" className="btn-secondary btn-sm nav-inline-link" onClick={() => setReportingTrip(true)}>
+          <FlagIcon size={15} /> Report
         </button>
       </div>
 
@@ -283,7 +306,9 @@ export function PublicTripPage() {
           {day.places.map((p) => (
             <li key={p.id}>
               <div className="place-row" onClick={() => focusPlace(p.id)} role="button" tabIndex={0}>
-                <span className="place-icon">📍</span>
+                <span className="place-icon">
+                  <PinIcon size={16} />
+                </span>
                 <div className="place-info">
                   <span className="place-name">
                     {p.name}

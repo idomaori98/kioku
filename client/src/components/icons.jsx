@@ -123,3 +123,52 @@ export function LogOutIcon({ size = 16 }) {
     </svg>
   )
 }
+
+export function ShareIcon({ size = 16 }) {
+  return (
+    <svg {...base} width={size} height={size}>
+      <circle cx="18" cy="5" r="3" />
+      <circle cx="6" cy="12" r="3" />
+      <circle cx="18" cy="19" r="3" />
+      <line x1="8.6" x2="15.4" y1="10.5" y2="6.5" />
+      <line x1="8.6" x2="15.4" y1="13.5" y2="17.5" />
+    </svg>
+  )
+}
+
+export function ClipboardIcon({ size = 16 }) {
+  return (
+    <svg {...base} width={size} height={size}>
+      <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
+      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+    </svg>
+  )
+}
+
+export function FlagIcon({ size = 16 }) {
+  return (
+    <svg {...base} width={size} height={size}>
+      <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+      <line x1="4" x2="4" y1="22" y2="15" />
+    </svg>
+  )
+}
+
+export function BanIcon({ size = 16 }) {
+  return (
+    <svg {...base} width={size} height={size}>
+      <circle cx="12" cy="12" r="10" />
+      <path d="m4.9 4.9 14.2 14.2" />
+    </svg>
+  )
+}
+
+export function AlertIcon({ size = 36 }) {
+  return (
+    <svg {...base} width={size} height={size}>
+      <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+      <line x1="12" x2="12" y1="9" y2="13" />
+      <line x1="12" x2="12.01" y1="17" y2="17" />
+    </svg>
+  )
+}

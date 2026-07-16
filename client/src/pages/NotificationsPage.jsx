@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api'
+import { EmptyState } from '../components/EmptyState'
+import { ErrorState } from '../components/ErrorState'
 import { BellIcon } from '../components/icons'
 
 function notificationText(n) {
@@ -54,7 +56,9 @@ export function NotificationsPage() {
   const [notifications, setNotifications] = useState(null)
   const [error, setError] = useState(null)
 
-  useEffect(() => {
+  function load() {
+    setError(null)
+    setNotifications(null)
     api
       .listNotifications()
       .then((items) => {
@@ -64,6 +68,10 @@ export function NotificationsPage() {
         }
       })
       .catch((err) => setError(err.message))
+  }
+
+  useEffect(() => {
+    load()
   }, [])
 
   return (
@@ -71,19 +79,21 @@ export function NotificationsPage() {
       <header className="discover-head">
         <h1>Notifications</h1>
       </header>
-      {error && <p className="error">{error}</p>}
 
-      {!notifications ? (
+      {error ? (
+        <ErrorState message={error} onRetry={load} />
+      ) : !notifications ? (
         <>
           <div className="skeleton-block notification-skeleton" aria-hidden="true" />
           <div className="skeleton-block notification-skeleton" aria-hidden="true" />
           <div className="skeleton-block notification-skeleton" aria-hidden="true" />
         </>
       ) : notifications.length === 0 ? (
-        <div className="notifications-empty">
-          <BellIcon size={36} />
-          <p>Nothing yet. When someone likes, comments on, or copies one of your trips — or sends you a friend request or message — it shows up here.</p>
-        </div>
+        <EmptyState
+          icon={BellIcon}
+          title="No notifications yet"
+          message="When someone likes, comments on, or copies your trip — or sends a friend request or message — it shows up here."
+        />
       ) : (
         <ul className="notification-list">
           {notifications.map((n) => (

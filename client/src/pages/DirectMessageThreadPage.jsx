@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../api'
 import { useAuth } from '../context/AuthContext'
+import { ErrorState } from '../components/ErrorState'
+import { BanIcon, CompassIcon, FlagIcon, PinIcon } from '../components/icons'
 
 const POLL_MS = 1500
 
@@ -88,7 +90,16 @@ export function DirectMessageThreadPage() {
     }
   }
 
-  if (error) return <p className="full-page-error">{error}</p>
+  function retry() {
+    setError(null)
+    setMessages(null)
+    api
+      .listDirectMessages(friendId)
+      .then(setMessages)
+      .catch((err) => setError(err.message))
+  }
+
+  if (error && !messages) return <ErrorState message={error} onRetry={retry} />
   if (!messages) return <p className="loading-state">Loading...</p>
 
   return (
@@ -98,16 +109,16 @@ export function DirectMessageThreadPage() {
         <Link className="btn-secondary btn-sm" to="/messages">
           ← All messages
         </Link>
-        <button type="button" className="btn-secondary btn-sm" onClick={() => setReporting(true)}>
-          ⚠️ Report
+        <button type="button" className="btn-secondary btn-sm nav-inline-link" onClick={() => setReporting(true)}>
+          <FlagIcon size={15} /> Report
         </button>
         <button
           type="button"
-          className="btn-secondary btn-sm btn-danger-outline"
+          className="btn-secondary btn-sm btn-danger-outline nav-inline-link"
           onClick={handleBlock}
           disabled={blocking}
         >
-          🚫 Block
+          <BanIcon size={15} /> Block
         </button>
       </div>
 
@@ -124,13 +135,15 @@ export function DirectMessageThreadPage() {
                       {m.sharedTrip.coverPhotoUrl ? (
                         <img src={m.sharedTrip.coverPhotoUrl} alt="" />
                       ) : (
-                        <span className="discover-card-cover-placeholder">🗺️</span>
+                        <CompassIcon size={24} />
                       )}
                     </div>
                     <div className="discover-card-body">
                       <h3 className="discover-card-name">{m.sharedTrip.name}</h3>
                       {m.sharedTrip.destination && (
-                        <p className="discover-card-destination">📍 {m.sharedTrip.destination}</p>
+                        <p className="discover-card-destination">
+                          <PinIcon /> {m.sharedTrip.destination}
+                        </p>
                       )}
                     </div>
                   </Link>

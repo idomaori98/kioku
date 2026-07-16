@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api'
 import { ConfirmDialog } from '../components/ConfirmDialog'
+import { EmptyState } from '../components/EmptyState'
+import { ErrorState } from '../components/ErrorState'
+import { MessageCircleIcon, UsersIcon } from '../components/icons'
 
 export function FriendsPage() {
   const [friends, setFriends] = useState(null)
@@ -15,6 +18,9 @@ export function FriendsPage() {
   const [removingFriend, setRemovingFriend] = useState(null)
 
   function load() {
+    setError(null)
+    setFriends(null)
+    setRequests(null)
     Promise.all([api.listFriends(), api.listFriendRequests()])
       .then(([f, r]) => {
         setFriends(f)
@@ -81,12 +87,11 @@ export function FriendsPage() {
     }
   }
 
-  if (!friends || !requests) return <p className="loading-state">Loading...</p>
+  const loading = !friends || !requests
 
   return (
     <div>
       <h1>Friends</h1>
-      {error && <p className="error">{error}</p>}
 
       <form className="card" onSubmit={handleSearch}>
         <h2 className="section-label">Add a friend</h2>
@@ -111,46 +116,64 @@ export function FriendsPage() {
         )}
       </form>
 
-      {requests.length > 0 && (
-        <div className="card">
-          <h2 className="section-label">Friend requests</h2>
-          <ul className="friend-list">
-            {requests.map((r) => (
-              <li key={r.id} className="friend-row">
-                <span className="friend-name">{r.user.name}</span>
-                <div className="friend-row-actions">
-                  <button type="button" className="btn-secondary btn-sm" onClick={() => handleAccept(r.user.id)}>
-                    Accept
-                  </button>
-                  <button type="button" className="btn-secondary btn-sm" onClick={() => handleDecline(r.user.id)}>
-                    Decline
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      {error ? (
+        <ErrorState message={error} onRetry={load} />
+      ) : loading ? (
+        <>
+          <div className="skeleton-block skeleton-row" aria-hidden="true" />
+          <div className="skeleton-block skeleton-row" aria-hidden="true" />
+        </>
+      ) : (
+        <>
+          {requests.length > 0 && (
+            <div className="card">
+              <h2 className="section-label">Friend requests</h2>
+              <ul className="friend-list">
+                {requests.map((r) => (
+                  <li key={r.id} className="friend-row">
+                    <span className="friend-name">{r.user.name}</span>
+                    <div className="friend-row-actions">
+                      <button type="button" className="btn-secondary btn-sm" onClick={() => handleAccept(r.user.id)}>
+                        Accept
+                      </button>
+                      <button type="button" className="btn-secondary btn-sm" onClick={() => handleDecline(r.user.id)}>
+                        Decline
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
-      <div className="card">
-        <h2 className="section-label">Your friends</h2>
-        {friends.length === 0 && <p className="empty-state">No friends yet — add one above.</p>}
-        <ul className="friend-list">
-          {friends.map((f) => (
-            <li key={f.id} className="friend-row">
-              <span className="friend-name">{f.user.name}</span>
-              <div className="friend-row-actions">
-                <Link className="btn-secondary btn-sm" to={`/messages/${f.user.id}`}>
-                  💬 Message
-                </Link>
-                <button type="button" className="btn-secondary btn-sm" onClick={() => setRemovingFriend(f.user)}>
-                  Remove
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </div>
+          {friends.length === 0 ? (
+            <EmptyState
+              icon={UsersIcon}
+              title="No friends yet"
+              message="Add someone by their email above to share trips and message each other."
+            />
+          ) : (
+            <div className="card">
+              <h2 className="section-label">Your friends</h2>
+              <ul className="friend-list">
+                {friends.map((f) => (
+                  <li key={f.id} className="friend-row">
+                    <span className="friend-name">{f.user.name}</span>
+                    <div className="friend-row-actions">
+                      <Link className="btn-secondary btn-sm nav-inline-link" to={`/messages/${f.user.id}`}>
+                        <MessageCircleIcon size={16} /> Message
+                      </Link>
+                      <button type="button" className="btn-secondary btn-sm" onClick={() => setRemovingFriend(f.user)}>
+                        Remove
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </>
+      )}
 
       {removingFriend && (
         <ConfirmDialog

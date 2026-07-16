@@ -340,22 +340,6 @@ h3 {
   margin-bottom: 8px;
 }
 
-.notifications-empty {
-  text-align: center;
-  padding: 48px 20px;
-  color: var(--ink-muted);
-}
-
-.notifications-empty svg {
-  color: var(--border-strong);
-}
-
-.notifications-empty p {
-  max-width: 340px;
-  margin: 12px auto 0;
-  font-size: 14px;
-}
-
 .profile-logout {
   display: flex;
   width: fit-content;
@@ -522,6 +506,45 @@ button:disabled {
   text-align: center;
   color: var(--danger);
   padding: 40px 20px;
+}
+
+/* Shared empty / error state panel */
+.state-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 44px 20px;
+  color: var(--ink-muted);
+}
+
+.state-panel > svg {
+  color: var(--border-strong);
+}
+
+.state-panel-title {
+  margin: 12px 0 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.state-panel-message {
+  margin: 6px auto 0;
+  max-width: 320px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.state-panel-action {
+  margin-top: 18px;
+}
+
+/* List loading skeletons */
+.skeleton-row {
+  height: 56px;
+  margin-bottom: 10px;
+  border-radius: var(--radius-card);
 }
 
 .card {
@@ -1582,6 +1605,7 @@ button:disabled {
   height: 32px;
   border-radius: 9px;
   background: var(--accent-soft);
+  color: var(--accent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2115,6 +2139,9 @@ button:disabled {
 }
 
 .trip-destination {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   color: var(--ink-muted);
   font-size: 14px;
   margin: 0 0 4px;
@@ -2122,6 +2149,24 @@ button:disabled {
 
 .discover-head {
   margin: 4px 0 16px;
+}
+
+.discover-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.discover-head-row h1 {
+  margin: 0;
+}
+
+/* Inline icon+label buttons/links (btn-secondary, discover-like, etc.) */
+.nav-inline-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .discover-head h1 {
@@ -2599,6 +2644,7 @@ button:disabled {
 .public-trip-actions {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 12px;
 }
@@ -2608,6 +2654,80 @@ button:disabled {
   font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 0.03em;
+}
+
+/* Copy-wizard progress indicator */
+.wizard-steps {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  list-style: none;
+  margin: 8px 0 18px;
+  padding: 0;
+}
+
+.wizard-step {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.wizard-step:not(:last-child)::after {
+  content: '';
+  flex: 1;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--border);
+}
+
+.wizard-step-done:not(:last-child)::after {
+  background: var(--accent);
+}
+
+.wizard-step-dot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--surface-alt);
+  border: 1px solid var(--border-strong);
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.wizard-step-current .wizard-step-dot {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.wizard-step-done .wizard-step-dot {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.wizard-step-name {
+  white-space: nowrap;
+}
+
+.wizard-step-current .wizard-step-name {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+@media (max-width: 430px) {
+  .wizard-step-upcoming .wizard-step-name,
+  .wizard-step-done .wizard-step-name {
+    display: none;
+  }
 }
 
 .wizard-day-header {

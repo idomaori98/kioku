@@ -6,6 +6,10 @@ import { DragReorderList } from '../components/DragReorderList'
 import { SwipeableRow } from '../components/SwipeableRow'
 import { PlaceForm } from '../components/PlaceForm'
 import { PlaceEditSheet } from '../components/PlaceEditSheet'
+import { ErrorState } from '../components/ErrorState'
+import { PinIcon, PlusIcon } from '../components/icons'
+
+const STEP_LABELS = ['Dates', 'Invite', 'Budget', 'Route']
 
 function addDays(dayKey, days) {
   const d = new Date(`${dayKey}T00:00:00Z`)
@@ -112,13 +116,38 @@ export function CopyTripWizardPage() {
     }
   }
 
-  if (error && !source) return <p className="full-page-error">{error}</p>
+  function retryLoad() {
+    setError(null)
+    setSource(null)
+    api
+      .getPublicTrip(id)
+      .then((t) => {
+        setSource(t)
+        const today = japanTodayKey()
+        setStartDate(today)
+        setEndDate(addDays(today, t.days.length - 1))
+      })
+      .catch((err) => setError(err.message))
+  }
+
+  if (error && !source) return <ErrorState message={error} onRetry={retryLoad} />
   if (!source) return <p className="loading-state">Loading...</p>
 
   return (
     <div>
       <h1>Copy trip</h1>
-      <p className="wizard-step-label">Step {step} of 4</p>
+      <ol className="wizard-steps" aria-label={`Step ${step} of 4`}>
+        {STEP_LABELS.map((label, i) => {
+          const n = i + 1
+          const state = n < step ? 'done' : n === step ? 'current' : 'upcoming'
+          return (
+            <li key={label} className={`wizard-step wizard-step-${state}`}>
+              <span className="wizard-step-dot">{n}</span>
+              <span className="wizard-step-name">{label}</span>
+            </li>
+          )
+        })}
+      </ol>
       {error && <p className="error">{error}</p>}
 
       {step === 1 && (
@@ -196,10 +225,10 @@ export function CopyTripWizardPage() {
                   <h3>{formatDayLabel(day)}</h3>
                   <button
                     type="button"
-                    className="btn-secondary btn-sm"
+                    className="btn-secondary btn-sm nav-inline-link"
                     onClick={() => setAddSheetDay(day)}
                   >
-                    + Add place
+                    <PlusIcon size={14} /> Add place
                   </button>
                 </div>
                 {dayPlaces.length === 0 && <p className="empty-state">No places for this day.</p>}
@@ -214,7 +243,9 @@ export function CopyTripWizardPage() {
                       deleteMessage={`Remove "${p.name}"?`}
                     >
                       <div className="place-row">
-                        <span className="place-icon">📍</span>
+                        <span className="place-icon">
+                          <PinIcon size={16} />
+                        </span>
                         <div className="place-info">
                           <span className="place-name">
                             {p.name}
