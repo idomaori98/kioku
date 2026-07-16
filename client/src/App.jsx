@@ -15,6 +15,10 @@ import { PublicationEditPage } from './pages/PublicationEditPage'
 import { PublicTripPage } from './pages/PublicTripPage'
 import { DiscoverPage } from './pages/DiscoverPage'
 import { CopyTripWizardPage } from './pages/CopyTripWizardPage'
+import { FriendsPage } from './pages/FriendsPage'
+import { DirectMessagesPage } from './pages/DirectMessagesPage'
+import { DirectMessageThreadPage } from './pages/DirectMessageThreadPage'
+import { FavoritesPage } from './pages/FavoritesPage'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -37,6 +41,15 @@ function Nav() {
       <span className="nav-user">
         <Link to="/discover" className="btn-secondary btn-sm">
           🔍 Discover
+        </Link>
+        <Link to="/friends" className="btn-secondary btn-sm">
+          👥 Friends
+        </Link>
+        <Link to="/messages" className="btn-secondary btn-sm">
+          💬 Messages
+        </Link>
+        <Link to="/favorites" className="btn-secondary btn-sm">
+          🔖 Favorites
         </Link>
         <Link to="/profile" className="avatar-small">
           {user.photoUrl ? (
@@ -145,6 +158,38 @@ function App() {
             element={
               <ProtectedRoute>
                 <CopyTripWizardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/friends"
+            element={
+              <ProtectedRoute>
+                <FriendsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/messages"
+            element={
+              <ProtectedRoute>
+                <DirectMessagesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/messages/:friendId"
+            element={
+              <ProtectedRoute>
+                <DirectMessageThreadPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/favorites"
+            element={
+              <ProtectedRoute>
+                <FavoritesPage />
               </ProtectedRoute>
             }
           />

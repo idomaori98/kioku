@@ -1,6 +1,8 @@
 import { Router } from 'express'
 import Trip, { TRAVEL_TYPES } from '../models/Trip.js'
 import Like from '../models/Like.js'
+import Favorite from '../models/Favorite.js'
+import Comment from '../models/Comment.js'
 import Expense from '../models/Expense.js'
 import Place from '../models/Place.js'
 import Photo from '../models/Photo.js'
@@ -102,7 +104,7 @@ router.post('/', async (req, res) => {
 
 async function attachCardData(trips, userId) {
   const tripIds = trips.map((t) => t._id)
-  const [coverPhotos, likeCounts, myLikes] = await Promise.all([
+  const [coverPhotos, likeCounts, myLikes, myFavorites] = await Promise.all([
     Photo.aggregate([
       { $match: { trip: { $in: tripIds }, hiddenFromPublic: { $ne: true } } },
       { $sort: { day: 1, order: 1, createdAt: 1 } },
@@ -113,10 +115,12 @@ async function attachCardData(trips, userId) {
       { $group: { _id: '$trip', count: { $sum: 1 } } },
     ]),
     Like.find({ trip: { $in: tripIds }, user: userId }),
+    Favorite.find({ trip: { $in: tripIds }, user: userId }),
   ])
   const coverByTrip = Object.fromEntries(coverPhotos.map((c) => [c._id.toString(), c.url]))
   const likesByTrip = Object.fromEntries(likeCounts.map((c) => [c._id.toString(), c.count]))
   const likedSet = new Set(myLikes.map((l) => l.trip.toString()))
+  const favoritedSet = new Set(myFavorites.map((f) => f.trip.toString()))
 
   return trips.map((trip) => ({
     id: trip._id,
@@ -129,6 +133,7 @@ async function attachCardData(trips, userId) {
     coverPhotoUrl: coverByTrip[trip._id.toString()] || null,
     likesCount: likesByTrip[trip._id.toString()] || 0,
     likedByMe: likedSet.has(trip._id.toString()),
+    favoritedByMe: favoritedSet.has(trip._id.toString()),
     publishedAt: trip.publishedAt,
   }))
 }
@@ -173,6 +178,15 @@ router.get('/search', async (req, res) => {
   res.json(cards)
 })
 
+router.get('/favorites', async (req, res) => {
+  const favorites = await Favorite.find({ user: req.userId }).sort({ createdAt: -1 })
+  const trips = await Trip.find({ _id: { $in: favorites.map((f) => f.trip) }, published: true })
+  const cards = await attachCardData(trips, req.userId)
+  const order = favorites.map((f) => f.trip.toString())
+  cards.sort((a, b) => order.indexOf(a.id.toString()) - order.indexOf(b.id.toString()))
+  res.json(cards)
+})
+
 router.get('/:id', async (req, res) => {
   const trip = await Trip.findById(req.params.id).populate('members.user', 'name email photoUrl')
   if (!trip) return res.status(404).json({ error: 'Trip not found' })
@@ -202,6 +216,23 @@ router.delete('/:id/like', async (req, res) => {
   await Like.deleteOne({ trip: trip._id, user: req.userId })
   const likesCount = await Like.countDocuments({ trip: trip._id })
   res.json({ likesCount, likedByMe: false })
+})
+
+router.post('/:id/favorite', async (req, res) => {
+  const trip = await Trip.findById(req.params.id)
+  if (!trip || !trip.published) return res.status(404).json({ error: 'Trip not found' })
+
+  await Favorite.updateOne(
+    { trip: trip._id, user: req.userId },
+    { trip: trip._id, user: req.userId },
+    { upsert: true }
+  )
+  res.json({ favoritedByMe: true })
+})
+
+router.delete('/:id/favorite', async (req, res) => {
+  await Favorite.deleteOne({ trip: req.params.id, user: req.userId })
+  res.json({ favoritedByMe: false })
 })
 
 router.put('/:id', async (req, res) => {
@@ -270,6 +301,8 @@ router.delete('/:id', async (req, res) => {
     DayNote.deleteMany({ trip: trip._id }),
     Message.deleteMany({ trip: trip._id }),
     Like.deleteMany({ trip: trip._id }),
+    Favorite.deleteMany({ trip: trip._id }),
+    Comment.deleteMany({ trip: trip._id }),
   ])
   await trip.deleteOne()
 
@@ -362,9 +395,10 @@ router.get('/:id/public', async (req, res) => {
 
   const notesByDay = Object.fromEntries(notes.map((n) => [n.day, n.note]))
   const days = tripDayKeys(trip)
-  const [likesCount, myLike] = await Promise.all([
+  const [likesCount, myLike, myFavorite] = await Promise.all([
     Like.countDocuments({ trip: trip._id }),
     Like.findOne({ trip: trip._id, user: req.userId }),
+    Favorite.findOne({ trip: trip._id, user: req.userId }),
   ])
 
   const dayPages = days.map((day) => ({
@@ -405,10 +439,12 @@ router.get('/:id/public', async (req, res) => {
     tripType: trip.tripType,
     destination: trip.destination || '',
     travelType: trip.travelType,
+    createdBy: trip.createdBy,
     createdByName: creatorMember?.user.name || null,
     publishedAt: trip.publishedAt,
     likesCount,
     likedByMe: !!myLike,
+    favoritedByMe: !!myFavorite,
     stats: {
       days: days.length,
       travelers: trip.members.length,

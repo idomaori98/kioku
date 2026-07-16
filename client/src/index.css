@@ -1771,3 +1771,132 @@ button:disabled {
 .wizard-day-header h3 {
   margin: 0;
 }
+
+.friend-search-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: var(--surface-alt);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+}
+
+.friend-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.friend-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.friend-row:last-child {
+  border-bottom: none;
+}
+
+.friend-row-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.friend-name {
+  font-weight: 500;
+}
+
+.conversation-link {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-decoration: none;
+  color: inherit;
+  width: 100%;
+}
+
+.conversation-preview {
+  color: var(--ink-muted);
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dm-shared-trip-card {
+  max-width: 220px;
+}
+
+.report-reason {
+  width: 100%;
+  min-height: 60px;
+  box-sizing: border-box;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--ink);
+  padding: 8px 10px;
+  font: inherit;
+  resize: vertical;
+}
+
+.comment-list {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+}
+
+.comment-row {
+  border-bottom: 1px solid var(--border);
+  padding: 10px 0;
+}
+
+.comment-row:last-child {
+  border-bottom: none;
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.comment-author {
+  font-weight: 500;
+}
+
+.comment-time {
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.comment-text {
+  margin: 4px 0;
+}
+
+.comment-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.comment-action-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--ink-muted);
+  font-size: 12px;
+  text-decoration: underline;
+}
+
+.comment-form {
+  display: flex;
+  gap: 8px;
+}
+
+.comment-form input {
+  flex: 1;
+}

@@ -51,6 +51,31 @@ export const api = {
     request(`/trips/${id}/publication`, { method: 'PUT', body: JSON.stringify(body) }),
   getPublicTrip: (id) => request(`/trips/${id}/public`),
   copyTrip: (id, body) => request(`/trips/${id}/copy`, { method: 'POST', body: JSON.stringify(body) }),
+  favoriteTrip: (id) => request(`/trips/${id}/favorite`, { method: 'POST' }),
+  unfavoriteTrip: (id) => request(`/trips/${id}/favorite`, { method: 'DELETE' }),
+  getFavorites: () => request('/trips/favorites'),
+  listComments: (tripId) => request(`/trips/${tripId}/comments`),
+  addComment: (tripId, text) =>
+    request(`/trips/${tripId}/comments`, { method: 'POST', body: JSON.stringify({ text }) }),
+  deleteComment: (tripId, commentId) =>
+    request(`/trips/${tripId}/comments/${commentId}`, { method: 'DELETE' }),
+  findUserByEmail: (email) => request(`/users/find?email=${encodeURIComponent(email)}`),
+  blockUser: (userId) => request(`/users/${userId}/block`, { method: 'POST' }),
+  unblockUser: (userId) => request(`/users/${userId}/block`, { method: 'DELETE' }),
+  listFriends: () => request('/friends'),
+  listFriendRequests: () => request('/friends/requests'),
+  sendFriendRequest: (userId) =>
+    request('/friends/requests', { method: 'POST', body: JSON.stringify({ userId }) }),
+  acceptFriendRequest: (requesterId) =>
+    request(`/friends/requests/${requesterId}/accept`, { method: 'POST' }),
+  declineFriendRequest: (requesterId) =>
+    request(`/friends/requests/${requesterId}`, { method: 'DELETE' }),
+  removeFriend: (friendId) => request(`/friends/${friendId}`, { method: 'DELETE' }),
+  listConversations: () => request('/dm/conversations'),
+  listDirectMessages: (friendId) => request(`/dm/${friendId}`),
+  sendDirectMessage: (friendId, body) =>
+    request(`/dm/${friendId}`, { method: 'POST', body: JSON.stringify(body) }),
+  sendReport: (body) => request('/reports', { method: 'POST', body: JSON.stringify(body) }),
   likeTrip: (id) => request(`/trips/${id}/like`, { method: 'POST' }),
   unlikeTrip: (id) => request(`/trips/${id}/like`, { method: 'DELETE' }),
   getFeed: () => request('/trips/feed'),

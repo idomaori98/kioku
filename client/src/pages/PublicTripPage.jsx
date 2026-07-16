@@ -1,15 +1,22 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { api } from '../api'
+import { useAuth } from '../context/AuthContext'
 import { formatDayLabel } from '../lib/days'
 import { CATEGORIES } from '../components/ExpenseForm'
 import { PlacesMap } from '../components/PlacesMap'
 import { PhotoLightbox } from '../components/PhotoLightbox'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 
 const CATEGORY_EMOJI = Object.fromEntries(CATEGORIES.map((c) => [c.value, c.emoji]))
 
+function formatDateTime(iso) {
+  return new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
+}
+
 export function PublicTripPage() {
   const { id } = useParams()
+  const { user } = useAuth()
   const [trip, setTrip] = useState(null)
   const [error, setError] = useState(null)
   const [dayIndex, setDayIndex] = useState(0)
@@ -17,8 +24,22 @@ export function PublicTripPage() {
   const [lightboxIndex, setLightboxIndex] = useState(null)
   const focusNonceRef = useRef(0)
 
+  const [comments, setComments] = useState(null)
+  const [commentText, setCommentText] = useState('')
+  const [postingComment, setPostingComment] = useState(false)
+  const [deletingComment, setDeletingComment] = useState(null)
+  const [reportingComment, setReportingComment] = useState(null)
+  const [reportReason, setReportReason] = useState('')
+
+  const [showSharePicker, setShowSharePicker] = useState(false)
+  const [friends, setFriends] = useState(null)
+  const [sharedWith, setSharedWith] = useState(null)
+  const [reportingTrip, setReportingTrip] = useState(false)
+  const [tripReportReason, setTripReportReason] = useState('')
+
   useEffect(() => {
     api.getPublicTrip(id).then(setTrip).catch((err) => setError(err.message))
+    api.listComments(id).then(setComments).catch(() => {})
   }, [id])
 
   function focusPlace(placeId) {
@@ -41,6 +62,93 @@ export function PublicTripPage() {
     }
   }
 
+  async function toggleFavorite() {
+    const wasFavorited = trip.favoritedByMe
+    setTrip((prev) => ({ ...prev, favoritedByMe: !wasFavorited }))
+    try {
+      const result = wasFavorited ? await api.unfavoriteTrip(id) : await api.favoriteTrip(id)
+      setTrip((prev) => ({ ...prev, favoritedByMe: result.favoritedByMe }))
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  async function openSharePicker() {
+    setShowSharePicker(true)
+    setSharedWith(null)
+    if (!friends) {
+      try {
+        const list = await api.listFriends()
+        setFriends(list)
+      } catch (err) {
+        setError(err.message)
+      }
+    }
+  }
+
+  async function handleShareToFriend(friendId, friendName) {
+    try {
+      await api.sendDirectMessage(friendId, { sharedTripId: id })
+      setSharedWith(friendName)
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  async function handleAddComment(e) {
+    e.preventDefault()
+    if (!commentText.trim()) return
+    setPostingComment(true)
+    try {
+      const comment = await api.addComment(id, commentText)
+      setComments((prev) => [...prev, comment])
+      setCommentText('')
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setPostingComment(false)
+    }
+  }
+
+  async function handleDeleteComment() {
+    try {
+      await api.deleteComment(id, deletingComment.id)
+      setComments((prev) => prev.filter((c) => c.id !== deletingComment.id))
+      setDeletingComment(null)
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  async function handleReportComment() {
+    try {
+      await api.sendReport({ targetType: 'comment', targetId: reportingComment.id, reason: reportReason })
+      setReportingComment(null)
+      setReportReason('')
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  async function handleBlockCommenter(userId) {
+    try {
+      await api.blockUser(userId)
+      setComments((prev) => prev.filter((c) => c.user.id !== userId))
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  async function handleReportTrip() {
+    try {
+      await api.sendReport({ targetType: 'trip', targetId: id, reason: tripReportReason })
+      setReportingTrip(false)
+      setTripReportReason('')
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
   if (error) return <p className="full-page-error">{error}</p>
   if (!trip) return <p className="loading-state">Loading...</p>
 
@@ -53,7 +161,7 @@ export function PublicTripPage() {
       <p className="trip-meta-row">
         {new Date(trip.startDate).toLocaleDateString()} – {new Date(trip.endDate).toLocaleDateString()}
         <span className="trip-meta-sep">·</span>
-        {trip.tripType === 'family' ? 'Family trip' : 'Shared trip'}
+        {trip.tripType === 'family' ? 'One-pot expenses' : 'Shared expenses'}
       </p>
       {trip.createdByName && <p className="public-byline">Published by {trip.createdByName}</p>}
       <div className="public-trip-actions">
@@ -64,9 +172,22 @@ export function PublicTripPage() {
         >
           {trip.likedByMe ? '❤️' : '🤍'} {trip.likesCount}
         </button>
+        <button
+          type="button"
+          className={`discover-like-btn ${trip.favoritedByMe ? 'discover-like-btn-active' : ''}`}
+          onClick={toggleFavorite}
+        >
+          {trip.favoritedByMe ? '🔖' : '📑'} {trip.favoritedByMe ? 'Saved' : 'Save'}
+        </button>
         <Link className="btn-secondary btn-sm" to={`/trips/${id}/copy`}>
           📋 Copy this trip
         </Link>
+        <button type="button" className="btn-secondary btn-sm" onClick={openSharePicker}>
+          📤 Share
+        </button>
+        <button type="button" className="btn-secondary btn-sm" onClick={() => setReportingTrip(true)}>
+          ⚠️ Report
+        </button>
       </div>
 
       <div className="recap-stats">
@@ -175,8 +296,157 @@ export function PublicTripPage() {
         </ul>
       </div>
 
+      <div className="card">
+        <h2 className="section-label">Comments</h2>
+        {comments === null ? (
+          <p className="loading-state">Loading comments...</p>
+        ) : (
+          <>
+            {comments.length === 0 && <p className="empty-state">No comments yet.</p>}
+            <ul className="comment-list">
+              {comments.map((c) => {
+                const isOwnComment = c.user.id === user?.id
+                const canDelete = isOwnComment || trip.createdBy === user?.id
+                return (
+                  <li key={c.id} className="comment-row">
+                    <div className="comment-header">
+                      <span className="comment-author">{c.user.name}</span>
+                      <span className="comment-time">{formatDateTime(c.createdAt)}</span>
+                    </div>
+                    <p className="comment-text">{c.text}</p>
+                    <div className="comment-actions">
+                      {canDelete && (
+                        <button
+                          type="button"
+                          className="comment-action-link"
+                          onClick={() => setDeletingComment(c)}
+                        >
+                          Delete
+                        </button>
+                      )}
+                      {!isOwnComment && (
+                        <>
+                          <button
+                            type="button"
+                            className="comment-action-link"
+                            onClick={() => setReportingComment(c)}
+                          >
+                            Report
+                          </button>
+                          <button
+                            type="button"
+                            className="comment-action-link"
+                            onClick={() => handleBlockCommenter(c.user.id)}
+                          >
+                            Block
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+          </>
+        )}
+        <form className="comment-form" onSubmit={handleAddComment}>
+          <input
+            type="text"
+            placeholder="Add a comment..."
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
+          />
+          <button type="submit" disabled={postingComment || !commentText.trim()}>
+            Post
+          </button>
+        </form>
+      </div>
+
       {lightboxIndex !== null && (
         <PhotoLightbox photos={day.photos} startIndex={lightboxIndex} onClose={() => setLightboxIndex(null)} />
+      )}
+
+      {showSharePicker && (
+        <div className="sheet-backdrop" onClick={() => setShowSharePicker(false)}>
+          <div className="sheet" onClick={(e) => e.stopPropagation()}>
+            <h3>Share with a friend</h3>
+            {sharedWith ? (
+              <p>Shared with {sharedWith}!</p>
+            ) : !friends ? (
+              <p className="loading-state">Loading friends...</p>
+            ) : friends.length === 0 ? (
+              <p className="empty-state">
+                No friends yet — <Link to="/friends">add one</Link> first.
+              </p>
+            ) : (
+              <ul className="friend-list">
+                {friends.map((f) => (
+                  <li key={f.id} className="friend-row">
+                    <span className="friend-name">{f.user.name}</span>
+                    <button
+                      type="button"
+                      className="btn-secondary btn-sm"
+                      onClick={() => handleShareToFriend(f.user.id, f.user.name)}
+                    >
+                      Send
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <button type="button" className="sheet-cancel" onClick={() => setShowSharePicker(false)}>
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {reportingTrip && (
+        <div className="confirm-backdrop" onClick={() => setReportingTrip(false)}>
+          <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
+            <p>Report this trip?</p>
+            <textarea
+              className="report-reason"
+              placeholder="Reason (optional)"
+              value={tripReportReason}
+              onChange={(e) => setTripReportReason(e.target.value)}
+            />
+            <button type="button" onClick={handleReportTrip}>
+              Submit report
+            </button>
+            <button type="button" className="sheet-cancel" onClick={() => setReportingTrip(false)}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {deletingComment && (
+        <ConfirmDialog
+          message="Delete this comment?"
+          onConfirm={handleDeleteComment}
+          onCancel={() => setDeletingComment(null)}
+        />
+      )}
+
+      {reportingComment && (
+        <div className="confirm-backdrop" onClick={() => setReportingComment(null)}>
+          <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
+            <p>Report this comment?</p>
+            <textarea
+              className="report-reason"
+              placeholder="Reason (optional)"
+              value={reportReason}
+              onChange={(e) => setReportReason(e.target.value)}
+            />
+            <button type="button" onClick={handleReportComment}>
+              Submit report
+            </button>
+            <button type="button" className="sheet-cancel" onClick={() => setReportingComment(null)}>
+              Cancel
+            </button>
+          </div>
+        </div>
       )}
     </div>
   )

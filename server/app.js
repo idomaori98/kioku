@@ -9,6 +9,11 @@ import placeRoutes from './routes/places.js'
 import recapRoutes from './routes/recap.js'
 import messageRoutes from './routes/messages.js'
 import balanceRoutes from './routes/balances.js'
+import commentRoutes from './routes/comments.js'
+import userRoutes from './routes/users.js'
+import friendRoutes from './routes/friends.js'
+import directMessageRoutes from './routes/directMessages.js'
+import reportRoutes from './routes/reports.js'
 import { requireAuth } from './middleware/auth.js'
 
 const app = express()
@@ -38,5 +43,10 @@ app.use('/api/trips/:tripId/places', requireAuth, placeRoutes)
 app.use('/api/trips/:tripId/recap', requireAuth, recapRoutes)
 app.use('/api/trips/:tripId/messages', requireAuth, messageRoutes)
 app.use('/api/trips/:tripId/balances', requireAuth, balanceRoutes)
+app.use('/api/trips/:tripId/comments', requireAuth, commentRoutes)
+app.use('/api/users', userRoutes)
+app.use('/api/friends', friendRoutes)
+app.use('/api/dm', directMessageRoutes)
+app.use('/api/reports', reportRoutes)
 
 export default app

@@ -200,7 +200,7 @@ export function HomePage() {
               checked={form.tripType === 'shared'}
               onChange={(e) => setForm({ ...form, tripType: e.target.value })}
             />
-            Shared trip — track who paid for each expense
+            Shared expenses — track who paid for each expense
           </label>
           <label>
             <input
@@ -210,7 +210,7 @@ export function HomePage() {
               checked={form.tripType === 'family'}
               onChange={(e) => setForm({ ...form, tripType: e.target.value })}
             />
-            Family trip — one pot, just log the spending
+            One pot — just log the spending, no splitting
           </label>
         </div>
         <label>

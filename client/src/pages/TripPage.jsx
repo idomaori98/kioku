@@ -411,7 +411,7 @@ export function TripPage() {
                   checked={editForm.tripType === 'shared'}
                   onChange={(e) => setEditForm({ ...editForm, tripType: e.target.value })}
                 />
-                Shared trip — track who paid for each expense
+                Shared expenses — track who paid for each expense
               </label>
               <label>
                 <input
@@ -421,7 +421,7 @@ export function TripPage() {
                   checked={editForm.tripType === 'family'}
                   onChange={(e) => setEditForm({ ...editForm, tripType: e.target.value })}
                 />
-                Family trip — one pot, just log the spending
+                One pot — just log the spending, no splitting
               </label>
             </div>
             <label>
@@ -456,7 +456,7 @@ export function TripPage() {
               <span className="trip-meta-sep">·</span>¥{trip.dailyBudget.toLocaleString()}/day
             </p>
             <p className="trip-type-tag">
-              {trip.tripType === 'family' ? 'Family trip · one shared pot' : 'Shared trip · tracks who paid'}
+              {trip.tripType === 'family' ? 'One pot · just log spending' : 'Shared expenses · tracks who paid'}
               {' · '}
               {trip.homeCurrency}
             </p>
