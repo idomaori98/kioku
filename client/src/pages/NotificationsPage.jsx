@@ -15,8 +15,6 @@ function notificationText(n) {
       return `commented on ${n.tripName || 'your trip'}`
     case 'like':
       return `liked ${n.tripName || 'your trip'}`
-    case 'dm':
-      return 'sent you a message'
     case 'trip_copied':
       return `copied ${n.tripName || 'your trip'} as a template`
     default:
@@ -29,8 +27,6 @@ function notificationTarget(n) {
     case 'friend_request':
     case 'friend_accept':
       return '/friends'
-    case 'dm':
-      return n.actor ? `/messages/${n.actor.id}` : '/messages'
     case 'comment':
     case 'like':
     case 'trip_copied':

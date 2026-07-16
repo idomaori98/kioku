@@ -5,7 +5,6 @@ import Trip from '../models/Trip.js'
 import Photo from '../models/Photo.js'
 import { requireAuth } from '../middleware/auth.js'
 import { isBlockedEitherWay } from '../lib/blocks.js'
-import { notify } from '../lib/notify.js'
 
 const router = Router()
 router.use(requireAuth)
@@ -47,23 +46,36 @@ router.get('/conversations', async (req, res) => {
 
   const seen = new Map()
   for (const m of messages) {
-    const other = m.sender._id.toString() === req.userId ? m.recipient : m.sender
+    const iAmSender = m.sender._id.toString() === req.userId
+    const other = iAmSender ? m.recipient : m.sender
     const key = other._id.toString()
     if (!seen.has(key)) {
       seen.set(key, {
         user: { id: other._id, name: other.name, photoUrl: other.photoUrl },
         lastMessage: m.sharedTripId ? `Shared a trip: ${m.sharedTripName}` : m.text,
         lastMessageAt: m.createdAt,
+        unreadCount: 0,
       })
     }
+    if (!iAmSender && !m.read) seen.get(key).unreadCount += 1
   }
 
   res.json([...seen.values()])
 })
 
+router.get('/unread-count', async (req, res) => {
+  const count = await DirectMessage.countDocuments({ recipient: req.userId, read: false })
+  res.json({ count })
+})
+
 router.get('/:friendId', async (req, res) => {
   const friendship = await requireFriendship(req.userId, req.params.friendId)
   if (!friendship) return res.status(403).json({ error: 'You can only message friends' })
+
+  await DirectMessage.updateMany(
+    { sender: req.params.friendId, recipient: req.userId, read: false },
+    { read: true }
+  )
 
   const messages = await DirectMessage.find({
     $or: [
@@ -111,7 +123,6 @@ router.post('/:friendId', async (req, res) => {
   }
 
   const message = await DirectMessage.create(body)
-  await notify({ user: req.params.friendId, actor: req.userId, type: 'dm' })
   res.status(201).json(serializeMessage(message))
 })
 

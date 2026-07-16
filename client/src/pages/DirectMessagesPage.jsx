@@ -48,9 +48,19 @@ export function DirectMessagesPage() {
         <ul className="friend-list">
           {conversations.map((c) => (
             <li key={c.user.id} className="friend-row">
-              <Link to={`/messages/${c.user.id}`} className="conversation-link">
-                <span className="friend-name">{c.user.name}</span>
-                <span className="conversation-preview">{c.lastMessage}</span>
+              <Link
+                to={`/messages/${c.user.id}`}
+                className={`conversation-link ${c.unreadCount > 0 ? 'conversation-unread' : ''}`}
+              >
+                <span className="conversation-text">
+                  <span className="friend-name">{c.user.name}</span>
+                  <span className="conversation-preview">{c.lastMessage}</span>
+                </span>
+                {c.unreadCount > 0 && (
+                  <span className="conversation-badge" aria-label={`${c.unreadCount} unread`}>
+                    {c.unreadCount > 9 ? '9+' : c.unreadCount}
+                  </span>
+                )}
               </Link>
             </li>
           ))}

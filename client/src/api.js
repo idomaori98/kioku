@@ -72,6 +72,7 @@ export const api = {
     request(`/friends/requests/${requesterId}`, { method: 'DELETE' }),
   removeFriend: (friendId) => request(`/friends/${friendId}`, { method: 'DELETE' }),
   listConversations: () => request('/dm/conversations'),
+  getUnreadMessageCount: () => request('/dm/unread-count'),
   listDirectMessages: (friendId) => request(`/dm/${friendId}`),
   sendDirectMessage: (friendId, body) =>
     request(`/dm/${friendId}`, { method: 'POST', body: JSON.stringify(body) }),

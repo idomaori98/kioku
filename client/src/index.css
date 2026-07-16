@@ -180,6 +180,22 @@ h3 {
   }
 }
 
+.nav-icon-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.nav-icon-badge {
+  position: absolute;
+  top: -3px;
+  right: -4px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 2px var(--bg);
+}
+
 .nav-bell {
   position: relative;
   display: flex;
@@ -2781,11 +2797,19 @@ button:disabled {
 
 .conversation-link {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  gap: 10px;
   text-decoration: none;
   color: inherit;
   width: 100%;
+}
+
+.conversation-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
 }
 
 .conversation-preview {
@@ -2794,6 +2818,29 @@ button:disabled {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.conversation-unread .friend-name {
+  font-weight: 700;
+}
+
+.conversation-unread .conversation-preview {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.conversation-badge {
+  flex-shrink: 0;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
 }
 
 .dm-shared-trip-card {

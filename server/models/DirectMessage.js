@@ -9,10 +9,12 @@ const directMessageSchema = new mongoose.Schema(
     sharedTripName: { type: String, default: '' },
     sharedTripDestination: { type: String, default: '' },
     sharedTripCoverUrl: { type: String, default: '' },
+    read: { type: Boolean, default: false },
   },
   { timestamps: true }
 )
 
 directMessageSchema.index({ sender: 1, recipient: 1, createdAt: 1 })
+directMessageSchema.index({ recipient: 1, read: 1 })
 
 export default mongoose.models.DirectMessage || mongoose.model('DirectMessage', directMessageSchema)

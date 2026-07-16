@@ -47,17 +47,25 @@ function Nav() {
   const { user } = useAuth()
   const location = useLocation()
   const [unread, setUnread] = useState(0)
+  const [unreadMessages, setUnreadMessages] = useState(0)
 
   useEffect(() => {
     if (!user) return
     let cancelled = false
-    const refresh = () =>
+    const refresh = () => {
       api
         .getUnreadNotificationCount()
         .then(({ count }) => {
           if (!cancelled) setUnread(count)
         })
         .catch(() => {})
+      api
+        .getUnreadMessageCount()
+        .then(({ count }) => {
+          if (!cancelled) setUnreadMessages(count)
+        })
+        .catch(() => {})
+    }
     refresh()
     const interval = setInterval(refresh, 60000)
     return () => {
@@ -74,16 +82,23 @@ function Nav() {
         <span className="nav-brand-name">Kioku</span>
       </Link>
       <div className="nav-links">
-        {NAV_ITEMS.map(({ to, label, Icon }) => (
-          <NavLink
-            key={to}
-            to={to}
-            className={({ isActive }) => `nav-icon-link ${isActive ? 'nav-icon-link-active' : ''}`}
-          >
-            <Icon size={20} />
-            <span>{label}</span>
-          </NavLink>
-        ))}
+        {NAV_ITEMS.map(({ to, label, Icon }) => {
+          const badge = to === '/messages' && unreadMessages > 0
+          return (
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) => `nav-icon-link ${isActive ? 'nav-icon-link-active' : ''}`}
+              aria-label={badge ? `${label} (${unreadMessages} unread)` : undefined}
+            >
+              <span className="nav-icon-wrap">
+                <Icon size={20} />
+                {badge && <span className="nav-icon-badge" aria-hidden="true" />}
+              </span>
+              <span>{label}</span>
+            </NavLink>
+          )
+        })}
         <NavLink
           to="/notifications"
           className={({ isActive }) => `nav-bell ${isActive ? 'nav-bell-active' : ''}`}
