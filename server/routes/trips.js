@@ -12,6 +12,7 @@ import { requireAuth } from '../middleware/auth.js'
 import { dayKeyFromDate, japanTodayKey, tripDayKeys } from '../lib/days.js'
 import { getJpyRate } from '../lib/exchangeRate.js'
 import { deleteObject } from '../lib/s3.js'
+import { notify } from '../lib/notify.js'
 
 const router = Router()
 router.use(requireAuth)
@@ -200,11 +201,20 @@ router.post('/:id/like', async (req, res) => {
   const trip = await Trip.findById(req.params.id)
   if (!trip || !trip.published) return res.status(404).json({ error: 'Trip not found' })
 
-  await Like.updateOne(
+  const result = await Like.updateOne(
     { trip: trip._id, user: req.userId },
     { trip: trip._id, user: req.userId },
     { upsert: true }
   )
+  if (result.upsertedCount > 0) {
+    await notify({
+      user: trip.createdBy,
+      actor: req.userId,
+      type: 'like',
+      trip: trip._id,
+      tripName: trip.name,
+    })
+  }
   const likesCount = await Like.countDocuments({ trip: trip._id })
   res.json({ likesCount, likedByMe: true })
 })
@@ -526,6 +536,13 @@ router.post('/:id/copy', async (req, res) => {
     await Place.insertMany(copiedPlaces)
   }
 
+  await notify({
+    user: original.createdBy,
+    actor: req.userId,
+    type: 'trip_copied',
+    trip: original._id,
+    tripName: original.name,
+  })
   await copy.populate('members.user', 'name email photoUrl')
   res.status(201).json(serializeTrip(copy))
 })

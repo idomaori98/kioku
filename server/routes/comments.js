@@ -3,6 +3,7 @@ import Comment from '../models/Comment.js'
 import Trip from '../models/Trip.js'
 import Block from '../models/Block.js'
 import { isBlockedEitherWay } from '../lib/blocks.js'
+import { notify } from '../lib/notify.js'
 import { requireAuth } from '../middleware/auth.js'
 
 const router = Router({ mergeParams: true })
@@ -45,6 +46,13 @@ router.post('/', async (req, res) => {
   }
 
   const comment = await Comment.create({ trip: req.params.tripId, user: req.userId, text: text.trim() })
+  await notify({
+    user: req.trip.createdBy,
+    actor: req.userId,
+    type: 'comment',
+    trip: req.trip._id,
+    tripName: req.trip.name,
+  })
   await comment.populate('user', 'name photoUrl')
   res.status(201).json(serializeComment(comment))
 })

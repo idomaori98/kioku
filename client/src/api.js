@@ -76,6 +76,9 @@ export const api = {
   sendDirectMessage: (friendId, body) =>
     request(`/dm/${friendId}`, { method: 'POST', body: JSON.stringify(body) }),
   sendReport: (body) => request('/reports', { method: 'POST', body: JSON.stringify(body) }),
+  listNotifications: () => request('/notifications'),
+  getUnreadNotificationCount: () => request('/notifications/unread-count'),
+  markNotificationsRead: () => request('/notifications/read-all', { method: 'POST' }),
   likeTrip: (id) => request(`/trips/${id}/like`, { method: 'POST' }),
   unlikeTrip: (id) => request(`/trips/${id}/like`, { method: 'DELETE' }),
   getFeed: () => request('/trips/feed'),

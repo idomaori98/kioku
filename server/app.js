@@ -14,6 +14,7 @@ import userRoutes from './routes/users.js'
 import friendRoutes from './routes/friends.js'
 import directMessageRoutes from './routes/directMessages.js'
 import reportRoutes from './routes/reports.js'
+import notificationRoutes from './routes/notifications.js'
 import { requireAuth } from './middleware/auth.js'
 
 const app = express()
@@ -48,5 +49,6 @@ app.use('/api/users', userRoutes)
 app.use('/api/friends', friendRoutes)
 app.use('/api/dm', directMessageRoutes)
 app.use('/api/reports', reportRoutes)
+app.use('/api/notifications', notificationRoutes)
 
 export default app

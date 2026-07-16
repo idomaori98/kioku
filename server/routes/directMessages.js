@@ -5,6 +5,7 @@ import Trip from '../models/Trip.js'
 import Photo from '../models/Photo.js'
 import { requireAuth } from '../middleware/auth.js'
 import { isBlockedEitherWay } from '../lib/blocks.js'
+import { notify } from '../lib/notify.js'
 
 const router = Router()
 router.use(requireAuth)
@@ -110,6 +111,7 @@ router.post('/:friendId', async (req, res) => {
   }
 
   const message = await DirectMessage.create(body)
+  await notify({ user: req.params.friendId, actor: req.userId, type: 'dm' })
   res.status(201).json(serializeMessage(message))
 })
 

@@ -180,12 +180,180 @@ h3 {
   }
 }
 
+.nav-bell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  color: var(--ink-muted);
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.nav-bell:hover {
+  background: var(--surface-alt);
+  color: var(--ink);
+}
+
+.nav-bell-active,
+.nav-bell-active:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+@media (prefers-color-scheme: dark) {
+  .nav-bell-active,
+  .nav-bell-active:hover {
+    color: #f2938a;
+  }
+}
+
+.nav-bell-badge {
+  position: absolute;
+  top: 4px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
 .nav-avatar {
   width: 34px;
   height: 34px;
   margin-left: 8px;
   box-shadow: 0 0 0 1px var(--border-strong);
   border: 2px solid var(--surface);
+}
+
+@media (max-width: 430px) {
+  .nav {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .nav-brand-name {
+    display: none;
+  }
+
+  .nav-icon-link {
+    min-width: 0;
+    padding: 5px 6px;
+  }
+
+  .nav-icon-link span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .nav-icon-link svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .nav-bell {
+    width: 40px;
+  }
+
+  .nav-avatar {
+    margin-left: 4px;
+  }
+}
+
+/* Notifications */
+.notification-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.notification-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-sm);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.notification-row:hover {
+  box-shadow: var(--shadow-card);
+}
+
+.notification-row-unread {
+  background: var(--accent-soft);
+}
+
+.notification-row .avatar-small {
+  width: 36px;
+  height: 36px;
+  font-size: 15px;
+}
+
+.notification-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.notification-text {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.notification-time {
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.notification-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.notification-skeleton {
+  height: 64px;
+  margin-bottom: 8px;
+}
+
+.notifications-empty {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--ink-muted);
+}
+
+.notifications-empty svg {
+  color: var(--border-strong);
+}
+
+.notifications-empty p {
+  max-width: 340px;
+  margin: 12px auto 0;
+  font-size: 14px;
 }
 
 .profile-logout {

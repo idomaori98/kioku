@@ -1,5 +1,7 @@
+import { useEffect, useState } from 'react'
 import { Link, Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom'
-import { BookmarkIcon, CompassIcon, MessageCircleIcon, UsersIcon } from './components/icons'
+import { api } from './api'
+import { BellIcon, BookmarkIcon, CompassIcon, MessageCircleIcon, UsersIcon } from './components/icons'
 import { useAuth } from './context/AuthContext'
 import { LoginPage } from './pages/LoginPage'
 import { SignupPage } from './pages/SignupPage'
@@ -20,6 +22,7 @@ import { FriendsPage } from './pages/FriendsPage'
 import { DirectMessagesPage } from './pages/DirectMessagesPage'
 import { DirectMessageThreadPage } from './pages/DirectMessageThreadPage'
 import { FavoritesPage } from './pages/FavoritesPage'
+import { NotificationsPage } from './pages/NotificationsPage'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -42,6 +45,27 @@ const NAV_ITEMS = [
 
 function Nav() {
   const { user } = useAuth()
+  const location = useLocation()
+  const [unread, setUnread] = useState(0)
+
+  useEffect(() => {
+    if (!user) return
+    let cancelled = false
+    const refresh = () =>
+      api
+        .getUnreadNotificationCount()
+        .then(({ count }) => {
+          if (!cancelled) setUnread(count)
+        })
+        .catch(() => {})
+    refresh()
+    const interval = setInterval(refresh, 60000)
+    return () => {
+      cancelled = true
+      clearInterval(interval)
+    }
+  }, [user, location.pathname])
+
   if (!user) return null
   return (
     <nav className="nav" aria-label="Primary">
@@ -60,6 +84,14 @@ function Nav() {
             <span>{label}</span>
           </NavLink>
         ))}
+        <NavLink
+          to="/notifications"
+          className={({ isActive }) => `nav-bell ${isActive ? 'nav-bell-active' : ''}`}
+          aria-label={unread > 0 ? `Notifications (${unread} unread)` : 'Notifications'}
+        >
+          <BellIcon />
+          {unread > 0 && <span className="nav-bell-badge">{unread > 9 ? '9+' : unread}</span>}
+        </NavLink>
         <Link to="/profile" className="avatar-small nav-avatar" aria-label="Your profile">
           {user.photoUrl ? (
             <img src={user.photoUrl} alt={user.name} />
@@ -198,6 +230,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <FavoritesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute>
+                <NotificationsPage />
               </ProtectedRoute>
             }
           />

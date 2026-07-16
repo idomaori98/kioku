@@ -2,6 +2,7 @@ import { Router } from 'express'
 import Friendship from '../models/Friendship.js'
 import { requireAuth } from '../middleware/auth.js'
 import { isBlockedEitherWay } from '../lib/blocks.js'
+import { notify } from '../lib/notify.js'
 
 const router = Router()
 router.use(requireAuth)
@@ -55,6 +56,7 @@ router.post('/requests', async (req, res) => {
   }
 
   const friendship = await Friendship.create({ requester: req.userId, recipient: userId })
+  await notify({ user: userId, actor: req.userId, type: 'friend_request' })
   await friendship.populate('requester', 'name photoUrl')
   await friendship.populate('recipient', 'name photoUrl')
   res.status(201).json(serializeFriendship(friendship, req.userId))
@@ -70,6 +72,7 @@ router.post('/requests/:requesterId/accept', async (req, res) => {
 
   friendship.status = 'accepted'
   await friendship.save()
+  await notify({ user: friendship.requester, actor: req.userId, type: 'friend_accept' })
   await friendship.populate('requester', 'name photoUrl')
   await friendship.populate('recipient', 'name photoUrl')
   res.json(serializeFriendship(friendship, req.userId))
