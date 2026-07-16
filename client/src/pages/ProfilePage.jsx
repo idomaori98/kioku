@@ -1,10 +1,11 @@
 import { useRef, useState } from 'react'
 import { api } from '../api'
+import { LogOutIcon } from '../components/icons'
 import { useAuth } from '../context/AuthContext'
 import { resizeImage } from '../lib/imageResize'
 
 export function ProfilePage() {
-  const { user, setUser } = useAuth()
+  const { user, setUser, logout } = useAuth()
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState(null)
   const fileInput = useRef(null)
@@ -58,6 +59,10 @@ export function ProfilePage() {
         {uploading ? 'Uploading...' : 'Change profile photo'}
       </button>
       {error && <p className="error">{error}</p>}
+
+      <button type="button" className="profile-logout" onClick={logout}>
+        <LogOutIcon /> Log out
+      </button>
     </div>
   )
 }

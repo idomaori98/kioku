@@ -1,4 +1,5 @@
-import { Link, Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { Link, Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom'
+import { BookmarkIcon, CompassIcon, MessageCircleIcon, UsersIcon } from './components/icons'
 import { useAuth } from './context/AuthContext'
 import { LoginPage } from './pages/LoginPage'
 import { SignupPage } from './pages/SignupPage'
@@ -32,34 +33,41 @@ function ProtectedRoute({ children }) {
   return children
 }
 
+const NAV_ITEMS = [
+  { to: '/discover', label: 'Discover', Icon: CompassIcon },
+  { to: '/friends', label: 'Friends', Icon: UsersIcon },
+  { to: '/messages', label: 'Messages', Icon: MessageCircleIcon },
+  { to: '/favorites', label: 'Favorites', Icon: BookmarkIcon },
+]
+
 function Nav() {
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   if (!user) return null
   return (
-    <nav className="nav">
-      <Link to="/">記憶 Kioku</Link>
-      <span className="nav-user">
-        <Link to="/discover" className="btn-secondary btn-sm">
-          🔍 Discover
-        </Link>
-        <Link to="/friends" className="btn-secondary btn-sm">
-          👥 Friends
-        </Link>
-        <Link to="/messages" className="btn-secondary btn-sm">
-          💬 Messages
-        </Link>
-        <Link to="/favorites" className="btn-secondary btn-sm">
-          🔖 Favorites
-        </Link>
-        <Link to="/profile" className="avatar-small">
+    <nav className="nav" aria-label="Primary">
+      <Link to="/" className="nav-brand">
+        <span className="nav-brand-kanji">記憶</span>
+        <span className="nav-brand-name">Kioku</span>
+      </Link>
+      <div className="nav-links">
+        {NAV_ITEMS.map(({ to, label, Icon }) => (
+          <NavLink
+            key={to}
+            to={to}
+            className={({ isActive }) => `nav-icon-link ${isActive ? 'nav-icon-link-active' : ''}`}
+          >
+            <Icon size={20} />
+            <span>{label}</span>
+          </NavLink>
+        ))}
+        <Link to="/profile" className="avatar-small nav-avatar" aria-label="Your profile">
           {user.photoUrl ? (
             <img src={user.photoUrl} alt={user.name} />
           ) : (
             <span>{user.name.charAt(0).toUpperCase()}</span>
           )}
         </Link>
-        {user.name} · <button onClick={logout}>Log out</button>
-      </span>
+      </div>
     </nav>
   )
 }
