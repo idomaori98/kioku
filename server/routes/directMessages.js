@@ -64,7 +64,8 @@ router.get('/conversations', async (req, res) => {
 })
 
 router.get('/unread-count', async (req, res) => {
-  const count = await DirectMessage.countDocuments({ recipient: req.userId, read: false })
+  // `read: { $ne: true }` also covers legacy messages saved before the read field existed.
+  const count = await DirectMessage.countDocuments({ recipient: req.userId, read: { $ne: true } })
   res.json({ count })
 })
 
@@ -73,7 +74,7 @@ router.get('/:friendId', async (req, res) => {
   if (!friendship) return res.status(403).json({ error: 'You can only message friends' })
 
   await DirectMessage.updateMany(
-    { sender: req.params.friendId, recipient: req.userId, read: false },
+    { sender: req.params.friendId, recipient: req.userId, read: { $ne: true } },
     { read: true }
   )
 
