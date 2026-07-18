@@ -27,7 +27,7 @@ router.post('/signup', async (req, res) => {
 
   res.status(201).json({
     token: signToken(user),
-    user: { id: user._id, email: user.email, name: user.name, photoUrl: user.photoUrl },
+    user: { id: user._id, email: user.email, name: user.name, photoUrl: user.photoUrl, isAdmin: !!user.isAdmin },
   })
 })
 
@@ -47,7 +47,7 @@ router.post('/login', async (req, res) => {
 
   res.json({
     token: signToken(user),
-    user: { id: user._id, email: user.email, name: user.name, photoUrl: user.photoUrl },
+    user: { id: user._id, email: user.email, name: user.name, photoUrl: user.photoUrl, isAdmin: !!user.isAdmin },
   })
 })
 
@@ -81,14 +81,14 @@ router.post('/google', async (req, res) => {
 
   res.json({
     token: signToken(user),
-    user: { id: user._id, email: user.email, name: user.name, photoUrl: user.photoUrl },
+    user: { id: user._id, email: user.email, name: user.name, photoUrl: user.photoUrl, isAdmin: !!user.isAdmin },
   })
 })
 
 router.get('/me', requireAuth, async (req, res) => {
   const user = await User.findById(req.userId)
   if (!user) return res.status(404).json({ error: 'User not found' })
-  res.json({ id: user._id, email: user.email, name: user.name, photoUrl: user.photoUrl })
+  res.json({ id: user._id, email: user.email, name: user.name, photoUrl: user.photoUrl, isAdmin: !!user.isAdmin })
 })
 
 router.post('/me/photo-upload-url', requireAuth, async (req, res) => {
@@ -107,7 +107,7 @@ router.put('/me', requireAuth, async (req, res) => {
 
   if (photoUrl !== undefined) user.photoUrl = photoUrl
   await user.save()
-  res.json({ id: user._id, email: user.email, name: user.name, photoUrl: user.photoUrl })
+  res.json({ id: user._id, email: user.email, name: user.name, photoUrl: user.photoUrl, isAdmin: !!user.isAdmin })
 })
 
 export default router

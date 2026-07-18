@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api'
-import { LogOutIcon, UsersIcon } from '../components/icons'
+import { FlagIcon, LogOutIcon, UsersIcon } from '../components/icons'
 import { useAuth } from '../context/AuthContext'
 import { resizeImage } from '../lib/imageResize'
 
@@ -64,6 +64,12 @@ export function ProfilePage() {
       <Link to="/friends" className="btn-secondary profile-friends-link">
         <UsersIcon size={18} /> Friends
       </Link>
+
+      {user.isAdmin && (
+        <Link to="/admin" className="btn-secondary profile-friends-link">
+          <FlagIcon size={16} /> Reports
+        </Link>
+      )}
 
       <button type="button" className="profile-logout" onClick={logout}>
         <LogOutIcon /> Log out

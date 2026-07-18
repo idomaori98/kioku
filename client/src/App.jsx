@@ -23,6 +23,7 @@ import { DirectMessagesPage } from './pages/DirectMessagesPage'
 import { DirectMessageThreadPage } from './pages/DirectMessageThreadPage'
 import { FavoritesPage } from './pages/FavoritesPage'
 import { NotificationsPage } from './pages/NotificationsPage'
+import { AdminPage } from './pages/AdminPage'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -261,6 +262,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <NotificationsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <AdminPage />
               </ProtectedRoute>
             }
           />

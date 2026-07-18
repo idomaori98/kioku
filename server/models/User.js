@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema(
     googleId: { type: String, unique: true, sparse: true },
     name: { type: String, required: true, trim: true },
     photoUrl: { type: String, default: '' },
+    isAdmin: { type: Boolean, default: false },
   },
   { timestamps: true }
 )

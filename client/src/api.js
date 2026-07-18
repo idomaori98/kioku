@@ -77,6 +77,10 @@ export const api = {
   sendDirectMessage: (friendId, body) =>
     request(`/dm/${friendId}`, { method: 'POST', body: JSON.stringify(body) }),
   sendReport: (body) => request('/reports', { method: 'POST', body: JSON.stringify(body) }),
+  adminListReports: (status) => request(`/admin/reports${status ? `?status=${status}` : ''}`),
+  adminResolveReport: (id) => request(`/admin/reports/${id}/resolve`, { method: 'POST' }),
+  adminDeleteComment: (id) => request(`/admin/comments/${id}`, { method: 'DELETE' }),
+  adminUnpublishTrip: (id) => request(`/admin/trips/${id}/unpublish`, { method: 'POST' }),
   listNotifications: () => request('/notifications'),
   getUnreadNotificationCount: () => request('/notifications/unread-count'),
   markNotificationsRead: () => request('/notifications/read-all', { method: 'POST' }),
