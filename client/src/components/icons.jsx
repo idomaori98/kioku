@@ -79,6 +79,16 @@ export function MessageCircleIcon({ size = 20 }) {
   )
 }
 
+export function HomeIcon({ size = 20 }) {
+  return (
+    <svg {...base} width={size} height={size}>
+      <path d="M3 9.5 12 3l9 6.5" />
+      <path d="M5 10v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V10" />
+      <path d="M9 21v-6h6v6" />
+    </svg>
+  )
+}
+
 export function BookmarkIcon({ size = 20 }) {
   return (
     <svg {...base} width={size} height={size}>

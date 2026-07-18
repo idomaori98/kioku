@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { api } from './api'
-import { BellIcon, BookmarkIcon, CompassIcon, MessageCircleIcon, UsersIcon } from './components/icons'
+import { BellIcon, BookmarkIcon, CompassIcon, HomeIcon, MessageCircleIcon, UsersIcon } from './components/icons'
 import { useAuth } from './context/AuthContext'
 import { LoginPage } from './pages/LoginPage'
 import { SignupPage } from './pages/SignupPage'
@@ -37,8 +37,11 @@ function ProtectedRoute({ children }) {
 }
 
 const NAV_ITEMS = [
+  // Home replaces the brand logo on mobile (where the logo is hidden for space).
+  { to: '/', label: 'Home', Icon: HomeIcon, end: true, cls: 'nav-link-mobile-only' },
   { to: '/discover', label: 'Discover', Icon: CompassIcon },
-  { to: '/friends', label: 'Friends', Icon: UsersIcon },
+  // Friends stays on desktop; on mobile it lives in the profile + messages screens.
+  { to: '/friends', label: 'Friends', Icon: UsersIcon, cls: 'nav-link-desktop-only' },
   { to: '/messages', label: 'Messages', Icon: MessageCircleIcon },
   { to: '/favorites', label: 'Favorites', Icon: BookmarkIcon },
 ]
@@ -84,13 +87,16 @@ function Nav() {
         <span className="nav-brand-name">Kioku</span>
       </Link>
       <div className="nav-links">
-        {NAV_ITEMS.map(({ to, label, Icon }) => {
+        {NAV_ITEMS.map(({ to, label, Icon, end, cls }) => {
           const badge = to === '/messages' && unreadMessages > 0
           return (
             <NavLink
               key={to}
               to={to}
-              className={({ isActive }) => `nav-icon-link ${isActive ? 'nav-icon-link-active' : ''}`}
+              end={end}
+              className={({ isActive }) =>
+                `nav-icon-link ${cls || ''} ${isActive ? 'nav-icon-link-active' : ''}`
+              }
               aria-label={badge ? `${label} (${unreadMessages} unread)` : undefined}
             >
               <span className="nav-icon-wrap">

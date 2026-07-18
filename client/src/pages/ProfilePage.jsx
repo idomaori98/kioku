@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { api } from '../api'
-import { LogOutIcon } from '../components/icons'
+import { LogOutIcon, UsersIcon } from '../components/icons'
 import { useAuth } from '../context/AuthContext'
 import { resizeImage } from '../lib/imageResize'
 
@@ -59,6 +60,10 @@ export function ProfilePage() {
         {uploading ? 'Uploading...' : 'Change profile photo'}
       </button>
       {error && <p className="error">{error}</p>}
+
+      <Link to="/friends" className="btn-secondary profile-friends-link">
+        <UsersIcon size={18} /> Friends
+      </Link>
 
       <button type="button" className="profile-logout" onClick={logout}>
         <LogOutIcon /> Log out
