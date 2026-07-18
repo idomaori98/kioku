@@ -36,11 +36,19 @@ export function DirectMessageThreadPage() {
 
   useEffect(() => {
     let cancelled = false
+    let markedRead = false
     function load() {
       api
         .listDirectMessages(friendId)
         .then((m) => {
-          if (!cancelled) setMessages(m)
+          if (cancelled) return
+          setMessages(m)
+          // Opening the thread marks the sender's messages read on the server;
+          // tell the nav to refresh its unread badge once.
+          if (!markedRead) {
+            markedRead = true
+            window.dispatchEvent(new Event('kioku:badges-changed'))
+          }
         })
         .catch((err) => {
           if (!cancelled) setError(err.message)

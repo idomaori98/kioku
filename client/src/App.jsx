@@ -68,9 +68,11 @@ function Nav() {
     }
     refresh()
     const interval = setInterval(refresh, 60000)
+    window.addEventListener('kioku:badges-changed', refresh)
     return () => {
       cancelled = true
       clearInterval(interval)
+      window.removeEventListener('kioku:badges-changed', refresh)
     }
   }, [user, location.pathname])
 
