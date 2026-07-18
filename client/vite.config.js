@@ -26,6 +26,16 @@ export default defineConfig({
       workbox: {
         runtimeCaching: [
           {
+            // Real-time data must never be served stale from the cache:
+            // unread counts, DM threads/conversations, notifications, and the feed.
+            urlPattern: ({ url, request }) =>
+              request.method === 'GET' &&
+              (/^\/api\/dm(\/|$)/.test(url.pathname) ||
+                url.pathname.startsWith('/api/notifications') ||
+                url.pathname === '/api/trips/feed'),
+            handler: 'NetworkOnly',
+          },
+          {
             urlPattern: ({ url, request }) =>
               url.pathname.startsWith('/api/') && request.method === 'GET',
             handler: 'NetworkFirst',
@@ -40,6 +50,11 @@ export default defineConfig({
     }),
   ],
   server: {
+    proxy: {
+      '/api': 'http://localhost:5050',
+    },
+  },
+  preview: {
     proxy: {
       '/api': 'http://localhost:5050',
     },
