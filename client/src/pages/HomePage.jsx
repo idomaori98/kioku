@@ -52,7 +52,10 @@ export function HomePage() {
 
   useEffect(() => {
     api.listTrips().then(setTrips).catch((err) => setError(err.message))
-    api.getFeed().then(setFeed).catch(() => setFeed([]))
+    api
+      .getFeed({ limit: 4 })
+      .then((res) => setFeed(res.cards))
+      .catch(() => setFeed([]))
   }, [])
 
   async function handleCreate(e) {

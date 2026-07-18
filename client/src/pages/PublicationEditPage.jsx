@@ -145,7 +145,7 @@ export function PublicationEditPage() {
                 className={`publication-photo-item ${hidden ? 'publication-photo-hidden' : ''}`}
                 onClick={() => togglePhoto(p.id)}
               >
-                <img src={p.url} alt={p.note || ''} />
+                <img src={p.url} alt={p.note || ''} loading="lazy" decoding="async" />
                 <span className="publication-photo-badge">{hidden ? 'Hidden' : 'Visible'}</span>
               </button>
             )

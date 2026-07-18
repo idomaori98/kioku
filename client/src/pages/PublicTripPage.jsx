@@ -268,7 +268,7 @@ export function PublicTripPage() {
                 role="button"
                 tabIndex={0}
               >
-                <img src={p.url} alt={p.note || ''} />
+                <img src={p.url} alt={p.note || ''} loading="lazy" decoding="async" />
               </div>
             ))}
           </div>

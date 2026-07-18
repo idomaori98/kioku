@@ -596,6 +596,8 @@ export function TripPage() {
                 <img
                   src={p.url}
                   alt={p.note || ''}
+                  loading="lazy"
+                  decoding="async"
                   onClick={() => setLightboxIndex(i)}
                   onContextMenu={(e) => e.preventDefault()}
                   draggable={false}

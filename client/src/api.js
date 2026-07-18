@@ -82,7 +82,13 @@ export const api = {
   markNotificationsRead: () => request('/notifications/read-all', { method: 'POST' }),
   likeTrip: (id) => request(`/trips/${id}/like`, { method: 'POST' }),
   unlikeTrip: (id) => request(`/trips/${id}/like`, { method: 'DELETE' }),
-  getFeed: () => request('/trips/feed'),
+  getFeed: ({ limit, offset } = {}) => {
+    const params = new URLSearchParams()
+    if (limit != null) params.set('limit', limit)
+    if (offset != null) params.set('offset', offset)
+    const qs = params.toString()
+    return request(`/trips/feed${qs ? `?${qs}` : ''}`)
+  },
   searchDiscover: (params) => {
     const query = new URLSearchParams(
       Object.fromEntries(Object.entries(params || {}).filter(([, v]) => v !== '' && v != null))

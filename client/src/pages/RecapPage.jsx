@@ -138,7 +138,7 @@ export function RecapPage() {
                 role="button"
                 tabIndex={0}
               >
-                <img src={p.url} alt="" />
+                <img src={p.url} alt="" loading="lazy" decoding="async" />
               </div>
             ))}
           </div>

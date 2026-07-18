@@ -139,13 +139,32 @@ async function attachCardData(trips, userId) {
   }))
 }
 
+const FEED_PAGE_SIZE = 20
+
 router.get('/feed', async (req, res) => {
-  const trips = await Trip.find({ published: true })
+  const limit = Math.min(Math.max(Number(req.query.limit) || FEED_PAGE_SIZE, 1), 50)
+  const offset = Math.max(Number(req.query.offset) || 0, 0)
+
+  // Order + paginate in the DB: most-loved first, then newest.
+  const [ordered, total] = await Promise.all([
+    Trip.aggregate([
+      { $match: { published: true } },
+      { $lookup: { from: 'likes', localField: '_id', foreignField: 'trip', as: 'likes' } },
+      { $addFields: { likesCount: { $size: '$likes' } } },
+      { $sort: { likesCount: -1, publishedAt: -1, _id: 1 } },
+      { $skip: offset },
+      { $limit: limit },
+      { $project: { _id: 1 } },
+    ]),
+    Trip.countDocuments({ published: true }),
+  ])
+
+  const orderIndex = new Map(ordered.map((t, i) => [t._id.toString(), i]))
+  const trips = await Trip.find({ _id: { $in: ordered.map((t) => t._id) } })
   const cards = await attachCardData(trips, req.userId)
-  cards.sort(
-    (a, b) => b.likesCount - a.likesCount || new Date(b.publishedAt) - new Date(a.publishedAt)
-  )
-  res.json(cards)
+  cards.sort((a, b) => orderIndex.get(a.id.toString()) - orderIndex.get(b.id.toString()))
+
+  res.json({ cards, hasMore: offset + cards.length < total })
 })
 
 router.get('/search', async (req, res) => {
@@ -176,7 +195,7 @@ router.get('/search', async (req, res) => {
   })
 
   cards.sort((a, b) => b.likesCount - a.likesCount)
-  res.json(cards)
+  res.json(cards.slice(0, 30))
 })
 
 router.get('/favorites', async (req, res) => {

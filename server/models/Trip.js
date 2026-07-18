@@ -41,5 +41,11 @@ const tripSchema = new mongoose.Schema(
   { timestamps: true }
 )
 
+// Feed: filter published, order by recency. Search adds travelType equality.
+tripSchema.index({ published: 1, publishedAt: -1 })
+tripSchema.index({ published: 1, travelType: 1 })
+// "My trips" list looks up by membership.
+tripSchema.index({ 'members.user': 1 })
+
 export { TRAVEL_TYPES }
 export default mongoose.models.Trip || mongoose.model('Trip', tripSchema)

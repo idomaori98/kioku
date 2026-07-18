@@ -12,6 +12,8 @@ export function DiscoverPage() {
   const [cards, setCards] = useState(null)
   const [error, setError] = useState(null)
   const [mode, setMode] = useState('feed')
+  const [hasMore, setHasMore] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [travelType, setTravelType] = useState('')
@@ -22,7 +24,26 @@ export function DiscoverPage() {
 
   function loadFeed() {
     setError(null)
-    api.getFeed().then(setCards).catch((err) => setError(err.message))
+    api
+      .getFeed()
+      .then((res) => {
+        setCards(res.cards)
+        setHasMore(res.hasMore)
+      })
+      .catch((err) => setError(err.message))
+  }
+
+  async function loadMore() {
+    setLoadingMore(true)
+    try {
+      const res = await api.getFeed({ offset: cards.length })
+      setCards((prev) => [...prev, ...res.cards])
+      setHasMore(res.hasMore)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoadingMore(false)
+    }
   }
 
   useEffect(() => {
@@ -226,6 +247,14 @@ export function DiscoverPage() {
                 ))}
               </div>
             </section>
+          )}
+
+          {isFeed && hasMore && (
+            <div className="discover-load-more">
+              <button type="button" className="btn-secondary" onClick={loadMore} disabled={loadingMore}>
+                {loadingMore ? 'Loading…' : 'Load more trips'}
+              </button>
+            </div>
           )}
 
           {cards.length === 0 && (

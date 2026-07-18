@@ -2425,6 +2425,12 @@ button:disabled {
   margin: 20px 0;
 }
 
+.discover-load-more {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0 8px;
+}
+
 .discover-results-head {
   display: flex;
   align-items: center;
