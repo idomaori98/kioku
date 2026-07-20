@@ -22,6 +22,17 @@ const app = express()
 
 app.use(express.json())
 
+// CORS — the API is consumed by native mobile clients (no Origin enforcement)
+// and, in dev, by Expo's web preview + the marketing site (browser, cross-origin).
+// Safe to allow any origin because auth is Bearer-token, not cookies (no credentials).
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*')
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  if (req.method === 'OPTIONS') return res.sendStatus(204)
+  next()
+})
+
 app.use(async (req, res, next) => {
   if (!process.env.MONGODB_URI) return next()
   try {
