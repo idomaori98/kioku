@@ -105,6 +105,43 @@ export default function TripDetailScreen() {
 
   useFocusEffect(useCallback(() => load(), [load]))
 
+  const [busy, setBusy] = useState(false)
+
+  async function toggleLike() {
+    if (!trip) return
+    const liked = trip.likedByMe
+    // Optimistic — flip locally, reconcile on error.
+    setTrip({ ...trip, likedByMe: !liked, likesCount: trip.likesCount + (liked ? -1 : 1) })
+    try {
+      await (liked ? api.unlikeTrip(trip.id) : api.likeTrip(trip.id))
+    } catch {
+      setTrip((t) => (t ? { ...t, likedByMe: liked, likesCount: t.likesCount + (liked ? 1 : -1) } : t))
+    }
+  }
+
+  async function togglePublish() {
+    if (!trip || busy) return
+    const run = async () => {
+      setBusy(true)
+      try {
+        await (trip.published ? api.unpublishTrip(trip.id) : api.publishTrip(trip.id))
+        setTrip((t) => (t ? { ...t, published: !trip.published } : t))
+      } catch (e) {
+        Alert.alert('Something went wrong', e instanceof Error ? e.message : 'Please try again.')
+      } finally {
+        setBusy(false)
+      }
+    }
+    if (trip.published) {
+      Alert.alert('Unpublish trip?', 'It will be removed from Discover and can no longer be seen or copied by others.', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Unpublish', style: 'destructive', onPress: run },
+      ])
+    } else {
+      run()
+    }
+  }
+
   const isOwner = !!user && !!trip && String(trip.createdBy) === user.id
   const cover = trip?.days.flatMap((d) => d.photos)[0]?.url ?? null
   const day = trip?.days[selected]
@@ -169,6 +206,37 @@ export default function TripDetailScreen() {
             <Stat icon="location-outline" value={trip.stats.places} label="places" />
             <Stat icon="images-outline" value={trip.stats.photos} label="photos" />
             <Stat icon="heart-outline" value={trip.likesCount} label="likes" />
+          </View>
+
+          {/* Social actions */}
+          <View style={styles.actionRow}>
+            {trip.published ? (
+              <Pressable style={styles.likeBtn} onPress={toggleLike} hitSlop={6}>
+                <Ionicons
+                  name={trip.likedByMe ? 'heart' : 'heart-outline'}
+                  size={20}
+                  color={trip.likedByMe ? KIOKU.accent : KIOKU.ink}
+                />
+                <Text style={styles.likeText}>{trip.likesCount}</Text>
+              </Pressable>
+            ) : null}
+
+            {isOwner ? (
+              <Pressable
+                style={[styles.pubBtn, trip.published ? styles.pubBtnOn : styles.pubBtnOff, busy && { opacity: 0.6 }]}
+                onPress={togglePublish}
+                disabled={busy}
+              >
+                <Ionicons
+                  name={trip.published ? 'globe-outline' : 'cloud-upload-outline'}
+                  size={16}
+                  color={trip.published ? KIOKU.success : '#fff'}
+                />
+                <Text style={[styles.pubText, trip.published ? { color: KIOKU.success } : { color: '#fff' }]}>
+                  {trip.published ? 'Published' : 'Publish'}
+                </Text>
+              </Pressable>
+            ) : null}
           </View>
 
           {/* Day pager */}
@@ -811,6 +879,32 @@ const styles = StyleSheet.create({
   stat: { flex: 1, alignItems: 'center', gap: 3 },
   statValue: { fontSize: 17, fontWeight: '800', color: KIOKU.ink },
   statLabel: { fontSize: 11.5, color: KIOKU.inkMuted },
+
+  actionRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 14 },
+  likeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: KIOKU.surface,
+    borderWidth: 1,
+    borderColor: KIOKU.border,
+    borderRadius: 999,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+  },
+  likeText: { fontSize: 14, fontWeight: '700', color: KIOKU.ink },
+  pubBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderRadius: 999,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    marginLeft: 'auto',
+  },
+  pubBtnOff: { backgroundColor: KIOKU.accent },
+  pubBtnOn: { backgroundColor: KIOKU.surface, borderWidth: 1, borderColor: KIOKU.success },
+  pubText: { fontSize: 14, fontWeight: '700' },
 
   pager: {
     flexDirection: 'row',

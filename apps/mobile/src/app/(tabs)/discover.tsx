@@ -29,6 +29,28 @@ export default function DiscoverScreen() {
 
   useFocusEffect(load)
 
+  const toggleLike = useCallback((id: string) => {
+    setCards((prev) => {
+      if (!prev) return prev
+      const card = prev.find((c) => c.id === id)
+      if (!card) return prev
+      const liked = card.likedByMe
+      // Fire-and-forget with optimistic update; revert this card on failure.
+      ;(liked ? api.unlikeTrip(id) : api.likeTrip(id)).catch(() => {
+        setCards((cur) =>
+          cur
+            ? cur.map((c) =>
+                c.id === id ? { ...c, likedByMe: liked, likesCount: c.likesCount + (liked ? 1 : -1) } : c
+              )
+            : cur
+        )
+      })
+      return prev.map((c) =>
+        c.id === id ? { ...c, likedByMe: !liked, likesCount: c.likesCount + (liked ? -1 : 1) } : c
+      )
+    })
+  }, [])
+
   return (
     <Screen>
       <ScreenTitle title="Discover" subtitle="Trips shared by fellow travelers" />
@@ -44,14 +66,14 @@ export default function DiscoverScreen() {
           keyExtractor={(c) => c.id}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
-          renderItem={({ item }) => <FeedCardView card={item} />}
+          renderItem={({ item }) => <FeedCardView card={item} onToggleLike={toggleLike} />}
         />
       )}
     </Screen>
   )
 }
 
-function FeedCardView({ card }: { card: FeedCard }) {
+function FeedCardView({ card, onToggleLike }: { card: FeedCard; onToggleLike: (id: string) => void }) {
   const router = useRouter()
   return (
     <Pressable style={styles.card} onPress={() => router.push(`/trip/${card.id}`)}>
@@ -63,10 +85,10 @@ function FeedCardView({ card }: { card: FeedCard }) {
             <Ionicons name="compass-outline" size={40} color={KIOKU.borderStrong} />
           </View>
         )}
-        <View style={styles.likePill}>
-          <Ionicons name="heart" size={13} color={KIOKU.accent} />
+        <Pressable style={styles.likePill} onPress={() => onToggleLike(card.id)} hitSlop={8}>
+          <Ionicons name={card.likedByMe ? 'heart' : 'heart-outline'} size={14} color={KIOKU.accent} />
           <Text style={styles.likeText}>{card.likesCount}</Text>
-        </View>
+        </Pressable>
         <View style={styles.overlay}>
           <Text style={styles.name} numberOfLines={1}>
             {card.name}

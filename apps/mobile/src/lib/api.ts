@@ -169,6 +169,10 @@ export const api = {
   }) => request<Trip>('/trips', { method: 'POST', body: input }),
   // Full itinerary; works for published trips and the viewer's own private trips.
   getItinerary: (id: string) => request<PublicTrip>(`/trips/${id}/itinerary`),
+  publishTrip: (id: string) => request<Trip>(`/trips/${id}/publish`, { method: 'POST' }),
+  unpublishTrip: (id: string) => request<Trip>(`/trips/${id}/unpublish`, { method: 'POST' }),
+  likeTrip: (id: string) => request(`/trips/${id}/like`, { method: 'POST' }),
+  unlikeTrip: (id: string) => request(`/trips/${id}/like`, { method: 'DELETE' }),
   addPlace: (tripId: string, input: { day: string; name: string; address?: string }) =>
     request(`/trips/${tripId}/places`, {
       method: 'POST',
