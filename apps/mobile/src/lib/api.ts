@@ -70,10 +70,22 @@ export type PublicPhoto = {
   addedByName: string
 }
 
+export type ExpenseCategory = 'food' | 'transport' | 'fun' | 'shopping' | 'other'
+
+export type PublicExpense = {
+  id: string
+  name: string
+  category: ExpenseCategory
+  amountYen: number
+  amountHome: number
+  addedByName: string
+}
+
 export type PublicDay = {
   day: string // date key, e.g. "2026-09-01"
   note: string
   places: PublicPlace[]
+  expenses: PublicExpense[]
   photos: PublicPhoto[]
 }
 
@@ -84,6 +96,7 @@ export type PublicTrip = {
   endDate: string
   destination: string
   homeCurrency: string
+  dailyBudget: number
   travelType: Trip['travelType']
   createdBy: string
   createdByName: string | null
@@ -163,6 +176,10 @@ export const api = {
     }),
   setDayNote: (tripId: string, day: string, note: string) =>
     request(`/trips/${tripId}/day-note`, { method: 'PUT', body: { day, note } }),
+  addExpense: (
+    tripId: string,
+    input: { day: string; name: string; category: ExpenseCategory; amountYen: number }
+  ) => request(`/trips/${tripId}/expenses`, { method: 'POST', body: input }),
   getFeed: (params: { limit?: number; offset?: number } = {}) => {
     const qs = new URLSearchParams()
     if (params.limit != null) qs.set('limit', String(params.limit))

@@ -14,7 +14,7 @@ import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-rou
 import { Image } from 'expo-image'
 import { Ionicons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { api, type PublicTrip, type PublicDay } from '@/lib/api'
+import { api, type PublicTrip, type PublicDay, type ExpenseCategory } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
 import { KIOKU } from '@/constants/kioku'
 import { ErrorState, Loading } from '@/components/ui'
@@ -25,6 +25,19 @@ const TRAVEL_LABEL: Record<PublicTrip['travelType'], string> = {
   solo: 'Solo',
   friends: 'Friends',
 }
+
+const CATEGORIES: { value: ExpenseCategory; emoji: string; label: string }[] = [
+  { value: 'food', emoji: '🍜', label: 'Food' },
+  { value: 'transport', emoji: '🚆', label: 'Transit' },
+  { value: 'fun', emoji: '🎡', label: 'Fun' },
+  { value: 'shopping', emoji: '🛍️', label: 'Shopping' },
+  { value: 'other', emoji: '📦', label: 'Other' },
+]
+const CATEGORY_EMOJI: Record<ExpenseCategory, string> = Object.fromEntries(
+  CATEGORIES.map((c) => [c.value, c.emoji])
+) as Record<ExpenseCategory, string>
+
+const yen = (n: number) => `¥${Math.round(n).toLocaleString()}`
 
 function toYMD(d: Date) {
   const y = d.getFullYear()
@@ -207,7 +220,11 @@ function DayView({
 }) {
   const [addingPlace, setAddingPlace] = useState(false)
   const [editingNote, setEditingNote] = useState(false)
+  const [addingExpense, setAddingExpense] = useState(false)
   const hasNote = !!day.note.trim()
+
+  const dayYen = day.expenses.reduce((s, e) => s + e.amountYen, 0)
+  const dayHome = day.expenses.reduce((s, e) => s + e.amountHome, 0)
 
   return (
     <View style={styles.dayCard}>
@@ -254,6 +271,46 @@ function DayView({
         ))
       )}
 
+      {/* Expenses */}
+      <View style={styles.sectionHead}>
+        <Text style={styles.sectionLabel}>Expenses</Text>
+        {isOwner ? (
+          <Pressable onPress={() => setAddingExpense(true)} hitSlop={8} style={styles.addLink}>
+            <Ionicons name="add" size={16} color={KIOKU.accent} />
+            <Text style={styles.addLinkText}>Add expense</Text>
+          </Pressable>
+        ) : null}
+      </View>
+
+      <View style={styles.budgetCard}>
+        <View style={styles.budgetTopRow}>
+          <Text style={styles.budgetToday}>{yen(dayYen)}</Text>
+          <Text style={styles.budgetHome}>
+            {dayHome.toFixed(2)} {trip.homeCurrency}
+          </Text>
+        </View>
+        <BudgetBar spent={dayYen} budget={trip.dailyBudget} />
+      </View>
+
+      {day.expenses.length === 0 ? (
+        <Text style={styles.emptyLine}>No expenses logged.</Text>
+      ) : (
+        day.expenses.map((e) => (
+          <View key={e.id} style={styles.expense}>
+            <Text style={styles.expenseEmoji}>{CATEGORY_EMOJI[e.category]}</Text>
+            <Text style={styles.expenseName} numberOfLines={1}>
+              {e.name}
+            </Text>
+            <View style={styles.expenseAmounts}>
+              <Text style={styles.expenseYen}>{yen(e.amountYen)}</Text>
+              <Text style={styles.expenseHome}>
+                {e.amountHome.toFixed(2)} {trip.homeCurrency}
+              </Text>
+            </View>
+          </View>
+        ))
+      )}
+
       {/* Photos (read-only for now — Phase D adds upload) */}
       {day.photos.length > 0 ? (
         <>
@@ -287,7 +344,117 @@ function DayView({
           onChanged()
         }}
       />
+      <AddExpenseModal
+        visible={addingExpense}
+        tripId={trip.id}
+        day={day.day}
+        onClose={() => setAddingExpense(false)}
+        onSaved={() => {
+          setAddingExpense(false)
+          onChanged()
+        }}
+      />
     </View>
+  )
+}
+
+function BudgetBar({ spent, budget }: { spent: number; budget: number }) {
+  const pct = budget > 0 ? Math.min(100, (spent / budget) * 100) : 0
+  const over = spent > budget
+  return (
+    <View>
+      <View style={styles.barTrack}>
+        <View style={[styles.barFill, { width: `${pct}%` }, over && styles.barFillOver]} />
+      </View>
+      <Text style={[styles.barLabel, over && { color: KIOKU.danger }]}>
+        {budget <= 0
+          ? 'No daily budget set'
+          : over
+            ? `${yen(spent - budget)} over budget today`
+            : `${yen(budget - spent)} left today`}
+      </Text>
+    </View>
+  )
+}
+
+function AddExpenseModal({
+  visible,
+  tripId,
+  day,
+  onClose,
+  onSaved,
+}: {
+  visible: boolean
+  tripId: string
+  day: string
+  onClose: () => void
+  onSaved: () => void
+}) {
+  const [name, setName] = useState('')
+  const [amount, setAmount] = useState('')
+  const [category, setCategory] = useState<ExpenseCategory>('food')
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (visible) {
+      setName('')
+      setAmount('')
+      setCategory('food')
+      setErr(null)
+      setBusy(false)
+    }
+  }, [visible])
+
+  async function save() {
+    if (!name.trim()) return setErr('Enter what you spent on.')
+    const amountYen = Math.round(Number(amount))
+    if (!amountYen || amountYen <= 0) return setErr('Enter an amount in yen.')
+    setBusy(true)
+    try {
+      await api.addExpense(tripId, { day, name: name.trim(), category, amountYen })
+      onSaved()
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'Could not add expense.')
+      setBusy(false)
+    }
+  }
+
+  return (
+    <SheetModal visible={visible} title="Add expense" onClose={onClose} onSave={save} busy={busy} saveLabel="Add">
+      {err ? <Text style={styles.modalErr}>{err}</Text> : null}
+      <TextInput
+        style={styles.modalInput}
+        placeholder="What was it? (e.g. Ramen lunch)"
+        placeholderTextColor={KIOKU.inkMuted}
+        value={name}
+        onChangeText={setName}
+        autoFocus
+      />
+      <TextInput
+        style={styles.modalInput}
+        placeholder="Amount in yen (¥)"
+        placeholderTextColor={KIOKU.inkMuted}
+        value={amount}
+        onChangeText={(t) => setAmount(t.replace(/[^0-9]/g, ''))}
+        keyboardType="number-pad"
+      />
+      <View style={styles.catRow}>
+        {CATEGORIES.map((c) => {
+          const on = category === c.value
+          return (
+            <Pressable
+              key={c.value}
+              style={[styles.catChip, on && styles.catChipOn]}
+              onPress={() => setCategory(c.value)}
+            >
+              <Text style={styles.catEmoji}>{c.emoji}</Text>
+              <Text style={[styles.catLabel, on && styles.catLabelOn]}>{c.label}</Text>
+            </Pressable>
+          )
+        })}
+      </View>
+    </SheetModal>
   )
 }
 
@@ -550,6 +717,56 @@ const styles = StyleSheet.create({
   placeAddr: { fontSize: 13, color: KIOKU.inkMuted, marginTop: 1 },
 
   photo: { width: 130, height: 130, borderRadius: 12, marginRight: 10, backgroundColor: KIOKU.surfaceAlt },
+
+  budgetCard: {
+    backgroundColor: KIOKU.surface,
+    borderWidth: 1,
+    borderColor: KIOKU.border,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
+  },
+  budgetTopRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 10 },
+  budgetToday: { fontSize: 22, fontWeight: '800', color: KIOKU.ink, letterSpacing: -0.3 },
+  budgetHome: { fontSize: 13, color: KIOKU.inkMuted },
+  barTrack: { height: 8, borderRadius: 4, backgroundColor: KIOKU.surfaceAlt, overflow: 'hidden' },
+  barFill: { height: 8, borderRadius: 4, backgroundColor: KIOKU.success },
+  barFillOver: { backgroundColor: KIOKU.danger },
+  barLabel: { fontSize: 12.5, color: KIOKU.inkMuted, marginTop: 7, fontWeight: '600' },
+
+  expense: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: KIOKU.surface,
+    borderWidth: 1,
+    borderColor: KIOKU.border,
+    borderRadius: 12,
+    padding: 13,
+    marginBottom: 8,
+  },
+  expenseEmoji: { fontSize: 20 },
+  expenseName: { flex: 1, fontSize: 15, fontWeight: '600', color: KIOKU.ink },
+  expenseAmounts: { alignItems: 'flex-end' },
+  expenseYen: { fontSize: 15, fontWeight: '700', color: KIOKU.ink },
+  expenseHome: { fontSize: 12, color: KIOKU.inkMuted, marginTop: 1 },
+
+  catRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 2 },
+  catChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: KIOKU.surface,
+    borderWidth: 1,
+    borderColor: KIOKU.border,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  catChipOn: { backgroundColor: KIOKU.accentSoft, borderColor: KIOKU.accent },
+  catEmoji: { fontSize: 15 },
+  catLabel: { fontSize: 13.5, fontWeight: '600', color: KIOKU.inkMuted },
+  catLabelOn: { color: KIOKU.ink },
 
   // modal
   modalBackdrop: { flex: 1, justifyContent: 'flex-end' },
