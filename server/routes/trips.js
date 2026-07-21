@@ -1,5 +1,7 @@
 import { Router } from 'express'
 import Trip, { TRAVEL_TYPES } from '../models/Trip.js'
+import User from '../models/User.js'
+import Follow from '../models/Follow.js'
 import Like from '../models/Like.js'
 import Favorite from '../models/Favorite.js'
 import Comment from '../models/Comment.js'
@@ -183,9 +185,10 @@ router.post('/', async (req, res) => {
   res.status(201).json(serializeTrip(trip))
 })
 
-async function attachCardData(trips, userId) {
+export async function attachCardData(trips, userId) {
   const tripIds = trips.map((t) => t._id)
-  const [coverPhotos, likeCounts, myLikes, myFavorites] = await Promise.all([
+  const creatorIds = [...new Set(trips.map((t) => t.createdBy.toString()))]
+  const [coverPhotos, likeCounts, myLikes, myFavorites, creators] = await Promise.all([
     Photo.aggregate([
       { $match: { trip: { $in: tripIds }, hiddenFromPublic: { $ne: true } } },
       { $sort: { day: 1, order: 1, createdAt: 1 } },
@@ -197,15 +200,19 @@ async function attachCardData(trips, userId) {
     ]),
     Like.find({ trip: { $in: tripIds }, user: userId }),
     Favorite.find({ trip: { $in: tripIds }, user: userId }),
+    User.find({ _id: { $in: creatorIds } }, 'name'),
   ])
   const coverByTrip = Object.fromEntries(coverPhotos.map((c) => [c._id.toString(), c.url]))
   const likesByTrip = Object.fromEntries(likeCounts.map((c) => [c._id.toString(), c.count]))
   const likedSet = new Set(myLikes.map((l) => l.trip.toString()))
   const favoritedSet = new Set(myFavorites.map((f) => f.trip.toString()))
+  const nameByCreator = Object.fromEntries(creators.map((u) => [u._id.toString(), u.name]))
 
   return trips.map((trip) => ({
     id: trip._id,
     name: trip.name,
+    createdBy: trip.createdBy,
+    createdByName: nameByCreator[trip.createdBy.toString()] || null,
     destination: trip.destination || '',
     travelType: trip.travelType,
     days: tripDayKeys(trip).length,
@@ -225,10 +232,17 @@ router.get('/feed', async (req, res) => {
   const limit = Math.min(Math.max(Number(req.query.limit) || FEED_PAGE_SIZE, 1), 50)
   const offset = Math.max(Number(req.query.offset) || 0, 0)
 
+  // scope=following restricts to trips by people the viewer follows.
+  const match = { published: true }
+  if (req.query.scope === 'following') {
+    const follows = await Follow.find({ follower: req.userId }, 'following')
+    match.createdBy = { $in: follows.map((f) => f.following) }
+  }
+
   // Order + paginate in the DB: most-loved first, then newest.
   const [ordered, total] = await Promise.all([
     Trip.aggregate([
-      { $match: { published: true } },
+      { $match: match },
       { $lookup: { from: 'likes', localField: '_id', foreignField: 'trip', as: 'likes' } },
       { $addFields: { likesCount: { $size: '$likes' } } },
       { $sort: { likesCount: -1, publishedAt: -1, _id: 1 } },
@@ -236,7 +250,7 @@ router.get('/feed', async (req, res) => {
       { $limit: limit },
       { $project: { _id: 1 } },
     ]),
-    Trip.countDocuments({ published: true }),
+    Trip.countDocuments(match),
   ])
 
   const orderIndex = new Map(ordered.map((t, i) => [t._id.toString(), i]))
