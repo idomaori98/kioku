@@ -239,13 +239,11 @@ export default function TripDetailScreen() {
             ) : null}
           </View>
 
-          {isOwner ? (
-            <Pressable style={styles.recapBtn} onPress={() => router.push(`/recap/${trip.id}`)}>
-              <Ionicons name="stats-chart-outline" size={16} color={KIOKU.ink} />
-              <Text style={styles.recapText}>View trip recap</Text>
-              <Ionicons name="chevron-forward" size={16} color={KIOKU.inkMuted} />
-            </Pressable>
-          ) : null}
+          <Pressable style={styles.recapBtn} onPress={() => router.push(`/recap/${trip.id}`)}>
+            <Ionicons name="stats-chart-outline" size={16} color={KIOKU.ink} />
+            <Text style={styles.recapText}>View trip recap</Text>
+            <Ionicons name="chevron-forward" size={16} color={KIOKU.inkMuted} />
+          </Pressable>
 
           {/* Day pager */}
           <View style={styles.pager}>

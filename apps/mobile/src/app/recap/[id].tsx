@@ -4,9 +4,56 @@ import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-rou
 import { Image } from 'expo-image'
 import { Ionicons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { api, type Recap, type ExpenseCategory } from '@/lib/api'
+import { api, type Recap, type PublicTrip, type ExpenseCategory } from '@/lib/api'
 import { KIOKU } from '@/constants/kioku'
 import { ErrorState, Loading } from '@/components/ui'
+
+const CATEGORY_ORDER: ExpenseCategory[] = ['food', 'transport', 'fun', 'shopping', 'other']
+
+// Build the same recap shape from an itinerary payload, so viewers who aren't
+// members (the member-gated /recap 403s for them) still get a recap of a
+// published trip. Totals reflect the public view (hidden items already excluded).
+function recapFromItinerary(t: PublicTrip): Recap {
+  const cats: Partial<Record<ExpenseCategory, { yen: number; home: number }>> = {}
+  const days = t.days.map((d) => {
+    for (const e of d.expenses) {
+      const c = (cats[e.category] ??= { yen: 0, home: 0 })
+      c.yen += e.amountYen
+      c.home += e.amountHome
+    }
+    return {
+      day: d.day,
+      note: d.note,
+      expenseYen: d.expenses.reduce((s, e) => s + e.amountYen, 0),
+      expenseHome: d.expenses.reduce((s, e) => s + e.amountHome, 0),
+      photoCount: d.photos.length,
+      placeCount: d.places.length,
+    }
+  })
+  return {
+    totals: {
+      days: t.stats.days,
+      travelers: t.stats.travelers,
+      photos: t.stats.photos,
+      places: t.stats.places,
+      spendYen: t.stats.spendYen,
+      spendHome: t.stats.spendHome,
+      homeCurrency: t.homeCurrency,
+    },
+    spendingByCategory: CATEGORY_ORDER.map((category) => ({
+      category,
+      yen: cats[category]?.yen ?? 0,
+      home: cats[category]?.home ?? 0,
+    })).filter((c) => c.yen > 0),
+    photos: t.days.flatMap((d) => d.photos.map((p) => ({ id: p.id, url: p.url, day: d.day }))),
+    places: t.days.flatMap((d) =>
+      d.places
+        .filter((p) => p.lat != null && p.lng != null)
+        .map((p) => ({ id: p.id, name: p.name, lat: p.lat as number, lng: p.lng as number, day: d.day }))
+    ),
+    days,
+  }
+}
 
 const CATEGORY_META: Record<ExpenseCategory, { emoji: string; label: string; color: string }> = {
   food: { emoji: '🍜', label: 'Food', color: '#c1443c' },
@@ -34,17 +81,26 @@ export default function RecapScreen() {
   const [recap, setRecap] = useState<Recap | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const load = useCallback(() => {
+  const load = useCallback(async () => {
     if (!id) return
     setError(null)
     setRecap(null)
-    api
-      .getRecap(id)
-      .then(setRecap)
-      .catch((e) => setError(e instanceof Error ? e.message : 'Failed to load'))
+    try {
+      let r: Recap
+      try {
+        // Member view — full recap (includes items hidden from the public).
+        r = await api.getRecap(id)
+      } catch {
+        // Non-member viewing a published trip — derive from the public itinerary.
+        r = recapFromItinerary(await api.getItinerary(id))
+      }
+      setRecap(r)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to load')
+    }
   }, [id])
 
-  useFocusEffect(load)
+  useFocusEffect(useCallback(() => void load(), [load]))
 
   if (error || !recap) {
     return (
