@@ -245,6 +245,17 @@ export default function TripDetailScreen() {
             <Ionicons name="chevron-forward" size={16} color={KIOKU.inkMuted} />
           </Pressable>
 
+          {trip.published ? (
+            <Pressable
+              style={styles.recapBtn}
+              onPress={() => router.push(`/comments/${trip.id}?owner=${isOwner ? 1 : 0}`)}
+            >
+              <Ionicons name="chatbubble-outline" size={16} color={KIOKU.ink} />
+              <Text style={styles.recapText}>Comments</Text>
+              <Ionicons name="chevron-forward" size={16} color={KIOKU.inkMuted} />
+            </Pressable>
+          ) : null}
+
           {/* Day pager */}
           <View style={styles.pager}>
             <Pressable

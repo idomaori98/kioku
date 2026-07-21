@@ -140,6 +140,14 @@ export type Recap = {
   }[]
 }
 
+// GET/POST /trips/:tripId/comments (published trips only) — see server/routes/comments.js.
+export type TripComment = {
+  id: string
+  text: string
+  createdAt: string
+  user: { id: string; name: string; photoUrl?: string }
+}
+
 type RequestOptions = {
   method?: string
   body?: unknown
@@ -198,6 +206,11 @@ export const api = {
   unpublishTrip: (id: string) => request<Trip>(`/trips/${id}/unpublish`, { method: 'POST' }),
   likeTrip: (id: string) => request(`/trips/${id}/like`, { method: 'POST' }),
   unlikeTrip: (id: string) => request(`/trips/${id}/like`, { method: 'DELETE' }),
+  getComments: (tripId: string) => request<TripComment[]>(`/trips/${tripId}/comments`),
+  addComment: (tripId: string, text: string) =>
+    request<TripComment>(`/trips/${tripId}/comments`, { method: 'POST', body: { text } }),
+  deleteComment: (tripId: string, commentId: string) =>
+    request(`/trips/${tripId}/comments/${commentId}`, { method: 'DELETE' }),
   addPlace: (tripId: string, input: { day: string; name: string; address?: string }) =>
     request(`/trips/${tripId}/places`, {
       method: 'POST',
