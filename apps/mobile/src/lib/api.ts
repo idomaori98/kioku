@@ -116,6 +116,30 @@ export type PublicTrip = {
   days: PublicDay[]
 }
 
+// GET /trips/:id/recap (member-gated) — see server/routes/recap.js.
+export type Recap = {
+  totals: {
+    days: number
+    travelers: number
+    photos: number
+    places: number
+    spendYen: number
+    spendHome: number
+    homeCurrency: string
+  }
+  spendingByCategory: { category: ExpenseCategory; yen: number; home: number }[]
+  photos: { id: string; url: string; day: string }[]
+  places: { id: string; name: string; lat: number; lng: number; day: string }[]
+  days: {
+    day: string
+    note: string
+    expenseYen: number
+    expenseHome: number
+    photoCount: number
+    placeCount: number
+  }[]
+}
+
 type RequestOptions = {
   method?: string
   body?: unknown
@@ -169,6 +193,7 @@ export const api = {
   }) => request<Trip>('/trips', { method: 'POST', body: input }),
   // Full itinerary; works for published trips and the viewer's own private trips.
   getItinerary: (id: string) => request<PublicTrip>(`/trips/${id}/itinerary`),
+  getRecap: (id: string) => request<Recap>(`/trips/${id}/recap`),
   publishTrip: (id: string) => request<Trip>(`/trips/${id}/publish`, { method: 'POST' }),
   unpublishTrip: (id: string) => request<Trip>(`/trips/${id}/unpublish`, { method: 'POST' }),
   likeTrip: (id: string) => request(`/trips/${id}/like`, { method: 'POST' }),

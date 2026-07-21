@@ -239,6 +239,14 @@ export default function TripDetailScreen() {
             ) : null}
           </View>
 
+          {isOwner ? (
+            <Pressable style={styles.recapBtn} onPress={() => router.push(`/recap/${trip.id}`)}>
+              <Ionicons name="stats-chart-outline" size={16} color={KIOKU.ink} />
+              <Text style={styles.recapText}>View trip recap</Text>
+              <Ionicons name="chevron-forward" size={16} color={KIOKU.inkMuted} />
+            </Pressable>
+          ) : null}
+
           {/* Day pager */}
           <View style={styles.pager}>
             <Pressable
@@ -905,6 +913,20 @@ const styles = StyleSheet.create({
   pubBtnOff: { backgroundColor: KIOKU.accent },
   pubBtnOn: { backgroundColor: KIOKU.surface, borderWidth: 1, borderColor: KIOKU.success },
   pubText: { fontSize: 14, fontWeight: '700' },
+
+  recapBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: KIOKU.surface,
+    borderWidth: 1,
+    borderColor: KIOKU.border,
+    borderRadius: 12,
+    paddingVertical: 13,
+    paddingHorizontal: 16,
+    marginTop: 12,
+  },
+  recapText: { flex: 1, fontSize: 14.5, fontWeight: '700', color: KIOKU.ink },
 
   pager: {
     flexDirection: 'row',
