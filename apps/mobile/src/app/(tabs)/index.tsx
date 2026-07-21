@@ -31,7 +31,15 @@ export default function TripsScreen() {
 
   return (
     <Screen>
-      <ScreenTitle title="Your trips" subtitle="Plan and revisit your journeys" />
+      <ScreenTitle
+        title="Your trips"
+        subtitle="Plan and revisit your journeys"
+        action={
+          <Pressable style={styles.addBtn} onPress={() => router.push('/new-trip')} hitSlop={8}>
+            <Ionicons name="add" size={24} color="#fff" />
+          </Pressable>
+        }
+      />
       {error ? (
         <ErrorState message={error} onRetry={load} />
       ) : !trips ? (
@@ -69,6 +77,14 @@ export default function TripsScreen() {
 }
 
 const styles = StyleSheet.create({
+  addBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: KIOKU.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   list: { paddingHorizontal: 16, paddingBottom: 24, gap: 10 },
   card: {
     flexDirection: 'row',

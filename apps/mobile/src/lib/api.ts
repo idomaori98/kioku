@@ -144,6 +144,16 @@ export const api = {
     }),
   me: () => request<User>('/auth/me'),
   listTrips: () => request<Trip[]>('/trips'),
+  createTrip: (input: {
+    name: string
+    destination?: string
+    startDate: string
+    endDate: string
+    dailyBudget: number
+    homeCurrency: string
+    tripType: 'shared' | 'family'
+    travelType: Trip['travelType']
+  }) => request<Trip>('/trips', { method: 'POST', body: input }),
   // Full itinerary; works for published trips and the viewer's own private trips.
   getItinerary: (id: string) => request<PublicTrip>(`/trips/${id}/itinerary`),
   getFeed: (params: { limit?: number; offset?: number } = {}) => {

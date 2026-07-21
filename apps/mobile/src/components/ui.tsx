@@ -12,10 +12,21 @@ export function Screen({ children }: { children: ReactNode }) {
   )
 }
 
-export function ScreenTitle({ title, subtitle }: { title: string; subtitle?: string }) {
+export function ScreenTitle({
+  title,
+  subtitle,
+  action,
+}: {
+  title: string
+  subtitle?: string
+  action?: ReactNode
+}) {
   return (
     <View style={styles.header}>
-      <Text style={styles.title}>{title}</Text>
+      <View style={styles.headerRow}>
+        <Text style={styles.title}>{title}</Text>
+        {action}
+      </View>
       {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
     </View>
   )
@@ -65,6 +76,7 @@ export function EmptyState({
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: KIOKU.bg },
   header: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 12 },
+  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   title: { fontSize: 30, fontWeight: '800', color: KIOKU.ink, letterSpacing: -0.5 },
   subtitle: { fontSize: 14, color: KIOKU.inkMuted, marginTop: 2 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 6 },
