@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
-import { useFocusEffect } from 'expo-router'
+import { useFocusEffect, useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { api, type Trip } from '@/lib/api'
 import { KIOKU } from '@/constants/kioku'
@@ -14,6 +14,7 @@ function formatRange(trip: Trip) {
 }
 
 export default function TripsScreen() {
+  const router = useRouter()
   const [trips, setTrips] = useState<Trip[] | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -43,7 +44,7 @@ export default function TripsScreen() {
           keyExtractor={(t) => t.id}
           contentContainerStyle={styles.list}
           renderItem={({ item }) => (
-            <Pressable style={styles.card}>
+            <Pressable style={styles.card} onPress={() => router.push(`/trip/${item.id}`)}>
               <View style={styles.iconWrap}>
                 <Ionicons name="airplane-outline" size={18} color={KIOKU.accent} />
               </View>

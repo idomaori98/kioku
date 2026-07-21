@@ -87,7 +87,8 @@ export type PublicTrip = {
   travelType: Trip['travelType']
   createdBy: string
   createdByName: string | null
-  publishedAt: string
+  published: boolean
+  publishedAt: string | null
   likesCount: number
   likedByMe: boolean
   favoritedByMe: boolean
@@ -143,7 +144,8 @@ export const api = {
     }),
   me: () => request<User>('/auth/me'),
   listTrips: () => request<Trip[]>('/trips'),
-  getPublicTrip: (id: string) => request<PublicTrip>(`/trips/${id}/public`),
+  // Full itinerary; works for published trips and the viewer's own private trips.
+  getItinerary: (id: string) => request<PublicTrip>(`/trips/${id}/itinerary`),
   getFeed: (params: { limit?: number; offset?: number } = {}) => {
     const qs = new URLSearchParams()
     if (params.limit != null) qs.set('limit', String(params.limit))

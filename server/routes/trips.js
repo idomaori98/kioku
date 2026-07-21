@@ -45,6 +45,86 @@ function serializeTrip(trip) {
   }
 }
 
+// Assembles the full read-only itinerary payload for a trip (used by both the
+// public view and the member-gated itinerary route). `trip` must have
+// members.user populated with at least `name`.
+async function buildItinerary(trip, userId) {
+  const creatorMember = trip.members.find((m) => m.user._id.toString() === trip.createdBy.toString())
+
+  const [expenses, places, photos, notes] = await Promise.all([
+    Expense.find({ trip: trip._id, hiddenFromPublic: { $ne: true } }).populate('addedBy', 'name'),
+    Place.find({ trip: trip._id }).populate('addedBy', 'name'),
+    Photo.find({ trip: trip._id, hiddenFromPublic: { $ne: true } })
+      .sort({ day: 1, order: 1, createdAt: 1 })
+      .populate('addedBy', 'name'),
+    DayNote.find({ trip: trip._id }),
+  ])
+
+  const notesByDay = Object.fromEntries(notes.map((n) => [n.day, n.note]))
+  const days = tripDayKeys(trip)
+  const [likesCount, myLike, myFavorite] = await Promise.all([
+    Like.countDocuments({ trip: trip._id }),
+    Like.findOne({ trip: trip._id, user: userId }),
+    Favorite.findOne({ trip: trip._id, user: userId }),
+  ])
+
+  const dayPages = days.map((day) => ({
+    day,
+    note: notesByDay[day] || '',
+    places: places
+      .filter((p) => p.day === day)
+      .map((p) => ({
+        id: p._id,
+        name: p.name,
+        address: p.address,
+        lat: p.lat,
+        lng: p.lng,
+        addedByName: p.addedBy.name,
+      })),
+    expenses: expenses
+      .filter((e) => e.day === day)
+      .map((e) => ({
+        id: e._id,
+        name: e.name,
+        category: e.category,
+        amountYen: e.amountYen,
+        amountHome: e.amountHome,
+        addedByName: e.addedBy.name,
+      })),
+    photos: photos
+      .filter((p) => p.day === day)
+      .map((p) => ({ id: p._id, url: p.url, note: p.note, addedByName: p.addedBy.name })),
+  }))
+
+  return {
+    id: trip._id,
+    name: trip.name,
+    startDate: trip.startDate,
+    endDate: trip.endDate,
+    dailyBudget: trip.dailyBudget,
+    homeCurrency: trip.homeCurrency,
+    tripType: trip.tripType,
+    destination: trip.destination || '',
+    travelType: trip.travelType,
+    createdBy: trip.createdBy,
+    createdByName: creatorMember?.user.name || null,
+    published: trip.published || false,
+    publishedAt: trip.publishedAt || null,
+    likesCount,
+    likedByMe: !!myLike,
+    favoritedByMe: !!myFavorite,
+    stats: {
+      days: days.length,
+      travelers: trip.members.length,
+      photos: photos.length,
+      places: places.length,
+      spendYen: expenses.reduce((sum, e) => sum + e.amountYen, 0),
+      spendHome: expenses.reduce((sum, e) => sum + e.amountHome, 0),
+    },
+    days: dayPages,
+  }
+}
+
 router.get('/', async (req, res) => {
   const trips = await Trip.find({ 'members.user': req.userId }).populate(
     'members.user',
@@ -410,80 +490,17 @@ router.put('/:id/publication', async (req, res) => {
 router.get('/:id/public', async (req, res) => {
   const trip = await Trip.findById(req.params.id).populate('members.user', 'name')
   if (!trip || !trip.published) return res.status(404).json({ error: 'Trip not found' })
+  res.json(await buildItinerary(trip, req.userId))
+})
 
-  const creatorMember = trip.members.find((m) => m.user._id.toString() === trip.createdBy.toString())
-
-  const [expenses, places, photos, notes] = await Promise.all([
-    Expense.find({ trip: trip._id, hiddenFromPublic: { $ne: true } }).populate('addedBy', 'name'),
-    Place.find({ trip: trip._id }).populate('addedBy', 'name'),
-    Photo.find({ trip: trip._id, hiddenFromPublic: { $ne: true } })
-      .sort({ day: 1, order: 1, createdAt: 1 })
-      .populate('addedBy', 'name'),
-    DayNote.find({ trip: trip._id }),
-  ])
-
-  const notesByDay = Object.fromEntries(notes.map((n) => [n.day, n.note]))
-  const days = tripDayKeys(trip)
-  const [likesCount, myLike, myFavorite] = await Promise.all([
-    Like.countDocuments({ trip: trip._id }),
-    Like.findOne({ trip: trip._id, user: req.userId }),
-    Favorite.findOne({ trip: trip._id, user: req.userId }),
-  ])
-
-  const dayPages = days.map((day) => ({
-    day,
-    note: notesByDay[day] || '',
-    places: places
-      .filter((p) => p.day === day)
-      .map((p) => ({
-        id: p._id,
-        name: p.name,
-        address: p.address,
-        lat: p.lat,
-        lng: p.lng,
-        addedByName: p.addedBy.name,
-      })),
-    expenses: expenses
-      .filter((e) => e.day === day)
-      .map((e) => ({
-        id: e._id,
-        name: e.name,
-        category: e.category,
-        amountYen: e.amountYen,
-        amountHome: e.amountHome,
-        addedByName: e.addedBy.name,
-      })),
-    photos: photos
-      .filter((p) => p.day === day)
-      .map((p) => ({ id: p._id, url: p.url, note: p.note, addedByName: p.addedBy.name })),
-  }))
-
-  res.json({
-    id: trip._id,
-    name: trip.name,
-    startDate: trip.startDate,
-    endDate: trip.endDate,
-    dailyBudget: trip.dailyBudget,
-    homeCurrency: trip.homeCurrency,
-    tripType: trip.tripType,
-    destination: trip.destination || '',
-    travelType: trip.travelType,
-    createdBy: trip.createdBy,
-    createdByName: creatorMember?.user.name || null,
-    publishedAt: trip.publishedAt,
-    likesCount,
-    likedByMe: !!myLike,
-    favoritedByMe: !!myFavorite,
-    stats: {
-      days: days.length,
-      travelers: trip.members.length,
-      photos: photos.length,
-      places: places.length,
-      spendYen: expenses.reduce((sum, e) => sum + e.amountYen, 0),
-      spendHome: expenses.reduce((sum, e) => sum + e.amountHome, 0),
-    },
-    days: dayPages,
-  })
+// Member-gated full itinerary — works whether or not the trip is published, so
+// the mobile app can open the owner's own (private) trips from the Trips tab.
+router.get('/:id/itinerary', async (req, res) => {
+  const trip = await Trip.findById(req.params.id).populate('members.user', 'name')
+  if (!trip) return res.status(404).json({ error: 'Trip not found' })
+  const isMember = trip.members.some((m) => m.user._id.toString() === req.userId)
+  if (!isMember && !trip.published) return res.status(403).json({ error: 'Not a member of this trip' })
+  res.json(await buildItinerary(trip, req.userId))
 })
 
 router.post('/:id/copy', async (req, res) => {

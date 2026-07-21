@@ -34,7 +34,7 @@ export default function TripDetailScreen() {
     setError(null)
     setTrip(null)
     api
-      .getPublicTrip(id)
+      .getItinerary(id)
       .then(setTrip)
       .catch((e) => setError(e instanceof Error ? e.message : 'Failed to load'))
   }, [id])
