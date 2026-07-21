@@ -156,6 +156,13 @@ export const api = {
   }) => request<Trip>('/trips', { method: 'POST', body: input }),
   // Full itinerary; works for published trips and the viewer's own private trips.
   getItinerary: (id: string) => request<PublicTrip>(`/trips/${id}/itinerary`),
+  addPlace: (tripId: string, input: { day: string; name: string; address?: string }) =>
+    request(`/trips/${tripId}/places`, {
+      method: 'POST',
+      body: { day: input.day, name: input.name, address: input.address ?? '', source: 'manual' },
+    }),
+  setDayNote: (tripId: string, day: string, note: string) =>
+    request(`/trips/${tripId}/day-note`, { method: 'PUT', body: { day, note } }),
   getFeed: (params: { limit?: number; offset?: number } = {}) => {
     const qs = new URLSearchParams()
     if (params.limit != null) qs.set('limit', String(params.limit))
