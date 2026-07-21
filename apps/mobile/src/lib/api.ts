@@ -12,6 +12,47 @@ export type User = {
 
 export type AuthResponse = { token: string; user: User }
 
+// serializeTrip in server/routes/trips.js (fields the mobile app consumes).
+export type TripMember = {
+  user: { id: string; name: string; email?: string; photoUrl?: string }
+  role: 'admin' | 'member'
+}
+
+export type Trip = {
+  id: string
+  name: string
+  destination: string
+  startDate: string
+  endDate: string
+  dailyBudget: number
+  homeCurrency: string
+  tripType: 'shared' | 'family'
+  travelType: 'family' | 'couple' | 'solo' | 'friends'
+  createdBy: string
+  createdByName?: string
+  endedAt: string | null
+  published: boolean
+  members: TripMember[]
+}
+
+// attachCardData in server/routes/trips.js (discover feed cards).
+export type FeedCard = {
+  id: string
+  name: string
+  destination: string
+  travelType: Trip['travelType']
+  days: number
+  dailyBudget: number
+  homeCurrency: string
+  coverPhotoUrl: string | null
+  likesCount: number
+  likedByMe: boolean
+  favoritedByMe: boolean
+  publishedAt: string
+}
+
+export type FeedResponse = { cards: FeedCard[]; hasMore: boolean }
+
 type RequestOptions = {
   method?: string
   body?: unknown
@@ -52,4 +93,12 @@ export const api = {
       auth: false,
     }),
   me: () => request<User>('/auth/me'),
+  listTrips: () => request<Trip[]>('/trips'),
+  getFeed: (params: { limit?: number; offset?: number } = {}) => {
+    const qs = new URLSearchParams()
+    if (params.limit != null) qs.set('limit', String(params.limit))
+    if (params.offset != null) qs.set('offset', String(params.offset))
+    const s = qs.toString()
+    return request<FeedResponse>(`/trips/feed${s ? `?${s}` : ''}`)
+  },
 }
