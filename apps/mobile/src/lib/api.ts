@@ -180,6 +180,13 @@ export const api = {
     tripId: string,
     input: { day: string; name: string; category: ExpenseCategory; amountYen: number }
   ) => request(`/trips/${tripId}/expenses`, { method: 'POST', body: input }),
+  getPhotoUploadUrl: (tripId: string, contentType: string) =>
+    request<{ uploadUrl: string; key: string; publicUrl: string }>(`/trips/${tripId}/photos/upload-url`, {
+      method: 'POST',
+      body: { contentType },
+    }),
+  createPhoto: (tripId: string, input: { day: string; key: string; publicUrl: string; note?: string }) =>
+    request(`/trips/${tripId}/photos`, { method: 'POST', body: input }),
   getFeed: (params: { limit?: number; offset?: number } = {}) => {
     const qs = new URLSearchParams()
     if (params.limit != null) qs.set('limit', String(params.limit))

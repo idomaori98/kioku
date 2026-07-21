@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
+  ActivityIndicator,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -14,6 +15,8 @@ import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-rou
 import { Image } from 'expo-image'
 import { Ionicons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import * as ImagePicker from 'expo-image-picker'
+import { manipulateAsync, SaveFormat } from 'expo-image-manipulator'
 import { api, type PublicTrip, type PublicDay, type ExpenseCategory } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
 import { KIOKU } from '@/constants/kioku'
@@ -221,7 +224,46 @@ function DayView({
   const [addingPlace, setAddingPlace] = useState(false)
   const [editingNote, setEditingNote] = useState(false)
   const [addingExpense, setAddingExpense] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [photoError, setPhotoError] = useState<string | null>(null)
   const hasNote = !!day.note.trim()
+
+  async function addPhoto() {
+    setPhotoError(null)
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync()
+    if (!perm.granted) {
+      setPhotoError('Photo access is needed to add photos.')
+      return
+    }
+    const picked = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 1,
+    })
+    if (picked.canceled || !picked.assets?.length) return
+
+    setUploading(true)
+    try {
+      // Re-encode to JPEG (iOS assets are often HEIC, which S3 rejects) and shrink.
+      const jpeg = await manipulateAsync(picked.assets[0].uri, [{ resize: { width: 1600 } }], {
+        compress: 0.7,
+        format: SaveFormat.JPEG,
+      })
+      const { uploadUrl, key, publicUrl } = await api.getPhotoUploadUrl(trip.id, 'image/jpeg')
+      const blob = await (await fetch(jpeg.uri)).blob()
+      const put = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'image/jpeg' },
+        body: blob,
+      })
+      if (!put.ok) throw new Error('Upload to storage failed')
+      await api.createPhoto(trip.id, { day: day.day, key, publicUrl })
+      onChanged()
+    } catch (e) {
+      setPhotoError(e instanceof Error ? e.message : 'Could not add photo.')
+    } finally {
+      setUploading(false)
+    }
+  }
 
   const dayYen = day.expenses.reduce((s, e) => s + e.amountYen, 0)
   const dayHome = day.expenses.reduce((s, e) => s + e.amountHome, 0)
@@ -311,15 +353,34 @@ function DayView({
         ))
       )}
 
-      {/* Photos (read-only for now — Phase D adds upload) */}
-      {day.photos.length > 0 ? (
+      {/* Photos */}
+      {isOwner || day.photos.length > 0 ? (
         <>
-          <Text style={[styles.sectionLabel, { marginTop: 18 }]}>Photos</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8 }}>
-            {day.photos.map((ph) => (
-              <Image key={ph.id} source={{ uri: ph.url }} style={styles.photo} contentFit="cover" transition={150} />
-            ))}
-          </ScrollView>
+          <View style={styles.sectionHead}>
+            <Text style={styles.sectionLabel}>Photos</Text>
+            {isOwner ? (
+              <Pressable onPress={addPhoto} hitSlop={8} style={styles.addLink} disabled={uploading}>
+                {uploading ? (
+                  <ActivityIndicator size="small" color={KIOKU.accent} />
+                ) : (
+                  <>
+                    <Ionicons name="add" size={16} color={KIOKU.accent} />
+                    <Text style={styles.addLinkText}>Add photo</Text>
+                  </>
+                )}
+              </Pressable>
+            ) : null}
+          </View>
+          {photoError ? <Text style={styles.modalErr}>{photoError}</Text> : null}
+          {day.photos.length === 0 ? (
+            <Text style={styles.emptyLine}>No photos yet.</Text>
+          ) : (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 2 }}>
+              {day.photos.map((ph) => (
+                <Image key={ph.id} source={{ uri: ph.url }} style={styles.photo} contentFit="cover" transition={150} />
+              ))}
+            </ScrollView>
+          )}
         </>
       ) : null}
 
