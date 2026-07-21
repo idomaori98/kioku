@@ -71,7 +71,7 @@ export type PublicPhoto = {
 }
 
 export type PublicDay = {
-  day: number
+  day: string // date key, e.g. "2026-09-01"
   note: string
   places: PublicPlace[]
   photos: PublicPhoto[]

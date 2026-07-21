@@ -16,10 +16,20 @@ const TRAVEL_LABEL: Record<PublicTrip['travelType'], string> = {
 }
 
 function formatRange(start: string, end: string) {
-  const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' }
-  const s = new Date(start).toLocaleDateString(undefined, opts)
-  const e = new Date(end).toLocaleDateString(undefined, { ...opts, year: 'numeric' })
+  const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', timeZone: 'UTC' }
+  const s = new Date(`${start.slice(0, 10)}T00:00:00Z`).toLocaleDateString(undefined, opts)
+  const e = new Date(`${end.slice(0, 10)}T00:00:00Z`).toLocaleDateString(undefined, { ...opts, year: 'numeric' })
   return `${s} – ${e}`
+}
+
+// Mirrors formatDayLabel in client/src/lib/days.js — day is a date key string.
+function formatDayLabel(dayKey: string) {
+  return new Date(`${dayKey}T00:00:00Z`).toLocaleDateString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    timeZone: 'UTC',
+  })
 }
 
 export default function TripDetailScreen() {
@@ -107,8 +117,8 @@ export default function TripDetailScreen() {
 
             {/* Itinerary */}
             <Text style={styles.sectionTitle}>Itinerary</Text>
-            {trip.days.map((day) => (
-              <DayBlock key={day.day} day={day} />
+            {trip.days.map((day, i) => (
+              <DayBlock key={day.day} day={day} index={i} />
             ))}
           </View>
         </ScrollView>
@@ -127,15 +137,18 @@ function Stat({ icon, value, label }: { icon: keyof typeof Ionicons.glyphMap; va
   )
 }
 
-function DayBlock({ day }: { day: PublicDay }) {
+function DayBlock({ day, index }: { day: PublicDay; index: number }) {
   const empty = day.places.length === 0 && day.photos.length === 0 && !day.note.trim()
   return (
     <View style={styles.day}>
       <View style={styles.dayHeader}>
         <View style={styles.dayBadge}>
-          <Text style={styles.dayBadgeText}>{day.day}</Text>
+          <Text style={styles.dayBadgeText}>{index + 1}</Text>
         </View>
-        <Text style={styles.dayTitle}>Day {day.day}</Text>
+        <View>
+          <Text style={styles.dayTitle}>Day {index + 1}</Text>
+          <Text style={styles.dayDate}>{formatDayLabel(day.day)}</Text>
+        </View>
       </View>
 
       {empty ? (
@@ -239,6 +252,7 @@ const styles = StyleSheet.create({
   },
   dayBadgeText: { color: '#fff', fontSize: 14, fontWeight: '800' },
   dayTitle: { fontSize: 17, fontWeight: '700', color: KIOKU.ink },
+  dayDate: { fontSize: 12.5, color: KIOKU.inkMuted, marginTop: 1 },
   dayEmpty: { fontSize: 14, color: KIOKU.inkMuted, fontStyle: 'italic' },
   dayNote: { fontSize: 15, lineHeight: 21, color: KIOKU.ink, marginBottom: 10 },
 
