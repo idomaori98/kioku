@@ -174,12 +174,25 @@ export const api = {
       method: 'POST',
       body: { day: input.day, name: input.name, address: input.address ?? '', source: 'manual' },
     }),
+  updatePlace: (tripId: string, placeId: string, name: string) =>
+    request(`/trips/${tripId}/places/${placeId}`, { method: 'PUT', body: { name } }),
+  deletePlace: (tripId: string, placeId: string) =>
+    request(`/trips/${tripId}/places/${placeId}`, { method: 'DELETE' }),
   setDayNote: (tripId: string, day: string, note: string) =>
     request(`/trips/${tripId}/day-note`, { method: 'PUT', body: { day, note } }),
   addExpense: (
     tripId: string,
     input: { day: string; name: string; category: ExpenseCategory; amountYen: number }
   ) => request(`/trips/${tripId}/expenses`, { method: 'POST', body: input }),
+  updateExpense: (
+    tripId: string,
+    expenseId: string,
+    input: { name: string; category: ExpenseCategory; amountYen: number }
+  ) => request(`/trips/${tripId}/expenses/${expenseId}`, { method: 'PUT', body: input }),
+  deleteExpense: (tripId: string, expenseId: string) =>
+    request(`/trips/${tripId}/expenses/${expenseId}`, { method: 'DELETE' }),
+  deletePhoto: (tripId: string, photoId: string) =>
+    request(`/trips/${tripId}/photos/${photoId}`, { method: 'DELETE' }),
   getPhotoUploadUrl: (tripId: string, contentType: string) =>
     request<{ uploadUrl: string; key: string; publicUrl: string }>(`/trips/${tripId}/photos/upload-url`, {
       method: 'POST',

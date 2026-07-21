@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -17,10 +18,18 @@ import { Ionicons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import * as ImagePicker from 'expo-image-picker'
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator'
-import { api, type PublicTrip, type PublicDay, type ExpenseCategory } from '@/lib/api'
+import {
+  api,
+  type PublicTrip,
+  type PublicDay,
+  type PublicPlace,
+  type PublicExpense,
+  type ExpenseCategory,
+} from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
 import { KIOKU } from '@/constants/kioku'
 import { ErrorState, Loading } from '@/components/ui'
+import { SwipeableRow } from '@/components/SwipeableRow'
 
 const TRAVEL_LABEL: Record<PublicTrip['travelType'], string> = {
   family: 'Family',
@@ -221,12 +230,30 @@ function DayView({
   isOwner: boolean
   onChanged: () => void
 }) {
-  const [addingPlace, setAddingPlace] = useState(false)
+  const [placeModal, setPlaceModal] = useState<null | { place?: PublicPlace }>(null)
   const [editingNote, setEditingNote] = useState(false)
-  const [addingExpense, setAddingExpense] = useState(false)
+  const [expenseModal, setExpenseModal] = useState<null | { expense?: PublicExpense }>(null)
   const [uploading, setUploading] = useState(false)
   const [photoError, setPhotoError] = useState<string | null>(null)
   const hasNote = !!day.note.trim()
+
+  function confirmDelete(label: string, run: () => Promise<unknown>) {
+    Alert.alert(`Delete ${label}?`, 'This cannot be undone.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await run()
+            onChanged()
+          } catch (e) {
+            Alert.alert('Could not delete', e instanceof Error ? e.message : 'Please try again.')
+          }
+        },
+      },
+    ])
+  }
 
   async function addPhoto() {
     setPhotoError(null)
@@ -288,7 +315,7 @@ function DayView({
       <View style={styles.sectionHead}>
         <Text style={styles.sectionLabel}>Places</Text>
         {isOwner ? (
-          <Pressable onPress={() => setAddingPlace(true)} hitSlop={8} style={styles.addLink}>
+          <Pressable onPress={() => setPlaceModal({})} hitSlop={8} style={styles.addLink}>
             <Ionicons name="add" size={16} color={KIOKU.accent} />
             <Text style={styles.addLinkText}>Add place</Text>
           </Pressable>
@@ -298,26 +325,42 @@ function DayView({
       {day.places.length === 0 ? (
         <Text style={styles.emptyLine}>No places added.</Text>
       ) : (
-        day.places.map((p) => (
-          <View key={p.id} style={styles.place}>
-            <Ionicons name="location" size={16} color={KIOKU.accent} style={{ marginTop: 2 }} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.placeName}>{p.name}</Text>
-              {p.address ? (
-                <Text style={styles.placeAddr} numberOfLines={1}>
-                  {p.address}
-                </Text>
-              ) : null}
+        day.places.map((p) => {
+          const row = (
+            <View style={styles.place}>
+              <Ionicons name="location" size={16} color={KIOKU.accent} style={{ marginTop: 2 }} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.placeName}>{p.name}</Text>
+                {p.address ? (
+                  <Text style={styles.placeAddr} numberOfLines={1}>
+                    {p.address}
+                  </Text>
+                ) : null}
+              </View>
             </View>
-          </View>
-        ))
+          )
+          return isOwner ? (
+            <SwipeableRow
+              key={p.id}
+              containerStyle={styles.swipeRow}
+              onEdit={() => setPlaceModal({ place: p })}
+              onDelete={() => confirmDelete('place', () => api.deletePlace(trip.id, p.id))}
+            >
+              {row}
+            </SwipeableRow>
+          ) : (
+            <View key={p.id} style={styles.rowGap}>
+              {row}
+            </View>
+          )
+        })
       )}
 
       {/* Expenses */}
       <View style={styles.sectionHead}>
         <Text style={styles.sectionLabel}>Expenses</Text>
         {isOwner ? (
-          <Pressable onPress={() => setAddingExpense(true)} hitSlop={8} style={styles.addLink}>
+          <Pressable onPress={() => setExpenseModal({})} hitSlop={8} style={styles.addLink}>
             <Ionicons name="add" size={16} color={KIOKU.accent} />
             <Text style={styles.addLinkText}>Add expense</Text>
           </Pressable>
@@ -337,20 +380,36 @@ function DayView({
       {day.expenses.length === 0 ? (
         <Text style={styles.emptyLine}>No expenses logged.</Text>
       ) : (
-        day.expenses.map((e) => (
-          <View key={e.id} style={styles.expense}>
-            <Text style={styles.expenseEmoji}>{CATEGORY_EMOJI[e.category]}</Text>
-            <Text style={styles.expenseName} numberOfLines={1}>
-              {e.name}
-            </Text>
-            <View style={styles.expenseAmounts}>
-              <Text style={styles.expenseYen}>{yen(e.amountYen)}</Text>
-              <Text style={styles.expenseHome}>
-                {e.amountHome.toFixed(2)} {trip.homeCurrency}
+        day.expenses.map((e) => {
+          const row = (
+            <View style={styles.expense}>
+              <Text style={styles.expenseEmoji}>{CATEGORY_EMOJI[e.category]}</Text>
+              <Text style={styles.expenseName} numberOfLines={1}>
+                {e.name}
               </Text>
+              <View style={styles.expenseAmounts}>
+                <Text style={styles.expenseYen}>{yen(e.amountYen)}</Text>
+                <Text style={styles.expenseHome}>
+                  {e.amountHome.toFixed(2)} {trip.homeCurrency}
+                </Text>
+              </View>
             </View>
-          </View>
-        ))
+          )
+          return isOwner ? (
+            <SwipeableRow
+              key={e.id}
+              containerStyle={styles.swipeRow}
+              onEdit={() => setExpenseModal({ expense: e })}
+              onDelete={() => confirmDelete('expense', () => api.deleteExpense(trip.id, e.id))}
+            >
+              {row}
+            </SwipeableRow>
+          ) : (
+            <View key={e.id} style={styles.rowGap}>
+              {row}
+            </View>
+          )
+        })
       )}
 
       {/* Photos */}
@@ -377,20 +436,31 @@ function DayView({
           ) : (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 2 }}>
               {day.photos.map((ph) => (
-                <Image key={ph.id} source={{ uri: ph.url }} style={styles.photo} contentFit="cover" transition={150} />
+                <View key={ph.id} style={styles.photoWrap}>
+                  <Image source={{ uri: ph.url }} style={styles.photo} contentFit="cover" transition={150} />
+                  {isOwner ? (
+                    <Pressable
+                      style={styles.photoDelete}
+                      hitSlop={6}
+                      onPress={() => confirmDelete('photo', () => api.deletePhoto(trip.id, ph.id))}
+                    >
+                      <Ionicons name="close" size={15} color="#fff" />
+                    </Pressable>
+                  ) : null}
+                </View>
               ))}
             </ScrollView>
           )}
         </>
       ) : null}
 
-      <AddPlaceModal
-        visible={addingPlace}
+      <PlaceModal
+        state={placeModal}
         tripId={trip.id}
         day={day.day}
-        onClose={() => setAddingPlace(false)}
+        onClose={() => setPlaceModal(null)}
         onSaved={() => {
-          setAddingPlace(false)
+          setPlaceModal(null)
           onChanged()
         }}
       />
@@ -405,13 +475,13 @@ function DayView({
           onChanged()
         }}
       />
-      <AddExpenseModal
-        visible={addingExpense}
+      <ExpenseModal
+        state={expenseModal}
         tripId={trip.id}
         day={day.day}
-        onClose={() => setAddingExpense(false)}
+        onClose={() => setExpenseModal(null)}
         onSaved={() => {
-          setAddingExpense(false)
+          setExpenseModal(null)
           onChanged()
         }}
       />
@@ -438,19 +508,21 @@ function BudgetBar({ spent, budget }: { spent: number; budget: number }) {
   )
 }
 
-function AddExpenseModal({
-  visible,
+function ExpenseModal({
+  state,
   tripId,
   day,
   onClose,
   onSaved,
 }: {
-  visible: boolean
+  state: null | { expense?: PublicExpense }
   tripId: string
   day: string
   onClose: () => void
   onSaved: () => void
 }) {
+  const visible = state !== null
+  const editing = state?.expense
   const [name, setName] = useState('')
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState<ExpenseCategory>('food')
@@ -459,13 +531,13 @@ function AddExpenseModal({
 
   useEffect(() => {
     if (visible) {
-      setName('')
-      setAmount('')
-      setCategory('food')
+      setName(editing?.name ?? '')
+      setAmount(editing ? String(editing.amountYen) : '')
+      setCategory(editing?.category ?? 'food')
       setErr(null)
       setBusy(false)
     }
-  }, [visible])
+  }, [visible, editing])
 
   async function save() {
     if (!name.trim()) return setErr('Enter what you spent on.')
@@ -473,16 +545,27 @@ function AddExpenseModal({
     if (!amountYen || amountYen <= 0) return setErr('Enter an amount in yen.')
     setBusy(true)
     try {
-      await api.addExpense(tripId, { day, name: name.trim(), category, amountYen })
+      if (editing) {
+        await api.updateExpense(tripId, editing.id, { name: name.trim(), category, amountYen })
+      } else {
+        await api.addExpense(tripId, { day, name: name.trim(), category, amountYen })
+      }
       onSaved()
     } catch (e) {
-      setErr(e instanceof Error ? e.message : 'Could not add expense.')
+      setErr(e instanceof Error ? e.message : 'Could not save expense.')
       setBusy(false)
     }
   }
 
   return (
-    <SheetModal visible={visible} title="Add expense" onClose={onClose} onSave={save} busy={busy} saveLabel="Add">
+    <SheetModal
+      visible={visible}
+      title={editing ? 'Edit expense' : 'Add expense'}
+      onClose={onClose}
+      onSave={save}
+      busy={busy}
+      saveLabel={editing ? 'Save' : 'Add'}
+    >
       {err ? <Text style={styles.modalErr}>{err}</Text> : null}
       <TextInput
         style={styles.modalInput}
@@ -519,19 +602,21 @@ function AddExpenseModal({
   )
 }
 
-function AddPlaceModal({
-  visible,
+function PlaceModal({
+  state,
   tripId,
   day,
   onClose,
   onSaved,
 }: {
-  visible: boolean
+  state: null | { place?: PublicPlace }
   tripId: string
   day: string
   onClose: () => void
   onSaved: () => void
 }) {
+  const visible = state !== null
+  const editing = state?.place
   const [name, setName] = useState('')
   const [address, setAddress] = useState('')
   const [busy, setBusy] = useState(false)
@@ -539,27 +624,38 @@ function AddPlaceModal({
 
   useEffect(() => {
     if (visible) {
-      setName('')
-      setAddress('')
+      setName(editing?.name ?? '')
+      setAddress(editing?.address ?? '')
       setErr(null)
       setBusy(false)
     }
-  }, [visible])
+  }, [visible, editing])
 
   async function save() {
     if (!name.trim()) return setErr('Enter a place name.')
     setBusy(true)
     try {
-      await api.addPlace(tripId, { day, name: name.trim(), address: address.trim() })
+      if (editing) {
+        await api.updatePlace(tripId, editing.id, name.trim())
+      } else {
+        await api.addPlace(tripId, { day, name: name.trim(), address: address.trim() })
+      }
       onSaved()
     } catch (e) {
-      setErr(e instanceof Error ? e.message : 'Could not add place.')
+      setErr(e instanceof Error ? e.message : 'Could not save place.')
       setBusy(false)
     }
   }
 
   return (
-    <SheetModal visible={visible} title="Add place" onClose={onClose} onSave={save} busy={busy} saveLabel="Add">
+    <SheetModal
+      visible={visible}
+      title={editing ? 'Edit place' : 'Add place'}
+      onClose={onClose}
+      onSave={save}
+      busy={busy}
+      saveLabel={editing ? 'Save' : 'Add'}
+    >
       {err ? <Text style={styles.modalErr}>{err}</Text> : null}
       <TextInput
         style={styles.modalInput}
@@ -569,13 +665,15 @@ function AddPlaceModal({
         onChangeText={setName}
         autoFocus
       />
-      <TextInput
-        style={styles.modalInput}
-        placeholder="Address (optional)"
-        placeholderTextColor={KIOKU.inkMuted}
-        value={address}
-        onChangeText={setAddress}
-      />
+      {editing ? null : (
+        <TextInput
+          style={styles.modalInput}
+          placeholder="Address (optional)"
+          placeholderTextColor={KIOKU.inkMuted}
+          value={address}
+          onChangeText={setAddress}
+        />
+      )}
     </SheetModal>
   )
 }
@@ -764,6 +862,8 @@ const styles = StyleSheet.create({
   addLinkText: { fontSize: 14, fontWeight: '600', color: KIOKU.accent },
   emptyLine: { fontSize: 14, color: KIOKU.inkMuted, fontStyle: 'italic' },
 
+  rowGap: { marginBottom: 8 },
+  swipeRow: { marginBottom: 8, borderRadius: 12, overflow: 'hidden' },
   place: {
     flexDirection: 'row',
     gap: 10,
@@ -772,12 +872,23 @@ const styles = StyleSheet.create({
     borderColor: KIOKU.border,
     borderRadius: 12,
     padding: 13,
-    marginBottom: 8,
   },
   placeName: { fontSize: 15, fontWeight: '600', color: KIOKU.ink },
   placeAddr: { fontSize: 13, color: KIOKU.inkMuted, marginTop: 1 },
 
-  photo: { width: 130, height: 130, borderRadius: 12, marginRight: 10, backgroundColor: KIOKU.surfaceAlt },
+  photoWrap: { position: 'relative', marginRight: 10 },
+  photo: { width: 130, height: 130, borderRadius: 12, backgroundColor: KIOKU.surfaceAlt },
+  photoDelete: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(24,14,9,0.6)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 
   budgetCard: {
     backgroundColor: KIOKU.surface,
@@ -804,7 +915,6 @@ const styles = StyleSheet.create({
     borderColor: KIOKU.border,
     borderRadius: 12,
     padding: 13,
-    marginBottom: 8,
   },
   expenseEmoji: { fontSize: 20 },
   expenseName: { flex: 1, fontSize: 15, fontWeight: '600', color: KIOKU.ink },
