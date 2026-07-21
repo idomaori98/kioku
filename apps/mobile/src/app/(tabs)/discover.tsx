@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
-import { useFocusEffect } from 'expo-router'
+import { useFocusEffect, useRouter } from 'expo-router'
 import { Image } from 'expo-image'
 import { Ionicons } from '@expo/vector-icons'
 import { api, type FeedCard } from '@/lib/api'
@@ -52,8 +52,9 @@ export default function DiscoverScreen() {
 }
 
 function FeedCardView({ card }: { card: FeedCard }) {
+  const router = useRouter()
   return (
-    <Pressable style={styles.card}>
+    <Pressable style={styles.card} onPress={() => router.push(`/trip/${card.id}`)}>
       <View style={styles.cover}>
         {card.coverPhotoUrl ? (
           <Image source={{ uri: card.coverPhotoUrl }} style={styles.coverImg} contentFit="cover" transition={200} />

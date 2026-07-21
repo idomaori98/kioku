@@ -53,6 +53,55 @@ export type FeedCard = {
 
 export type FeedResponse = { cards: FeedCard[]; hasMore: boolean }
 
+// GET /trips/:id/public — the full read-only itinerary (see server/routes/trips.js).
+export type PublicPlace = {
+  id: string
+  name: string
+  address: string
+  lat: number | null
+  lng: number | null
+  addedByName: string
+}
+
+export type PublicPhoto = {
+  id: string
+  url: string
+  note: string
+  addedByName: string
+}
+
+export type PublicDay = {
+  day: number
+  note: string
+  places: PublicPlace[]
+  photos: PublicPhoto[]
+}
+
+export type PublicTrip = {
+  id: string
+  name: string
+  startDate: string
+  endDate: string
+  destination: string
+  homeCurrency: string
+  travelType: Trip['travelType']
+  createdBy: string
+  createdByName: string | null
+  publishedAt: string
+  likesCount: number
+  likedByMe: boolean
+  favoritedByMe: boolean
+  stats: {
+    days: number
+    travelers: number
+    photos: number
+    places: number
+    spendYen: number
+    spendHome: number
+  }
+  days: PublicDay[]
+}
+
 type RequestOptions = {
   method?: string
   body?: unknown
@@ -94,6 +143,7 @@ export const api = {
     }),
   me: () => request<User>('/auth/me'),
   listTrips: () => request<Trip[]>('/trips'),
+  getPublicTrip: (id: string) => request<PublicTrip>(`/trips/${id}/public`),
   getFeed: (params: { limit?: number; offset?: number } = {}) => {
     const qs = new URLSearchParams()
     if (params.limit != null) qs.set('limit', String(params.limit))
