@@ -1,11 +1,12 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useAuth } from '@/lib/auth-context'
-import { KIOKU } from '@/constants/kioku'
+import { useStyles, type Theme } from '@/lib/theme'
 import { Screen, ScreenTitle } from '@/components/ui'
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth()
+  const [styles, KIOKU] = useStyles(makeStyles)
   if (!user) return null
 
   return (
@@ -27,7 +28,8 @@ export default function ProfileScreen() {
   )
 }
 
-const styles = StyleSheet.create({
+function makeStyles(KIOKU: Theme) {
+  return StyleSheet.create({
   body: { alignItems: 'center', paddingTop: 24, gap: 4 },
   avatar: {
     width: 96,
@@ -53,4 +55,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   logoutText: { color: KIOKU.danger, fontWeight: '600' },
-})
+  })
+}

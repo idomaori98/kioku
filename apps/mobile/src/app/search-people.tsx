@@ -5,11 +5,12 @@ import { Image } from 'expo-image'
 import { Ionicons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { api, type UserLite } from '@/lib/api'
-import { KIOKU } from '@/constants/kioku'
+import { useStyles, type Theme } from '@/lib/theme'
 
 export default function SearchPeopleScreen() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
+  const [styles, KIOKU] = useStyles(makeStyles)
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<UserLite[] | null>(null)
   const [loading, setLoading] = useState(false)
@@ -103,7 +104,8 @@ export default function SearchPeopleScreen() {
   )
 }
 
-const styles = StyleSheet.create({
+function makeStyles(KIOKU: Theme) {
+  return StyleSheet.create({
   root: { flex: 1, backgroundColor: KIOKU.bg },
   topbar: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 8 },
   backBtn: { width: 36, height: 40, alignItems: 'center', justifyContent: 'center' },
@@ -146,4 +148,5 @@ const styles = StyleSheet.create({
   avatarImg: { width: '100%', height: '100%' },
   avatarInitial: { color: '#fff', fontSize: 17, fontWeight: '700' },
   name: { flex: 1, fontSize: 15, fontWeight: '600', color: KIOKU.ink },
-})
+  })
+}

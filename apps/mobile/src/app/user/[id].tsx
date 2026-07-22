@@ -5,13 +5,15 @@ import { Image } from 'expo-image'
 import { Ionicons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { api, type UserProfile, type FeedCard } from '@/lib/api'
-import { FONT, KIOKU } from '@/constants/kioku'
+import { FONT } from '@/constants/kioku'
+import { useStyles, type Theme } from '@/lib/theme'
 import { ErrorState, Loading } from '@/components/ui'
 
 export default function UserProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
   const insets = useSafeAreaInsets()
+  const [styles, KIOKU] = useStyles(makeStyles)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -134,6 +136,7 @@ export default function UserProfileScreen() {
 }
 
 function Count({ value, label }: { value: number; label: string }) {
+  const [styles] = useStyles(makeStyles)
   return (
     <View style={styles.count}>
       <Text style={styles.countValue}>{value}</Text>
@@ -143,6 +146,7 @@ function Count({ value, label }: { value: number; label: string }) {
 }
 
 function TripTile({ card, onPress }: { card: FeedCard; onPress: () => void }) {
+  const [styles, KIOKU] = useStyles(makeStyles)
   return (
     <Pressable style={styles.tile} onPress={onPress}>
       {card.coverPhotoUrl ? (
@@ -164,7 +168,8 @@ function TripTile({ card, onPress }: { card: FeedCard; onPress: () => void }) {
   )
 }
 
-const styles = StyleSheet.create({
+function makeStyles(KIOKU: Theme) {
+  return StyleSheet.create({
   root: { flex: 1, backgroundColor: KIOKU.bg },
   topbar: {
     flexDirection: 'row',
@@ -241,4 +246,5 @@ const styles = StyleSheet.create({
   },
   tileLikeText: { color: '#fff', fontSize: 11, fontWeight: '700' },
   tileName: { position: 'absolute', left: 10, right: 10, bottom: 9, color: '#fff', fontSize: 14, fontWeight: '700' },
-})
+  })
+}

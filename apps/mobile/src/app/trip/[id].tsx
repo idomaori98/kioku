@@ -27,7 +27,8 @@ import {
   type ExpenseCategory,
 } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
-import { FONT, KIOKU } from '@/constants/kioku'
+import { FONT } from '@/constants/kioku'
+import { useStyles, type Theme } from '@/lib/theme'
 import { ErrorState, Loading } from '@/components/ui'
 import { SwipeableRow } from '@/components/SwipeableRow'
 
@@ -79,6 +80,7 @@ export default function TripDetailScreen() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const { user } = useAuth()
+  const [styles, KIOKU] = useStyles(makeStyles)
   const [trip, setTrip] = useState<PublicTrip | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState(0)
@@ -306,6 +308,7 @@ export default function TripDetailScreen() {
 }
 
 function Stat({ icon, value, label }: { icon: keyof typeof Ionicons.glyphMap; value: number; label: string }) {
+  const [styles, KIOKU] = useStyles(makeStyles)
   return (
     <View style={styles.stat}>
       <Ionicons name={icon} size={17} color={KIOKU.accent} />
@@ -326,6 +329,7 @@ function DayView({
   isOwner: boolean
   onChanged: () => void
 }) {
+  const [styles, KIOKU] = useStyles(makeStyles)
   const [placeModal, setPlaceModal] = useState<null | { place?: PublicPlace }>(null)
   const [editingNote, setEditingNote] = useState(false)
   const [expenseModal, setExpenseModal] = useState<null | { expense?: PublicExpense }>(null)
@@ -586,6 +590,7 @@ function DayView({
 }
 
 function BudgetBar({ spent, budget }: { spent: number; budget: number }) {
+  const [styles, KIOKU] = useStyles(makeStyles)
   const pct = budget > 0 ? Math.min(100, (spent / budget) * 100) : 0
   const over = spent > budget
   return (
@@ -617,6 +622,7 @@ function ExpenseModal({
   onClose: () => void
   onSaved: () => void
 }) {
+  const [styles, KIOKU] = useStyles(makeStyles)
   const visible = state !== null
   const editing = state?.expense
   const [name, setName] = useState('')
@@ -711,6 +717,7 @@ function PlaceModal({
   onClose: () => void
   onSaved: () => void
 }) {
+  const [styles, KIOKU] = useStyles(makeStyles)
   const visible = state !== null
   const editing = state?.place
   const [name, setName] = useState('')
@@ -789,6 +796,7 @@ function EditNoteModal({
   onClose: () => void
   onSaved: () => void
 }) {
+  const [styles, KIOKU] = useStyles(makeStyles)
   const [note, setNote] = useState(initial)
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
@@ -845,6 +853,7 @@ function SheetModal({
   onSave: () => void
   children: React.ReactNode
 }) {
+  const [styles] = useStyles(makeStyles)
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <KeyboardAvoidingView
@@ -869,7 +878,8 @@ function SheetModal({
   )
 }
 
-const styles = StyleSheet.create({
+function makeStyles(KIOKU: Theme) {
+  return StyleSheet.create({
   root: { flex: 1, backgroundColor: KIOKU.bg },
   centered: { justifyContent: 'center' },
 
@@ -1103,4 +1113,5 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   modalTextarea: { minHeight: 110, textAlignVertical: 'top' },
-})
+  })
+}

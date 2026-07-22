@@ -2,9 +2,11 @@ import { ReactNode } from 'react'
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
-import { FONT, KIOKU } from '@/constants/kioku'
+import { FONT } from '@/constants/kioku'
+import { useStyles, type Theme } from '@/lib/theme'
 
 export function Screen({ children }: { children: ReactNode }) {
+  const [styles] = useStyles(makeStyles)
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       {children}
@@ -21,6 +23,7 @@ export function ScreenTitle({
   subtitle?: string
   action?: ReactNode
 }) {
+  const [styles] = useStyles(makeStyles)
   return (
     <View style={styles.header}>
       <View style={styles.headerRow}>
@@ -33,6 +36,7 @@ export function ScreenTitle({
 }
 
 export function Loading() {
+  const [styles, KIOKU] = useStyles(makeStyles)
   return (
     <View style={styles.center}>
       <ActivityIndicator color={KIOKU.accent} />
@@ -41,6 +45,7 @@ export function Loading() {
 }
 
 export function ErrorState({ message, onRetry }: { message: string; onRetry?: () => void }) {
+  const [styles, KIOKU] = useStyles(makeStyles)
   return (
     <View style={styles.center}>
       <Ionicons name="alert-circle-outline" size={40} color={KIOKU.borderStrong} />
@@ -64,6 +69,7 @@ export function EmptyState({
   title: string
   message?: string
 }) {
+  const [styles, KIOKU] = useStyles(makeStyles)
   return (
     <View style={styles.center}>
       <Ionicons name={icon} size={40} color={KIOKU.borderStrong} />
@@ -73,21 +79,23 @@ export function EmptyState({
   )
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: KIOKU.bg },
-  header: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 12 },
-  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  title: { fontSize: 30, fontFamily: FONT.displayHeavy, color: KIOKU.ink, letterSpacing: -0.5 },
-  subtitle: { fontSize: 14, color: KIOKU.inkMuted, marginTop: 2 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 6 },
-  stateTitle: { fontSize: 17, fontFamily: FONT.displaySemi, color: KIOKU.ink, marginTop: 8 },
-  stateMsg: { fontSize: 14, color: KIOKU.inkMuted, textAlign: 'center', maxWidth: 300 },
-  retry: {
-    marginTop: 16,
-    backgroundColor: KIOKU.accent,
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-  },
-  retryText: { color: '#fff', fontWeight: '600' },
-})
+function makeStyles(KIOKU: Theme) {
+  return StyleSheet.create({
+    screen: { flex: 1, backgroundColor: KIOKU.bg },
+    header: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 12 },
+    headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    title: { fontSize: 30, fontFamily: FONT.displayHeavy, color: KIOKU.ink, letterSpacing: -0.5 },
+    subtitle: { fontSize: 14, color: KIOKU.inkMuted, marginTop: 2 },
+    center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 6 },
+    stateTitle: { fontSize: 17, fontFamily: FONT.displaySemi, color: KIOKU.ink, marginTop: 8 },
+    stateMsg: { fontSize: 14, color: KIOKU.inkMuted, textAlign: 'center', maxWidth: 300 },
+    retry: {
+      marginTop: 16,
+      backgroundColor: KIOKU.accent,
+      borderRadius: 10,
+      paddingVertical: 10,
+      paddingHorizontal: 20,
+    },
+    retryText: { color: '#fff', fontWeight: '600' },
+  })
+}

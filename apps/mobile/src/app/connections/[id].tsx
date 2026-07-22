@@ -5,7 +5,7 @@ import { Image } from 'expo-image'
 import { Ionicons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { api, type UserLite } from '@/lib/api'
-import { KIOKU } from '@/constants/kioku'
+import { useStyles, type Theme } from '@/lib/theme'
 import { EmptyState, ErrorState, Loading } from '@/components/ui'
 
 type Tab = 'followers' | 'following'
@@ -14,6 +14,7 @@ export default function ConnectionsScreen() {
   const { id, tab } = useLocalSearchParams<{ id: string; tab?: string }>()
   const router = useRouter()
   const insets = useSafeAreaInsets()
+  const [styles, KIOKU] = useStyles(makeStyles)
   const [active, setActive] = useState<Tab>(tab === 'following' ? 'following' : 'followers')
   const [users, setUsers] = useState<UserLite[] | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -85,7 +86,8 @@ export default function ConnectionsScreen() {
   )
 }
 
-const styles = StyleSheet.create({
+function makeStyles(KIOKU: Theme) {
+  return StyleSheet.create({
   root: { flex: 1, backgroundColor: KIOKU.bg },
   topbar: {
     flexDirection: 'row',
@@ -126,4 +128,5 @@ const styles = StyleSheet.create({
   avatarImg: { width: '100%', height: '100%' },
   avatarInitial: { color: '#fff', fontSize: 17, fontWeight: '700' },
   name: { flex: 1, fontSize: 15, fontWeight: '600', color: KIOKU.ink },
-})
+  })
+}

@@ -4,7 +4,7 @@ import { useFocusEffect, useRouter } from 'expo-router'
 import { Image } from 'expo-image'
 import { Ionicons } from '@expo/vector-icons'
 import { api, type Conversation } from '@/lib/api'
-import { KIOKU } from '@/constants/kioku'
+import { useStyles, type Theme } from '@/lib/theme'
 import { EmptyState, ErrorState, Loading, Screen, ScreenTitle } from '@/components/ui'
 
 function timeAgo(iso: string) {
@@ -21,6 +21,7 @@ function timeAgo(iso: string) {
 
 export default function MessagesScreen() {
   const router = useRouter()
+  const [styles, KIOKU] = useStyles(makeStyles)
   const [items, setItems] = useState<Conversation[] | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -94,7 +95,8 @@ export default function MessagesScreen() {
   )
 }
 
-const styles = StyleSheet.create({
+function makeStyles(KIOKU: Theme) {
+  return StyleSheet.create({
   findBtn: {
     width: 38,
     height: 38,
@@ -140,4 +142,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
   },
   badgeText: { color: '#fff', fontSize: 12, fontWeight: '700' },
-})
+  })
+}

@@ -16,7 +16,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { api, type DirectMessage } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
-import { KIOKU } from '@/constants/kioku'
+import { useStyles, type Theme } from '@/lib/theme'
 import { ErrorState, Loading } from '@/components/ui'
 
 export default function DmThreadScreen() {
@@ -24,6 +24,7 @@ export default function DmThreadScreen() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const { user } = useAuth()
+  const [styles, KIOKU] = useStyles(makeStyles)
   const listRef = useRef<FlatList<DirectMessage>>(null)
 
   const [messages, setMessages] = useState<DirectMessage[] | null>(null)
@@ -136,7 +137,8 @@ export default function DmThreadScreen() {
   )
 }
 
-const styles = StyleSheet.create({
+function makeStyles(KIOKU: Theme) {
+  return StyleSheet.create({
   root: { flex: 1, backgroundColor: KIOKU.bg },
   topbar: {
     flexDirection: 'row',
@@ -198,4 +200,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   sendOff: { backgroundColor: KIOKU.borderStrong },
-})
+  })
+}

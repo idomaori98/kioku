@@ -3,7 +3,7 @@ import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
 import { useFocusEffect, useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { api, type Trip } from '@/lib/api'
-import { KIOKU } from '@/constants/kioku'
+import { useStyles, type Theme } from '@/lib/theme'
 import { EmptyState, ErrorState, Loading, Screen, ScreenTitle } from '@/components/ui'
 import { PressableScale } from '@/components/PressableScale'
 
@@ -16,6 +16,7 @@ function formatRange(trip: Trip) {
 
 export default function TripsScreen() {
   const router = useRouter()
+  const [styles, KIOKU] = useStyles(makeStyles)
   const [trips, setTrips] = useState<Trip[] | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -77,7 +78,8 @@ export default function TripsScreen() {
   )
 }
 
-const styles = StyleSheet.create({
+function makeStyles(KIOKU: Theme) {
+  return StyleSheet.create({
   addBtn: {
     width: 38,
     height: 38,
@@ -108,4 +110,5 @@ const styles = StyleSheet.create({
   info: { flex: 1, minWidth: 0 },
   name: { fontSize: 16, fontWeight: '600', color: KIOKU.ink },
   sub: { fontSize: 13, color: KIOKU.inkMuted, marginTop: 2 },
-})
+  })
+}

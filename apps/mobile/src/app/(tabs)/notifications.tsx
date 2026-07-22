@@ -4,16 +4,18 @@ import { useFocusEffect, useRouter } from 'expo-router'
 import { Image } from 'expo-image'
 import { Ionicons } from '@expo/vector-icons'
 import { api, type AppNotification, type NotificationType } from '@/lib/api'
-import { KIOKU } from '@/constants/kioku'
+import { useStyles, type Theme } from '@/lib/theme'
 import { EmptyState, ErrorState, Loading, Screen, ScreenTitle } from '@/components/ui'
 
-const ICON: Record<NotificationType, { name: keyof typeof Ionicons.glyphMap; color: string }> = {
-  like: { name: 'heart', color: KIOKU.accent },
-  comment: { name: 'chatbubble', color: '#3f7cac' },
-  follow: { name: 'person-add', color: '#0f6e56' },
-  trip_copied: { name: 'copy', color: '#b5548f' },
-  friend_request: { name: 'person', color: KIOKU.inkMuted },
-  friend_accept: { name: 'people', color: '#0f6e56' },
+function iconMap(KIOKU: Theme): Record<NotificationType, { name: keyof typeof Ionicons.glyphMap; color: string }> {
+  return {
+    like: { name: 'heart', color: KIOKU.accent },
+    comment: { name: 'chatbubble', color: '#4a90c2' },
+    follow: { name: 'person-add', color: KIOKU.success },
+    trip_copied: { name: 'copy', color: '#c06aa0' },
+    friend_request: { name: 'person', color: KIOKU.inkMuted },
+    friend_accept: { name: 'people', color: KIOKU.success },
+  }
 }
 
 function messageFor(n: AppNotification) {
@@ -50,6 +52,8 @@ function timeAgo(iso: string) {
 
 export default function NotificationsScreen() {
   const router = useRouter()
+  const [styles, KIOKU] = useStyles(makeStyles)
+  const ICON = iconMap(KIOKU)
   const [items, setItems] = useState<AppNotification[] | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -119,7 +123,8 @@ export default function NotificationsScreen() {
   )
 }
 
-const styles = StyleSheet.create({
+function makeStyles(KIOKU: Theme) {
+  return StyleSheet.create({
   list: { paddingHorizontal: 16, paddingBottom: 24, gap: 8 },
   row: {
     flexDirection: 'row',
@@ -151,4 +156,5 @@ const styles = StyleSheet.create({
   text: { flex: 1, fontSize: 14.5, lineHeight: 20, color: KIOKU.ink },
   time: { color: KIOKU.inkMuted, fontWeight: '500' },
   dot: { width: 9, height: 9, borderRadius: 5, backgroundColor: KIOKU.accent },
-})
+  })
+}

@@ -4,7 +4,8 @@ import { useFocusEffect, useRouter } from 'expo-router'
 import { Image } from 'expo-image'
 import { Ionicons } from '@expo/vector-icons'
 import { api, type FeedCard } from '@/lib/api'
-import { FONT, KIOKU } from '@/constants/kioku'
+import { FONT } from '@/constants/kioku'
+import { useStyles, type Theme } from '@/lib/theme'
 import { EmptyState, ErrorState, Loading, Screen, ScreenTitle } from '@/components/ui'
 import { PressableScale } from '@/components/PressableScale'
 
@@ -18,6 +19,7 @@ const TRAVEL_LABEL: Record<FeedCard['travelType'], string> = {
 type Scope = 'all' | 'following'
 
 export default function DiscoverScreen() {
+  const [styles, KIOKU] = useStyles(makeStyles)
   const [scope, setScope] = useState<Scope>('all')
   const [cards, setCards] = useState<FeedCard[] | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -98,6 +100,7 @@ export default function DiscoverScreen() {
 
 function FeedCardView({ card, onToggleLike }: { card: FeedCard; onToggleLike: (id: string) => void }) {
   const router = useRouter()
+  const [styles, KIOKU] = useStyles(makeStyles)
   return (
     <PressableScale style={styles.card} onPress={() => router.push(`/trip/${card.id}`)}>
       <View style={styles.cover}>
@@ -136,7 +139,8 @@ function FeedCardView({ card, onToggleLike }: { card: FeedCard; onToggleLike: (i
   )
 }
 
-const styles = StyleSheet.create({
+function makeStyles(KIOKU: Theme) {
+  return StyleSheet.create({
   segment: {
     flexDirection: 'row',
     marginHorizontal: 16,
@@ -183,4 +187,5 @@ const styles = StyleSheet.create({
   meta: { fontSize: 13.5, color: 'rgba(255,255,255,0.92)', marginTop: 2 },
   author: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 8 },
   authorText: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.92)' },
-})
+  })
+}

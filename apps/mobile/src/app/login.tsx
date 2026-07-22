@@ -11,10 +11,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Redirect } from 'expo-router'
 import { useAuth } from '@/lib/auth-context'
-import { FONT, KIOKU } from '@/constants/kioku'
+import { FONT } from '@/constants/kioku'
+import { useStyles, type Theme } from '@/lib/theme'
 
 export default function LoginScreen() {
   const { user, loading, login, signup } = useAuth()
+  const [styles, KIOKU] = useStyles(makeStyles)
   const [mode, setMode] = useState<'login' | 'signup'>('login')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -101,7 +103,8 @@ export default function LoginScreen() {
   )
 }
 
-const styles = StyleSheet.create({
+function makeStyles(KIOKU: Theme) {
+  return StyleSheet.create({
   fill: { flex: 1, backgroundColor: KIOKU.bg },
   wrap: { paddingHorizontal: 28, justifyContent: 'center' },
   kanji: { fontSize: 40, fontWeight: '700', color: KIOKU.accent, textAlign: 'center' },
@@ -143,4 +146,5 @@ const styles = StyleSheet.create({
   buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
   switch: { color: KIOKU.accent, textAlign: 'center', marginTop: 18, fontSize: 14 },
   error: { color: KIOKU.danger, textAlign: 'center', marginBottom: 10 },
-})
+  })
+}

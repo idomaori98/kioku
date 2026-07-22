@@ -14,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { api, type Trip } from '@/lib/api'
-import { KIOKU } from '@/constants/kioku'
+import { useStyles, type Theme } from '@/lib/theme'
 
 const TRAVEL_TYPES: { value: Trip['travelType']; label: string }[] = [
   { value: 'family', label: 'Family' },
@@ -41,6 +41,7 @@ function prettyDate(s: string) {
 export default function NewTripScreen() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
+  const [styles, KIOKU] = useStyles(makeStyles)
   const today = toYMD(new Date())
 
   const [name, setName] = useState('')
@@ -245,6 +246,7 @@ function Field({
   style?: object
   children: React.ReactNode
 }) {
+  const [styles] = useStyles(makeStyles)
   return (
     <View style={[styles.field, style]}>
       <Text style={styles.label}>{label}</Text>
@@ -265,6 +267,7 @@ function OptionCard({
   subtitle: string
   onPress: () => void
 }) {
+  const [styles, KIOKU] = useStyles(makeStyles)
   return (
     <Pressable style={[styles.option, selected && styles.optionOn]} onPress={onPress}>
       <Ionicons
@@ -280,7 +283,8 @@ function OptionCard({
   )
 }
 
-const styles = StyleSheet.create({
+function makeStyles(KIOKU: Theme) {
+  return StyleSheet.create({
   root: { flex: 1, backgroundColor: KIOKU.bg },
   topbar: {
     flexDirection: 'row',
@@ -347,4 +351,5 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   submitText: { color: '#fff', fontSize: 16, fontWeight: '700' },
-})
+  })
+}

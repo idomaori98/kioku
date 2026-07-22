@@ -6,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { api, type UserLite } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
-import { KIOKU } from '@/constants/kioku'
+import { useStyles, type Theme } from '@/lib/theme'
 import { EmptyState, ErrorState, Loading } from '@/components/ui'
 
 export default function ShareTripScreen() {
@@ -14,6 +14,7 @@ export default function ShareTripScreen() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const { user } = useAuth()
+  const [styles, KIOKU] = useStyles(makeStyles)
   const [people, setPeople] = useState<UserLite[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [sendingTo, setSendingTo] = useState<string | null>(null)
@@ -99,7 +100,8 @@ export default function ShareTripScreen() {
   )
 }
 
-const styles = StyleSheet.create({
+function makeStyles(KIOKU: Theme) {
+  return StyleSheet.create({
   root: { flex: 1, backgroundColor: KIOKU.bg },
   topbar: {
     flexDirection: 'row',
@@ -147,4 +149,5 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
   },
   sendText: { color: '#fff', fontSize: 13, fontWeight: '700' },
-})
+  })
+}

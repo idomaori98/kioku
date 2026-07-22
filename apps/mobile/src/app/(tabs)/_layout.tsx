@@ -4,10 +4,11 @@ import { Redirect, Tabs } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { api } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
-import { KIOKU } from '@/constants/kioku'
+import { useTheme } from '@/lib/theme'
 
 export default function TabsLayout() {
   const { user, loading } = useAuth()
+  const KIOKU = useTheme()
   const [alertsCount, setAlertsCount] = useState(0)
   const [messagesCount, setMessagesCount] = useState(0)
 

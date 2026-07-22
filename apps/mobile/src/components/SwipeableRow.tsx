@@ -4,7 +4,7 @@ import ReanimatedSwipeable, {
   type SwipeableMethods,
 } from 'react-native-gesture-handler/ReanimatedSwipeable'
 import { Ionicons } from '@expo/vector-icons'
-import { KIOKU } from '@/constants/kioku'
+import { useStyles, type Theme } from '@/lib/theme'
 
 // Slide a row left to reveal Edit / Delete, like a native list row.
 export function SwipeableRow({
@@ -18,6 +18,7 @@ export function SwipeableRow({
   onDelete: () => void
   containerStyle?: object
 }) {
+  const [styles] = useStyles(makeStyles)
   const ref = useRef<SwipeableMethods>(null)
 
   function renderRightActions() {
@@ -63,10 +64,12 @@ export function SwipeableRow({
   )
 }
 
-const styles = StyleSheet.create({
+function makeStyles(KIOKU: Theme) {
+  return StyleSheet.create({
   actions: { flexDirection: 'row' },
   action: { width: 72, alignItems: 'center', justifyContent: 'center', gap: 3 },
   edit: { backgroundColor: KIOKU.inkMuted },
   del: { backgroundColor: KIOKU.danger },
   label: { color: '#fff', fontSize: 12, fontWeight: '700' },
-})
+  })
+}

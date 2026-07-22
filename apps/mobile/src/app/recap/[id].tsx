@@ -5,7 +5,8 @@ import { Image } from 'expo-image'
 import { Ionicons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { api, type Recap, type PublicTrip, type ExpenseCategory } from '@/lib/api'
-import { FONT, KIOKU } from '@/constants/kioku'
+import { FONT } from '@/constants/kioku'
+import { useStyles, type Theme } from '@/lib/theme'
 import { ErrorState, Loading } from '@/components/ui'
 
 const CATEGORY_ORDER: ExpenseCategory[] = ['food', 'transport', 'fun', 'shopping', 'other']
@@ -78,6 +79,7 @@ export default function RecapScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
   const insets = useSafeAreaInsets()
+  const [styles, KIOKU] = useStyles(makeStyles)
   const [recap, setRecap] = useState<Recap | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -215,6 +217,7 @@ export default function RecapScreen() {
 }
 
 function TopBar({ onBack }: { onBack: () => void }) {
+  const [styles, KIOKU] = useStyles(makeStyles)
   return (
     <View style={styles.topbar}>
       <Pressable onPress={onBack} hitSlop={10} style={styles.topbarBtn}>
@@ -227,6 +230,7 @@ function TopBar({ onBack }: { onBack: () => void }) {
 }
 
 function Total({ value, label }: { value: number; label: string }) {
+  const [styles] = useStyles(makeStyles)
   return (
     <View style={styles.total}>
       <Text style={styles.totalValue}>{value}</Text>
@@ -235,7 +239,8 @@ function Total({ value, label }: { value: number; label: string }) {
   )
 }
 
-const styles = StyleSheet.create({
+function makeStyles(KIOKU: Theme) {
+  return StyleSheet.create({
   root: { flex: 1, backgroundColor: KIOKU.bg },
   centered: { flex: 1, justifyContent: 'center' },
 
@@ -323,4 +328,5 @@ const styles = StyleSheet.create({
   dayDate: { fontSize: 15, fontWeight: '700', color: KIOKU.ink },
   dayNote: { fontSize: 13.5, color: KIOKU.ink, marginTop: 3, lineHeight: 19 },
   dayMeta: { fontSize: 12.5, color: KIOKU.inkMuted, marginTop: 5, fontWeight: '600' },
-})
+  })
+}
