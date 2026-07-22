@@ -57,6 +57,25 @@ export type FeedResponse = { cards: FeedCard[]; hasMore: boolean }
 
 export type UserLite = { id: string; name: string; photoUrl?: string }
 
+// GET /notifications — see server/routes/notifications.js.
+export type NotificationType =
+  | 'like'
+  | 'comment'
+  | 'follow'
+  | 'trip_copied'
+  | 'friend_request'
+  | 'friend_accept'
+
+export type AppNotification = {
+  id: string
+  type: NotificationType
+  read: boolean
+  createdAt: string
+  actor: { id: string; name: string; photoUrl?: string } | null
+  tripId: string | null
+  tripName: string
+}
+
 // GET /users/:id — public profile (see server/routes/users.js).
 export type UserProfile = {
   id: string
@@ -273,4 +292,7 @@ export const api = {
   getFollowers: (id: string) => request<UserLite[]>(`/users/${id}/followers`),
   getFollowing: (id: string) => request<UserLite[]>(`/users/${id}/following`),
   searchUsers: (q: string) => request<UserLite[]>(`/users/search?q=${encodeURIComponent(q)}`),
+  getNotifications: () => request<AppNotification[]>('/notifications'),
+  getUnreadCount: () => request<{ count: number }>('/notifications/unread-count'),
+  markAllNotificationsRead: () => request<{ ok: boolean }>('/notifications/read-all', { method: 'POST' }),
 }
