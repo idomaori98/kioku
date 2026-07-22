@@ -5,7 +5,7 @@ import { Image } from 'expo-image'
 import { Ionicons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { api, type UserProfile, type FeedCard } from '@/lib/api'
-import { KIOKU } from '@/constants/kioku'
+import { FONT, KIOKU } from '@/constants/kioku'
 import { ErrorState, Loading } from '@/components/ui'
 
 export default function UserProfileScreen() {
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
   },
   avatarImg: { width: '100%', height: '100%' },
   avatarInitial: { color: '#fff', fontSize: 34, fontWeight: '700' },
-  name: { fontSize: 22, fontWeight: '800', color: KIOKU.ink, marginTop: 12, letterSpacing: -0.3 },
+  name: { fontSize: 23, fontFamily: FONT.displayHeavy, color: KIOKU.ink, marginTop: 12, letterSpacing: -0.3 },
 
   countRow: { flexDirection: 'row', gap: 26, marginTop: 16 },
   count: { alignItems: 'center' },

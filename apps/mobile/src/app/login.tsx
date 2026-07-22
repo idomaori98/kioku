@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Redirect } from 'expo-router'
 import { useAuth } from '@/lib/auth-context'
-import { KIOKU } from '@/constants/kioku'
+import { FONT, KIOKU } from '@/constants/kioku'
 
 export default function LoginScreen() {
   const { user, loading, login, signup } = useAuth()
@@ -107,12 +107,12 @@ const styles = StyleSheet.create({
   kanji: { fontSize: 40, fontWeight: '700', color: KIOKU.accent, textAlign: 'center' },
   brand: {
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: FONT.displaySemi,
     letterSpacing: 6,
     textTransform: 'uppercase',
     color: KIOKU.inkMuted,
     textAlign: 'center',
-    marginTop: 2,
+    marginTop: 4,
   },
   tagline: {
     fontSize: 15,

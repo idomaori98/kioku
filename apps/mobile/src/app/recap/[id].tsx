@@ -5,7 +5,7 @@ import { Image } from 'expo-image'
 import { Ionicons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { api, type Recap, type PublicTrip, type ExpenseCategory } from '@/lib/api'
-import { KIOKU } from '@/constants/kioku'
+import { FONT, KIOKU } from '@/constants/kioku'
 import { ErrorState, Loading } from '@/components/ui'
 
 const CATEGORY_ORDER: ExpenseCategory[] = ['food', 'transport', 'fun', 'shopping', 'other']
@@ -275,7 +275,7 @@ const styles = StyleSheet.create({
   spendYen: { fontSize: 20, fontWeight: '800', color: KIOKU.accent },
   spendHome: { fontSize: 12.5, color: KIOKU.inkMuted },
 
-  section: { fontSize: 18, fontWeight: '800', color: KIOKU.ink, marginTop: 26, marginBottom: 10, letterSpacing: -0.3 },
+  section: { fontSize: 18, fontFamily: FONT.displaySemi, color: KIOKU.ink, marginTop: 26, marginBottom: 10, letterSpacing: -0.3 },
 
   catCard: {
     backgroundColor: KIOKU.surface,

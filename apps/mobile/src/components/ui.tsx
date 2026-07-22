@@ -2,7 +2,7 @@ import { ReactNode } from 'react'
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
-import { KIOKU } from '@/constants/kioku'
+import { FONT, KIOKU } from '@/constants/kioku'
 
 export function Screen({ children }: { children: ReactNode }) {
   return (
@@ -77,10 +77,10 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: KIOKU.bg },
   header: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 12 },
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  title: { fontSize: 30, fontWeight: '800', color: KIOKU.ink, letterSpacing: -0.5 },
+  title: { fontSize: 30, fontFamily: FONT.displayHeavy, color: KIOKU.ink, letterSpacing: -0.5 },
   subtitle: { fontSize: 14, color: KIOKU.inkMuted, marginTop: 2 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 6 },
-  stateTitle: { fontSize: 16, fontWeight: '700', color: KIOKU.ink, marginTop: 8 },
+  stateTitle: { fontSize: 17, fontFamily: FONT.displaySemi, color: KIOKU.ink, marginTop: 8 },
   stateMsg: { fontSize: 14, color: KIOKU.inkMuted, textAlign: 'center', maxWidth: 300 },
   retry: {
     marginTop: 16,

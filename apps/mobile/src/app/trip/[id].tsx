@@ -27,7 +27,7 @@ import {
   type ExpenseCategory,
 } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
-import { KIOKU } from '@/constants/kioku'
+import { FONT, KIOKU } from '@/constants/kioku'
 import { ErrorState, Loading } from '@/components/ui'
 import { SwipeableRow } from '@/components/SwipeableRow'
 
@@ -878,7 +878,7 @@ const styles = StyleSheet.create({
   heroEmpty: { alignItems: 'center', justifyContent: 'center' },
   heroScrim: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 130, backgroundColor: 'rgba(24,14,9,0.34)' },
   heroText: { position: 'absolute', left: 20, right: 20, bottom: 18 },
-  heroName: { fontSize: 26, fontWeight: '800', color: '#fff', letterSpacing: -0.4 },
+  heroName: { fontSize: 28, fontFamily: FONT.displayHeavy, color: '#fff', letterSpacing: -0.4 },
   heroMeta: { fontSize: 14, color: 'rgba(255,255,255,0.94)', marginTop: 3 },
 
   back: {
@@ -967,7 +967,7 @@ const styles = StyleSheet.create({
   },
   arrowDisabled: { backgroundColor: KIOKU.surfaceAlt, borderColor: KIOKU.surfaceAlt },
   pagerCenter: { flex: 1, alignItems: 'center' },
-  pagerDay: { fontSize: 19, fontWeight: '800', color: KIOKU.ink, letterSpacing: -0.3 },
+  pagerDay: { fontSize: 20, fontFamily: FONT.displayHeavy, color: KIOKU.ink, letterSpacing: -0.3 },
   pagerDate: { fontSize: 13.5, color: KIOKU.inkMuted, marginTop: 1 },
 
   dayCard: { marginTop: 12 },
@@ -994,7 +994,7 @@ const styles = StyleSheet.create({
   },
 
   sectionHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 22, marginBottom: 8 },
-  sectionLabel: { fontSize: 16, fontWeight: '800', color: KIOKU.ink },
+  sectionLabel: { fontSize: 16, fontFamily: FONT.displaySemi, color: KIOKU.ink },
   addLink: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   addLinkText: { fontSize: 14, fontWeight: '600', color: KIOKU.accent },
   emptyLine: { fontSize: 14, color: KIOKU.inkMuted, fontStyle: 'italic' },

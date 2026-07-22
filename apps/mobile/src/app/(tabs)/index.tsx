@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { api, type Trip } from '@/lib/api'
 import { KIOKU } from '@/constants/kioku'
 import { EmptyState, ErrorState, Loading, Screen, ScreenTitle } from '@/components/ui'
+import { PressableScale } from '@/components/PressableScale'
 
 function formatRange(trip: Trip) {
   const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' }
@@ -52,7 +53,7 @@ export default function TripsScreen() {
           keyExtractor={(t) => t.id}
           contentContainerStyle={styles.list}
           renderItem={({ item }) => (
-            <Pressable style={styles.card} onPress={() => router.push(`/trip/${item.id}`)}>
+            <PressableScale style={styles.card} onPress={() => router.push(`/trip/${item.id}`)}>
               <View style={styles.iconWrap}>
                 <Ionicons name="airplane-outline" size={18} color={KIOKU.accent} />
               </View>
@@ -68,7 +69,7 @@ export default function TripsScreen() {
               {item.endedAt ? (
                 <Ionicons name="lock-closed-outline" size={15} color={KIOKU.inkMuted} />
               ) : null}
-            </Pressable>
+            </PressableScale>
           )}
         />
       )}

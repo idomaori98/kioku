@@ -13,3 +13,11 @@ export const KIOKU = {
   danger: '#a32d2d',
   success: '#0f6e56',
 } as const
+
+// Display typeface — Bricolage Grotesque gives Kioku its editorial voice on
+// the wordmark, screen titles, and hero names. Body/UI stays on the system sans.
+export const FONT = {
+  display: 'BricolageGrotesque_700Bold',
+  displaySemi: 'BricolageGrotesque_600SemiBold',
+  displayHeavy: 'BricolageGrotesque_800ExtraBold',
+} as const

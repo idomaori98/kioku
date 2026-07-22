@@ -4,8 +4,9 @@ import { useFocusEffect, useRouter } from 'expo-router'
 import { Image } from 'expo-image'
 import { Ionicons } from '@expo/vector-icons'
 import { api, type FeedCard } from '@/lib/api'
-import { KIOKU } from '@/constants/kioku'
+import { FONT, KIOKU } from '@/constants/kioku'
 import { EmptyState, ErrorState, Loading, Screen, ScreenTitle } from '@/components/ui'
+import { PressableScale } from '@/components/PressableScale'
 
 const TRAVEL_LABEL: Record<FeedCard['travelType'], string> = {
   family: 'Family',
@@ -98,7 +99,7 @@ export default function DiscoverScreen() {
 function FeedCardView({ card, onToggleLike }: { card: FeedCard; onToggleLike: (id: string) => void }) {
   const router = useRouter()
   return (
-    <Pressable style={styles.card} onPress={() => router.push(`/trip/${card.id}`)}>
+    <PressableScale style={styles.card} onPress={() => router.push(`/trip/${card.id}`)}>
       <View style={styles.cover}>
         {card.coverPhotoUrl ? (
           <Image source={{ uri: card.coverPhotoUrl }} style={styles.coverImg} contentFit="cover" transition={200} />
@@ -131,7 +132,7 @@ function FeedCardView({ card, onToggleLike }: { card: FeedCard; onToggleLike: (i
           ) : null}
         </View>
       </View>
-    </Pressable>
+    </PressableScale>
   )
 }
 
@@ -178,7 +179,7 @@ const styles = StyleSheet.create({
     // simple bottom scrim until the design pass adds a real gradient
     backgroundColor: 'rgba(24,14,9,0.42)',
   },
-  name: { fontSize: 22, fontWeight: '800', color: '#fff', letterSpacing: -0.3 },
+  name: { fontSize: 23, fontFamily: FONT.displayHeavy, color: '#fff', letterSpacing: -0.3 },
   meta: { fontSize: 13.5, color: 'rgba(255,255,255,0.92)', marginTop: 2 },
   author: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 8 },
   authorText: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.92)' },
