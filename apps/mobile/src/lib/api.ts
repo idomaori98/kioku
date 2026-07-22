@@ -184,6 +184,22 @@ export type TripComment = {
   user: { id: string; name: string; photoUrl?: string }
 }
 
+// GET /dm/* — direct messages (see server/routes/directMessages.js).
+export type Conversation = {
+  user: { id: string; name: string; photoUrl?: string }
+  lastMessage: string
+  lastMessageAt: string
+  unreadCount: number
+}
+
+export type DirectMessage = {
+  id: string
+  senderId: string
+  text: string
+  createdAt: string
+  sharedTrip: { id: string; name: string; destination: string; coverPhotoUrl: string } | null
+}
+
 type RequestOptions = {
   method?: string
   body?: unknown
@@ -295,4 +311,8 @@ export const api = {
   getNotifications: () => request<AppNotification[]>('/notifications'),
   getUnreadCount: () => request<{ count: number }>('/notifications/unread-count'),
   markAllNotificationsRead: () => request<{ ok: boolean }>('/notifications/read-all', { method: 'POST' }),
+  getConversations: () => request<Conversation[]>('/dm/conversations'),
+  getMessages: (userId: string) => request<DirectMessage[]>(`/dm/${userId}`),
+  sendMessage: (userId: string, text: string) =>
+    request<DirectMessage>(`/dm/${userId}`, { method: 'POST', body: { text } }),
 }

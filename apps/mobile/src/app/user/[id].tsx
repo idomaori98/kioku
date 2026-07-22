@@ -96,20 +96,28 @@ export default function UserProfileScreen() {
               </View>
 
               {!profile.isMe ? (
-                <Pressable
-                  style={[styles.followBtn, profile.isFollowedByMe ? styles.followingBtn : styles.notFollowingBtn]}
-                  onPress={toggleFollow}
-                  disabled={busy}
-                >
-                  <Ionicons
-                    name={profile.isFollowedByMe ? 'checkmark' : 'person-add'}
-                    size={16}
-                    color={profile.isFollowedByMe ? KIOKU.ink : '#fff'}
-                  />
-                  <Text style={[styles.followText, profile.isFollowedByMe ? { color: KIOKU.ink } : { color: '#fff' }]}>
-                    {profile.isFollowedByMe ? 'Following' : 'Follow'}
-                  </Text>
-                </Pressable>
+                <View style={styles.actionRow}>
+                  <Pressable
+                    style={[styles.followBtn, profile.isFollowedByMe ? styles.followingBtn : styles.notFollowingBtn]}
+                    onPress={toggleFollow}
+                    disabled={busy}
+                  >
+                    <Ionicons
+                      name={profile.isFollowedByMe ? 'checkmark' : 'person-add'}
+                      size={16}
+                      color={profile.isFollowedByMe ? KIOKU.ink : '#fff'}
+                    />
+                    <Text style={[styles.followText, profile.isFollowedByMe ? { color: KIOKU.ink } : { color: '#fff' }]}>
+                      {profile.isFollowedByMe ? 'Following' : 'Follow'}
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    style={styles.msgBtn}
+                    onPress={() => router.push(`/dm/${profile.id}?name=${encodeURIComponent(profile.name)}`)}
+                  >
+                    <Ionicons name="chatbubble-outline" size={18} color={KIOKU.ink} />
+                  </Pressable>
+                </View>
               ) : null}
 
               <Text style={styles.tripsLabel}>{profile.tripCount > 0 ? 'Published trips' : ''}</Text>
@@ -189,6 +197,7 @@ const styles = StyleSheet.create({
   countValue: { fontSize: 18, fontWeight: '800', color: KIOKU.ink },
   countLabel: { fontSize: 12.5, color: KIOKU.inkMuted, marginTop: 1 },
 
+  actionRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 18 },
   followBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -196,7 +205,16 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 30,
     paddingVertical: 11,
-    marginTop: 18,
+  },
+  msgBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: KIOKU.borderStrong,
+    backgroundColor: KIOKU.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   notFollowingBtn: { backgroundColor: KIOKU.accent },
   followingBtn: { backgroundColor: KIOKU.surface, borderWidth: 1, borderColor: KIOKU.borderStrong },
