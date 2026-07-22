@@ -29,8 +29,9 @@ import {
 import { useAuth } from '@/lib/auth-context'
 import { FONT } from '@/constants/kioku'
 import { useStyles, type Theme } from '@/lib/theme'
-import { ErrorState, Loading } from '@/components/ui'
+import { ErrorState } from '@/components/ui'
 import { SwipeableRow } from '@/components/SwipeableRow'
+import { TripDetailSkeleton } from '@/components/Skeleton'
 
 const TRAVEL_LABEL: Record<PublicTrip['travelType'], string> = {
   family: 'Family',
@@ -158,9 +159,9 @@ export default function TripDetailScreen() {
   }
   if (!trip || !day) {
     return (
-      <View style={[styles.root, styles.centered, { paddingTop: insets.top }]}>
+      <View style={styles.root}>
         <Stack.Screen options={{ headerShown: false }} />
-        <Loading />
+        <TripDetailSkeleton />
       </View>
     )
   }

@@ -7,7 +7,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { api, type UserProfile, type FeedCard } from '@/lib/api'
 import { FONT } from '@/constants/kioku'
 import { useStyles, type Theme } from '@/lib/theme'
-import { ErrorState, Loading } from '@/components/ui'
+import { ErrorState } from '@/components/ui'
+import { ProfileSkeleton } from '@/components/Skeleton'
 
 export default function UserProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -65,7 +66,7 @@ export default function UserProfileScreen() {
       {error && !profile ? (
         <ErrorState message={error} onRetry={load} />
       ) : !profile ? (
-        <Loading />
+        <ProfileSkeleton />
       ) : (
         <FlatList
           data={profile.trips}

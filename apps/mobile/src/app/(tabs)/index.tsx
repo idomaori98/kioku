@@ -4,8 +4,9 @@ import { useFocusEffect, useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { api, type Trip } from '@/lib/api'
 import { useStyles, type Theme } from '@/lib/theme'
-import { EmptyState, ErrorState, Loading, Screen, ScreenTitle } from '@/components/ui'
+import { EmptyState, ErrorState, Screen, ScreenTitle } from '@/components/ui'
 import { PressableScale } from '@/components/PressableScale'
+import { ListSkeleton } from '@/components/Skeleton'
 
 function formatRange(trip: Trip) {
   const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' }
@@ -45,7 +46,7 @@ export default function TripsScreen() {
       {error ? (
         <ErrorState message={error} onRetry={load} />
       ) : !trips ? (
-        <Loading />
+        <ListSkeleton />
       ) : trips.length === 0 ? (
         <EmptyState icon="map-outline" title="No trips yet" message="Your planned trips will appear here." />
       ) : (

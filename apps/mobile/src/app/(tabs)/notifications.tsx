@@ -5,7 +5,8 @@ import { Image } from 'expo-image'
 import { Ionicons } from '@expo/vector-icons'
 import { api, type AppNotification, type NotificationType } from '@/lib/api'
 import { useStyles, type Theme } from '@/lib/theme'
-import { EmptyState, ErrorState, Loading, Screen, ScreenTitle } from '@/components/ui'
+import { EmptyState, ErrorState, Screen, ScreenTitle } from '@/components/ui'
+import { ListSkeleton } from '@/components/Skeleton'
 
 function iconMap(KIOKU: Theme): Record<NotificationType, { name: keyof typeof Ionicons.glyphMap; color: string }> {
   return {
@@ -85,7 +86,7 @@ export default function NotificationsScreen() {
       {error ? (
         <ErrorState message={error} onRetry={load} />
       ) : !items ? (
-        <Loading />
+        <ListSkeleton avatarRound />
       ) : items.length === 0 ? (
         <EmptyState icon="notifications-outline" title="No alerts yet" message="Likes, comments, and follows will show up here." />
       ) : (

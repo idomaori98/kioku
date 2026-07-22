@@ -6,8 +6,9 @@ import { Ionicons } from '@expo/vector-icons'
 import { api, type FeedCard } from '@/lib/api'
 import { FONT } from '@/constants/kioku'
 import { useStyles, type Theme } from '@/lib/theme'
-import { EmptyState, ErrorState, Loading, Screen, ScreenTitle } from '@/components/ui'
+import { EmptyState, ErrorState, Screen, ScreenTitle } from '@/components/ui'
 import { PressableScale } from '@/components/PressableScale'
+import { FeedSkeleton } from '@/components/Skeleton'
 
 const TRAVEL_LABEL: Record<FeedCard['travelType'], string> = {
   family: 'Family',
@@ -74,7 +75,7 @@ export default function DiscoverScreen() {
       {error ? (
         <ErrorState message={error} onRetry={load} />
       ) : !cards ? (
-        <Loading />
+        <FeedSkeleton />
       ) : cards.length === 0 ? (
         <EmptyState
           icon={scope === 'following' ? 'people-outline' : 'compass-outline'}

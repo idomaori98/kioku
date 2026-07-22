@@ -5,7 +5,8 @@ import { Image } from 'expo-image'
 import { Ionicons } from '@expo/vector-icons'
 import { api, type Conversation } from '@/lib/api'
 import { useStyles, type Theme } from '@/lib/theme'
-import { EmptyState, ErrorState, Loading, Screen, ScreenTitle } from '@/components/ui'
+import { EmptyState, ErrorState, Screen, ScreenTitle } from '@/components/ui'
+import { ListSkeleton } from '@/components/Skeleton'
 
 function timeAgo(iso: string) {
   const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
@@ -49,7 +50,7 @@ export default function MessagesScreen() {
       {error ? (
         <ErrorState message={error} onRetry={load} />
       ) : !items ? (
-        <Loading />
+        <ListSkeleton avatarRound />
       ) : items.length === 0 ? (
         <EmptyState
           icon="chatbubble-outline"
