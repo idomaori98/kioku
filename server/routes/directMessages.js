@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import DirectMessage from '../models/DirectMessage.js'
-import Friendship from '../models/Friendship.js'
+import Follow from '../models/Follow.js'
 import Trip from '../models/Trip.js'
 import Photo from '../models/Photo.js'
 import { requireAuth } from '../middleware/auth.js'
@@ -9,12 +9,12 @@ import { isBlockedEitherWay } from '../lib/blocks.js'
 const router = Router()
 router.use(requireAuth)
 
-async function requireFriendship(userA, userB) {
-  return Friendship.findOne({
-    status: 'accepted',
+// You can message someone you're connected to via follow (either direction).
+async function requireConnection(userA, userB) {
+  return Follow.findOne({
     $or: [
-      { requester: userA, recipient: userB },
-      { requester: userB, recipient: userA },
+      { follower: userA, following: userB },
+      { follower: userB, following: userA },
     ],
   })
 }
@@ -70,8 +70,8 @@ router.get('/unread-count', async (req, res) => {
 })
 
 router.get('/:friendId', async (req, res) => {
-  const friendship = await requireFriendship(req.userId, req.params.friendId)
-  if (!friendship) return res.status(403).json({ error: 'You can only message friends' })
+  const connection = await requireConnection(req.userId, req.params.friendId)
+  if (!connection) return res.status(403).json({ error: 'You can only message people you follow' })
 
   await DirectMessage.updateMany(
     { sender: req.params.friendId, recipient: req.userId, read: { $ne: true } },
@@ -94,8 +94,8 @@ router.post('/:friendId', async (req, res) => {
     return res.status(400).json({ error: 'text or sharedTripId is required' })
   }
 
-  const friendship = await requireFriendship(req.userId, req.params.friendId)
-  if (!friendship) return res.status(403).json({ error: 'You can only message friends' })
+  const connection = await requireConnection(req.userId, req.params.friendId)
+  if (!connection) return res.status(403).json({ error: 'You can only message people you follow' })
 
   if (await isBlockedEitherWay(req.userId, req.params.friendId)) {
     return res.status(403).json({ error: 'Unable to message this person' })
