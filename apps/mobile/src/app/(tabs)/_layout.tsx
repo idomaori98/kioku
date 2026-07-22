@@ -1,11 +1,38 @@
-import { ActivityIndicator, View } from 'react-native'
+import { useEffect, useState } from 'react'
+import { ActivityIndicator, AppState, View } from 'react-native'
 import { Redirect, Tabs } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
+import { api } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
 import { KIOKU } from '@/constants/kioku'
 
 export default function TabsLayout() {
   const { user, loading } = useAuth()
+  const [alertsCount, setAlertsCount] = useState(0)
+  const [messagesCount, setMessagesCount] = useState(0)
+
+  useEffect(() => {
+    if (!user) return
+    let alive = true
+    const refresh = () => {
+      api
+        .getUnreadCount()
+        .then((r) => alive && setAlertsCount(r.count))
+        .catch(() => {})
+      api
+        .getDmUnreadCount()
+        .then((r) => alive && setMessagesCount(r.count))
+        .catch(() => {})
+    }
+    refresh()
+    const interval = setInterval(refresh, 20000)
+    const sub = AppState.addEventListener('change', (s) => s === 'active' && refresh())
+    return () => {
+      alive = false
+      clearInterval(interval)
+      sub.remove()
+    }
+  }, [user])
 
   if (loading) {
     return (
@@ -43,6 +70,8 @@ export default function TabsLayout() {
         name="notifications"
         options={{
           title: 'Alerts',
+          tabBarBadge: alertsCount > 0 ? (alertsCount > 99 ? '99+' : alertsCount) : undefined,
+          tabBarBadgeStyle: { backgroundColor: KIOKU.accent, fontSize: 11 },
           tabBarIcon: ({ color, size }) => <Ionicons name="notifications-outline" color={color} size={size} />,
         }}
       />
@@ -50,6 +79,8 @@ export default function TabsLayout() {
         name="messages"
         options={{
           title: 'Messages',
+          tabBarBadge: messagesCount > 0 ? (messagesCount > 99 ? '99+' : messagesCount) : undefined,
+          tabBarBadgeStyle: { backgroundColor: KIOKU.accent, fontSize: 11 },
           tabBarIcon: ({ color, size }) => <Ionicons name="chatbubble-outline" color={color} size={size} />,
         }}
       />

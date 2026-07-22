@@ -313,6 +313,7 @@ export const api = {
   markAllNotificationsRead: () => request<{ ok: boolean }>('/notifications/read-all', { method: 'POST' }),
   getConversations: () => request<Conversation[]>('/dm/conversations'),
   getMessages: (userId: string) => request<DirectMessage[]>(`/dm/${userId}`),
-  sendMessage: (userId: string, text: string) =>
-    request<DirectMessage>(`/dm/${userId}`, { method: 'POST', body: { text } }),
+  sendMessage: (userId: string, body: { text?: string; sharedTripId?: string }) =>
+    request<DirectMessage>(`/dm/${userId}`, { method: 'POST', body }),
+  getDmUnreadCount: () => request<{ count: number }>('/dm/unread-count'),
 }

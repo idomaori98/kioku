@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react'
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
 import { useFocusEffect, useRouter } from 'expo-router'
 import { Image } from 'expo-image'
+import { Ionicons } from '@expo/vector-icons'
 import { api, type Conversation } from '@/lib/api'
 import { KIOKU } from '@/constants/kioku'
 import { EmptyState, ErrorState, Loading, Screen, ScreenTitle } from '@/components/ui'
@@ -35,7 +36,15 @@ export default function MessagesScreen() {
 
   return (
     <Screen>
-      <ScreenTitle title="Messages" subtitle="Chats with people you follow" />
+      <ScreenTitle
+        title="Messages"
+        subtitle="Chats with people you follow"
+        action={
+          <Pressable style={styles.findBtn} onPress={() => router.push('/search-people')} hitSlop={8}>
+            <Ionicons name="search" size={20} color={KIOKU.ink} />
+          </Pressable>
+        }
+      />
       {error ? (
         <ErrorState message={error} onRetry={load} />
       ) : !items ? (
@@ -86,6 +95,14 @@ export default function MessagesScreen() {
 }
 
 const styles = StyleSheet.create({
+  findBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: KIOKU.surfaceAlt,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   list: { paddingHorizontal: 16, paddingBottom: 24, gap: 6 },
   row: {
     flexDirection: 'row',

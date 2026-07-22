@@ -47,7 +47,7 @@ export default function DmThreadScreen() {
     if (!text || sending || !id) return
     setSending(true)
     try {
-      const created = await api.sendMessage(id, text)
+      const created = await api.sendMessage(id, { text })
       setMessages((prev) => [...(prev ?? []), created])
       setDraft('')
       requestAnimationFrame(() => listRef.current?.scrollToEnd({ animated: true }))

@@ -250,14 +250,21 @@ export default function TripDetailScreen() {
           </Pressable>
 
           {trip.published ? (
-            <Pressable
-              style={styles.recapBtn}
-              onPress={() => router.push(`/comments/${trip.id}?owner=${isOwner ? 1 : 0}`)}
-            >
-              <Ionicons name="chatbubble-outline" size={16} color={KIOKU.ink} />
-              <Text style={styles.recapText}>Comments</Text>
-              <Ionicons name="chevron-forward" size={16} color={KIOKU.inkMuted} />
-            </Pressable>
+            <>
+              <Pressable
+                style={styles.recapBtn}
+                onPress={() => router.push(`/comments/${trip.id}?owner=${isOwner ? 1 : 0}`)}
+              >
+                <Ionicons name="chatbubble-outline" size={16} color={KIOKU.ink} />
+                <Text style={styles.recapText}>Comments</Text>
+                <Ionicons name="chevron-forward" size={16} color={KIOKU.inkMuted} />
+              </Pressable>
+              <Pressable style={styles.recapBtn} onPress={() => router.push(`/share-trip/${trip.id}`)}>
+                <Ionicons name="paper-plane-outline" size={16} color={KIOKU.ink} />
+                <Text style={styles.recapText}>Share to a chat</Text>
+                <Ionicons name="chevron-forward" size={16} color={KIOKU.inkMuted} />
+              </Pressable>
+            </>
           ) : null}
 
           {/* Day pager */}
