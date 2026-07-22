@@ -198,7 +198,11 @@ export default function TripDetailScreen() {
 
         <View style={styles.body}>
           <Text style={styles.byline}>
-            by {trip.createdByName ?? 'Unknown'} · {TRAVEL_LABEL[trip.travelType]}
+            by{' '}
+            <Text style={styles.bylineLink} onPress={() => router.push(`/user/${trip.createdBy}`)}>
+              {trip.createdByName ?? 'Unknown'}
+            </Text>{' '}
+            · {TRAVEL_LABEL[trip.travelType]}
           </Text>
 
           <View style={styles.stats}>
@@ -883,6 +887,7 @@ const styles = StyleSheet.create({
 
   body: { paddingHorizontal: 20, paddingTop: 18 },
   byline: { fontSize: 14, color: KIOKU.inkMuted, fontWeight: '600' },
+  bylineLink: { color: KIOKU.accent, fontWeight: '700' },
 
   stats: {
     flexDirection: 'row',

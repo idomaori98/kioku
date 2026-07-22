@@ -14,7 +14,10 @@ const TRAVEL_LABEL: Record<FeedCard['travelType'], string> = {
   friends: 'Friends',
 }
 
+type Scope = 'all' | 'following'
+
 export default function DiscoverScreen() {
+  const [scope, setScope] = useState<Scope>('all')
   const [cards, setCards] = useState<FeedCard[] | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -22,10 +25,10 @@ export default function DiscoverScreen() {
     setError(null)
     setCards(null)
     api
-      .getFeed()
+      .getFeed(scope === 'following' ? { scope: 'following' } : {})
       .then((res) => setCards(res.cards))
       .catch((e) => setError(e instanceof Error ? e.message : 'Failed to load'))
-  }, [])
+  }, [scope])
 
   useFocusEffect(load)
 
@@ -54,12 +57,31 @@ export default function DiscoverScreen() {
   return (
     <Screen>
       <ScreenTitle title="Discover" subtitle="Trips shared by fellow travelers" />
+
+      <View style={styles.segment}>
+        {(['all', 'following'] as Scope[]).map((s) => (
+          <Pressable key={s} style={[styles.segItem, scope === s && styles.segItemOn]} onPress={() => setScope(s)}>
+            <Text style={[styles.segText, scope === s && styles.segTextOn]}>
+              {s === 'all' ? 'For you' : 'Following'}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
       {error ? (
         <ErrorState message={error} onRetry={load} />
       ) : !cards ? (
         <Loading />
       ) : cards.length === 0 ? (
-        <EmptyState icon="compass-outline" title="Nothing here yet" message="Published trips will appear here." />
+        <EmptyState
+          icon={scope === 'following' ? 'people-outline' : 'compass-outline'}
+          title={scope === 'following' ? 'Nothing from people you follow' : 'Nothing here yet'}
+          message={
+            scope === 'following'
+              ? 'Follow travelers and their published trips show up here.'
+              : 'Published trips will appear here.'
+          }
+        />
       ) : (
         <FlatList
           data={cards}
@@ -97,6 +119,16 @@ function FeedCardView({ card, onToggleLike }: { card: FeedCard; onToggleLike: (i
             {card.destination ? `${card.destination} · ` : ''}
             {card.days} day{card.days === 1 ? '' : 's'} · {TRAVEL_LABEL[card.travelType]}
           </Text>
+          {card.createdByName ? (
+            <Pressable
+              style={styles.author}
+              hitSlop={6}
+              onPress={() => router.push(`/user/${card.createdBy}`)}
+            >
+              <Ionicons name="person-circle-outline" size={15} color="rgba(255,255,255,0.92)" />
+              <Text style={styles.authorText}>{card.createdByName}</Text>
+            </Pressable>
+          ) : null}
         </View>
       </View>
     </Pressable>
@@ -104,6 +136,20 @@ function FeedCardView({ card, onToggleLike }: { card: FeedCard; onToggleLike: (i
 }
 
 const styles = StyleSheet.create({
+  segment: {
+    flexDirection: 'row',
+    marginHorizontal: 16,
+    marginBottom: 14,
+    backgroundColor: KIOKU.surfaceAlt,
+    borderRadius: 12,
+    padding: 4,
+    gap: 4,
+  },
+  segItem: { flex: 1, alignItems: 'center', paddingVertical: 9, borderRadius: 9 },
+  segItemOn: { backgroundColor: KIOKU.surface },
+  segText: { fontSize: 14, fontWeight: '700', color: KIOKU.inkMuted },
+  segTextOn: { color: KIOKU.ink },
+
   list: { paddingHorizontal: 16, paddingBottom: 24, gap: 16 },
   card: { borderRadius: 20, overflow: 'hidden', backgroundColor: KIOKU.surfaceAlt },
   cover: { height: 230, position: 'relative' },
@@ -134,4 +180,6 @@ const styles = StyleSheet.create({
   },
   name: { fontSize: 22, fontWeight: '800', color: '#fff', letterSpacing: -0.3 },
   meta: { fontSize: 13.5, color: 'rgba(255,255,255,0.92)', marginTop: 2 },
+  author: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 8 },
+  authorText: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.92)' },
 })

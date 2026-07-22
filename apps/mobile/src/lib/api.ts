@@ -39,6 +39,8 @@ export type Trip = {
 export type FeedCard = {
   id: string
   name: string
+  createdBy: string
+  createdByName: string | null
   destination: string
   travelType: Trip['travelType']
   days: number
@@ -52,6 +54,21 @@ export type FeedCard = {
 }
 
 export type FeedResponse = { cards: FeedCard[]; hasMore: boolean }
+
+export type UserLite = { id: string; name: string; photoUrl?: string }
+
+// GET /users/:id — public profile (see server/routes/users.js).
+export type UserProfile = {
+  id: string
+  name: string
+  photoUrl?: string
+  isMe: boolean
+  isFollowedByMe: boolean
+  followerCount: number
+  followingCount: number
+  tripCount: number
+  trips: FeedCard[]
+}
 
 // GET /trips/:id/public — the full read-only itinerary (see server/routes/trips.js).
 export type PublicPlace = {
@@ -242,11 +259,18 @@ export const api = {
     }),
   createPhoto: (tripId: string, input: { day: string; key: string; publicUrl: string; note?: string }) =>
     request(`/trips/${tripId}/photos`, { method: 'POST', body: input }),
-  getFeed: (params: { limit?: number; offset?: number } = {}) => {
+  getFeed: (params: { limit?: number; offset?: number; scope?: 'following' } = {}) => {
     const qs = new URLSearchParams()
     if (params.limit != null) qs.set('limit', String(params.limit))
     if (params.offset != null) qs.set('offset', String(params.offset))
+    if (params.scope) qs.set('scope', params.scope)
     const s = qs.toString()
     return request<FeedResponse>(`/trips/feed${s ? `?${s}` : ''}`)
   },
+  getProfile: (id: string) => request<UserProfile>(`/users/${id}`),
+  followUser: (id: string) => request(`/users/${id}/follow`, { method: 'POST' }),
+  unfollowUser: (id: string) => request(`/users/${id}/follow`, { method: 'DELETE' }),
+  getFollowers: (id: string) => request<UserLite[]>(`/users/${id}/followers`),
+  getFollowing: (id: string) => request<UserLite[]>(`/users/${id}/following`),
+  searchUsers: (q: string) => request<UserLite[]>(`/users/search?q=${encodeURIComponent(q)}`),
 }

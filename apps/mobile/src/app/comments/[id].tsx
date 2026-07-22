@@ -116,7 +116,9 @@ export default function CommentsScreen() {
                   )}
                   <View style={{ flex: 1 }}>
                     <View style={styles.rowHead}>
-                      <Text style={styles.name}>{item.user.name}</Text>
+                      <Text style={styles.name} onPress={() => router.push(`/user/${item.user.id}`)}>
+                        {item.user.name}
+                      </Text>
                       <Text style={styles.time}>{timeAgo(item.createdAt)}</Text>
                     </View>
                     <Text style={styles.text}>{item.text}</Text>
