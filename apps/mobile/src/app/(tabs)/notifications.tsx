@@ -7,6 +7,7 @@ import { api, type AppNotification, type NotificationType } from '@/lib/api'
 import { useStyles, type Theme } from '@/lib/theme'
 import { EmptyState, ErrorState, Screen, ScreenTitle } from '@/components/ui'
 import { ListSkeleton } from '@/components/Skeleton'
+import { PressableScale } from '@/components/PressableScale'
 
 function iconMap(KIOKU: Theme): Record<NotificationType, { name: keyof typeof Ionicons.glyphMap; color: string }> {
   return {
@@ -88,7 +89,11 @@ export default function NotificationsScreen() {
       ) : !items ? (
         <ListSkeleton avatarRound />
       ) : items.length === 0 ? (
-        <EmptyState icon="notifications-outline" title="No alerts yet" message="Likes, comments, and follows will show up here." />
+        <EmptyState
+          icon="notifications-outline"
+          title="You're all caught up"
+          message="Likes, comments, and new followers will show up here."
+        />
       ) : (
         <FlatList
           data={items}
@@ -98,7 +103,7 @@ export default function NotificationsScreen() {
           renderItem={({ item }) => {
             const ic = ICON[item.type]
             return (
-              <Pressable style={[styles.row, !item.read && styles.rowUnread]} onPress={() => open(item)}>
+              <PressableScale style={[styles.row, !item.read && styles.rowUnread]} onPress={() => open(item)}>
                 <View style={styles.avatarWrap}>
                   {item.actor?.photoUrl ? (
                     <Image source={{ uri: item.actor.photoUrl }} style={styles.avatar} />
@@ -115,7 +120,7 @@ export default function NotificationsScreen() {
                   {messageFor(item)} <Text style={styles.time}>· {timeAgo(item.createdAt)}</Text>
                 </Text>
                 {!item.read ? <View style={styles.dot} /> : null}
-              </Pressable>
+              </PressableScale>
             )
           }}
         />

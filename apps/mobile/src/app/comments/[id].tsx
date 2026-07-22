@@ -102,7 +102,7 @@ export default function CommentsScreen() {
             contentContainerStyle={styles.list}
             showsVerticalScrollIndicator={false}
             ListEmptyComponent={
-              <EmptyState icon="chatbubble-outline" title="No comments yet" message="Be the first to say something." />
+              <EmptyState icon="chatbubble-outline" title="Start the conversation" message="Be the first to comment on this trip." />
             }
             renderItem={({ item }) => {
               const canDelete = isTripOwner || item.user.id === user?.id

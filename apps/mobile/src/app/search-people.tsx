@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { api, type UserLite } from '@/lib/api'
 import { useStyles, type Theme } from '@/lib/theme'
+import { PressableScale } from '@/components/PressableScale'
 
 export default function SearchPeopleScreen() {
   const router = useRouter()
@@ -87,7 +88,7 @@ export default function SearchPeopleScreen() {
           </View>
         }
         renderItem={({ item }) => (
-          <Pressable style={styles.row} onPress={() => router.push(`/user/${item.id}`)}>
+          <PressableScale style={styles.row} onPress={() => router.push(`/user/${item.id}`)}>
             <View style={styles.avatar}>
               {item.photoUrl ? (
                 <Image source={{ uri: item.photoUrl }} style={styles.avatarImg} />
@@ -97,7 +98,7 @@ export default function SearchPeopleScreen() {
             </View>
             <Text style={styles.name}>{item.name}</Text>
             <Ionicons name="chevron-forward" size={18} color={KIOKU.borderStrong} />
-          </Pressable>
+          </PressableScale>
         )}
       />
     </View>

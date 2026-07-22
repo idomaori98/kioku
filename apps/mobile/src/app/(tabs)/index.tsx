@@ -48,7 +48,11 @@ export default function TripsScreen() {
       ) : !trips ? (
         <ListSkeleton />
       ) : trips.length === 0 ? (
-        <EmptyState icon="map-outline" title="No trips yet" message="Your planned trips will appear here." />
+        <EmptyState
+          icon="map-outline"
+          title="Start your first trip"
+          message="Tap the + above to plan a trip — days, places, expenses, and photos."
+        />
       ) : (
         <FlatList
           data={trips}

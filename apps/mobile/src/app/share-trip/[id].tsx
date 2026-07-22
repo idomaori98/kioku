@@ -8,6 +8,7 @@ import { api, type UserLite } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
 import { useStyles, type Theme } from '@/lib/theme'
 import { EmptyState, ErrorState, Loading } from '@/components/ui'
+import { PressableScale } from '@/components/PressableScale'
 
 export default function ShareTripScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -75,7 +76,7 @@ export default function ShareTripScreen() {
             />
           }
           renderItem={({ item }) => (
-            <Pressable style={styles.row} onPress={() => share(item)} disabled={!!sendingTo}>
+            <PressableScale style={styles.row} onPress={() => share(item)} disabled={!!sendingTo}>
               <View style={styles.avatar}>
                 {item.photoUrl ? (
                   <Image source={{ uri: item.photoUrl }} style={styles.avatarImg} />
@@ -92,7 +93,7 @@ export default function ShareTripScreen() {
                   <Text style={styles.sendText}>Send</Text>
                 </View>
               )}
-            </Pressable>
+            </PressableScale>
           )}
         />
       )}

@@ -9,6 +9,7 @@ import { FONT } from '@/constants/kioku'
 import { useStyles, type Theme } from '@/lib/theme'
 import { ErrorState } from '@/components/ui'
 import { ProfileSkeleton } from '@/components/Skeleton'
+import { PressableScale } from '@/components/PressableScale'
 
 export default function UserProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -149,7 +150,7 @@ function Count({ value, label }: { value: number; label: string }) {
 function TripTile({ card, onPress }: { card: FeedCard; onPress: () => void }) {
   const [styles, KIOKU] = useStyles(makeStyles)
   return (
-    <Pressable style={styles.tile} onPress={onPress}>
+    <PressableScale style={styles.tile} onPress={onPress}>
       {card.coverPhotoUrl ? (
         <Image source={{ uri: card.coverPhotoUrl }} style={styles.tileImg} contentFit="cover" transition={150} />
       ) : (
@@ -165,7 +166,7 @@ function TripTile({ card, onPress }: { card: FeedCard; onPress: () => void }) {
       <Text style={styles.tileName} numberOfLines={2}>
         {card.name}
       </Text>
-    </Pressable>
+    </PressableScale>
   )
 }
 

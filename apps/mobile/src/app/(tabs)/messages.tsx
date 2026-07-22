@@ -7,6 +7,7 @@ import { api, type Conversation } from '@/lib/api'
 import { useStyles, type Theme } from '@/lib/theme'
 import { EmptyState, ErrorState, Screen, ScreenTitle } from '@/components/ui'
 import { ListSkeleton } from '@/components/Skeleton'
+import { PressableScale } from '@/components/PressableScale'
 
 function timeAgo(iso: string) {
   const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
@@ -54,8 +55,8 @@ export default function MessagesScreen() {
       ) : items.length === 0 ? (
         <EmptyState
           icon="chatbubble-outline"
-          title="No messages yet"
-          message="Open someone's profile and tap Message to start a chat."
+          title="Start a conversation"
+          message="Open a traveler's profile and tap Message to say hi."
         />
       ) : (
         <FlatList
@@ -64,7 +65,7 @@ export default function MessagesScreen() {
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
-            <Pressable style={styles.row} onPress={() => router.push(`/dm/${item.user.id}?name=${encodeURIComponent(item.user.name)}`)}>
+            <PressableScale style={styles.row} onPress={() => router.push(`/dm/${item.user.id}?name=${encodeURIComponent(item.user.name)}`)}>
               <View style={styles.avatar}>
                 {item.user.photoUrl ? (
                   <Image source={{ uri: item.user.photoUrl }} style={styles.avatarImg} />
@@ -88,7 +89,7 @@ export default function MessagesScreen() {
                   <Text style={styles.badgeText}>{item.unreadCount}</Text>
                 </View>
               ) : null}
-            </Pressable>
+            </PressableScale>
           )}
         />
       )}

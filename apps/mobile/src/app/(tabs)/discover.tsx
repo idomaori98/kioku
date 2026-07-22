@@ -79,11 +79,11 @@ export default function DiscoverScreen() {
       ) : cards.length === 0 ? (
         <EmptyState
           icon={scope === 'following' ? 'people-outline' : 'compass-outline'}
-          title={scope === 'following' ? 'Nothing from people you follow' : 'Nothing here yet'}
+          title={scope === 'following' ? 'Trips from your people' : 'Nothing to explore yet'}
           message={
             scope === 'following'
-              ? 'Follow travelers and their published trips show up here.'
-              : 'Published trips will appear here.'
+              ? 'Follow other travelers and their published trips land here.'
+              : 'Published trips from fellow travelers will show up here.'
           }
         />
       ) : (
