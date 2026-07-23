@@ -440,10 +440,21 @@ function DayView({
       <View style={styles.sectionHead}>
         <Text style={styles.sectionLabel}>Places</Text>
         {isOwner ? (
-          <Pressable onPress={() => setPlaceModal({})} hitSlop={8} style={styles.addLink}>
-            <Ionicons name="add" size={16} color={KIOKU.accent} />
-            <Text style={styles.addLinkText}>Add place</Text>
-          </Pressable>
+          <View style={styles.headActions}>
+            {day.places.length > 1 ? (
+              <Pressable
+                onPress={() => router.push(`/reorder/${trip.id}?day=${day.day}&kind=places`)}
+                hitSlop={8}
+                style={styles.arrangeBtn}
+              >
+                <Ionicons name="swap-vertical" size={18} color={KIOKU.inkMuted} />
+              </Pressable>
+            ) : null}
+            <Pressable onPress={() => setPlaceModal({})} hitSlop={8} style={styles.addLink}>
+              <Ionicons name="add" size={16} color={KIOKU.accent} />
+              <Text style={styles.addLinkText}>Add place</Text>
+            </Pressable>
+          </View>
         ) : null}
       </View>
 
@@ -549,16 +560,27 @@ function DayView({
           <View style={styles.sectionHead}>
             <Text style={styles.sectionLabel}>Photos</Text>
             {isOwner ? (
-              <Pressable onPress={addPhoto} hitSlop={8} style={styles.addLink} disabled={uploading}>
-                {uploading ? (
-                  <ActivityIndicator size="small" color={KIOKU.accent} />
-                ) : (
-                  <>
-                    <Ionicons name="add" size={16} color={KIOKU.accent} />
-                    <Text style={styles.addLinkText}>Add photo</Text>
-                  </>
-                )}
-              </Pressable>
+              <View style={styles.headActions}>
+                {day.photos.length > 1 ? (
+                  <Pressable
+                    onPress={() => router.push(`/reorder/${trip.id}?day=${day.day}&kind=photos`)}
+                    hitSlop={8}
+                    style={styles.arrangeBtn}
+                  >
+                    <Ionicons name="swap-vertical" size={18} color={KIOKU.inkMuted} />
+                  </Pressable>
+                ) : null}
+                <Pressable onPress={addPhoto} hitSlop={8} style={styles.addLink} disabled={uploading}>
+                  {uploading ? (
+                    <ActivityIndicator size="small" color={KIOKU.accent} />
+                  ) : (
+                    <>
+                      <Ionicons name="add" size={16} color={KIOKU.accent} />
+                      <Text style={styles.addLinkText}>Add photo</Text>
+                    </>
+                  )}
+                </Pressable>
+              </View>
             ) : null}
           </View>
           {photoError ? <Text style={styles.modalErr}>{photoError}</Text> : null}
@@ -1043,6 +1065,8 @@ function makeStyles(KIOKU: Theme) {
   },
 
   sectionHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 22, marginBottom: 8 },
+  headActions: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  arrangeBtn: { paddingVertical: 2 },
   sectionLabel: { fontSize: 16, fontFamily: FONT.displaySemi, color: KIOKU.ink },
   addLink: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   addLinkText: { fontSize: 14, fontWeight: '600', color: KIOKU.accent },

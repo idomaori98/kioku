@@ -55,7 +55,7 @@ async function buildItinerary(trip, userId) {
 
   const [expenses, places, photos, notes] = await Promise.all([
     Expense.find({ trip: trip._id, hiddenFromPublic: { $ne: true } }).populate('addedBy', 'name'),
-    Place.find({ trip: trip._id }).populate('addedBy', 'name'),
+    Place.find({ trip: trip._id }).sort({ day: 1, order: 1, createdAt: 1 }).populate('addedBy', 'name'),
     Photo.find({ trip: trip._id, hiddenFromPublic: { $ne: true } })
       .sort({ day: 1, order: 1, createdAt: 1 })
       .populate('addedBy', 'name'),

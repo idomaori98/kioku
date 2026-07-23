@@ -286,6 +286,10 @@ export const api = {
     }),
   updatePlace: (tripId: string, placeId: string, name: string) =>
     request(`/trips/${tripId}/places/${placeId}`, { method: 'PUT', body: { name } }),
+  reorderPlaces: (tripId: string, day: string, orderedIds: string[]) =>
+    request(`/trips/${tripId}/places/reorder`, { method: 'PUT', body: { day, orderedIds } }),
+  reorderPhotos: (tripId: string, day: string, orderedIds: string[]) =>
+    request(`/trips/${tripId}/photos/reorder`, { method: 'PUT', body: { day, orderedIds } }),
   deletePlace: (tripId: string, placeId: string) =>
     request(`/trips/${tripId}/places/${placeId}`, { method: 'DELETE' }),
   setDayNote: (tripId: string, day: string, note: string) =>
