@@ -127,4 +127,19 @@ router.post('/:friendId', async (req, res) => {
   res.status(201).json(serializeMessage(message))
 })
 
+const DELETE_WINDOW_MS = 20 * 60 * 1000
+
+router.delete('/message/:messageId', async (req, res) => {
+  const msg = await DirectMessage.findById(req.params.messageId)
+  if (!msg) return res.status(404).json({ error: 'Message not found' })
+  if (msg.sender.toString() !== req.userId) {
+    return res.status(403).json({ error: 'You can only delete your own messages' })
+  }
+  if (Date.now() - new Date(msg.createdAt).getTime() > DELETE_WINDOW_MS) {
+    return res.status(403).json({ error: 'Messages can only be deleted within 20 minutes of sending' })
+  }
+  await msg.deleteOne()
+  res.status(204).end()
+})
+
 export default router

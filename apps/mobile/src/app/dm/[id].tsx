@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from 'react'
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -59,6 +60,28 @@ export default function DmThreadScreen() {
     }
   }
 
+  function tryDelete(m: DirectMessage) {
+    if (m.senderId !== user?.id) return
+    if (Date.now() - new Date(m.createdAt).getTime() > 20 * 60 * 1000) {
+      Alert.alert('Too late to delete', 'Messages can only be deleted within 20 minutes of sending.')
+      return
+    }
+    Alert.alert('Delete message?', 'This removes it for both of you.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => {
+          setMessages((prev) => prev?.filter((x) => x.id !== m.id) ?? prev)
+          api.deleteDirectMessage(m.id).catch(() => {
+            Alert.alert('Could not delete', 'Please try again.')
+            load()
+          })
+        },
+      },
+    ])
+  }
+
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -96,7 +119,11 @@ export default function DmThreadScreen() {
               const mine = item.senderId === user?.id
               return (
                 <View style={[styles.bubbleRow, mine ? styles.rowMine : styles.rowTheirs]}>
-                  <View style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleTheirs]}>
+                  <Pressable
+                    style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleTheirs]}
+                    onLongPress={() => tryDelete(item)}
+                    delayLongPress={350}
+                  >
                     {item.sharedTrip ? (
                       <Pressable style={styles.tripCard} onPress={() => router.push(`/trip/${item.sharedTrip!.id}`)}>
                         {item.sharedTrip.coverPhotoUrl ? (
@@ -108,7 +135,7 @@ export default function DmThreadScreen() {
                     {item.text ? (
                       <Text style={[styles.bubbleText, mine ? styles.textMine : styles.textTheirs]}>{item.text}</Text>
                     ) : null}
-                  </View>
+                  </Pressable>
                 </View>
               )
             }}

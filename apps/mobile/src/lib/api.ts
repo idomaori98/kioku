@@ -255,6 +255,8 @@ export const api = {
   getTripMessages: (tripId: string) => request<TripMessage[]>(`/trips/${tripId}/messages`),
   sendTripMessage: (tripId: string, text: string) =>
     request<TripMessage>(`/trips/${tripId}/messages`, { method: 'POST', body: { text } }),
+  deleteTripMessage: (tripId: string, messageId: string) =>
+    request(`/trips/${tripId}/messages/${messageId}`, { method: 'DELETE' }),
   createTrip: (input: {
     name: string
     destination?: string
@@ -330,4 +332,6 @@ export const api = {
   sendMessage: (userId: string, body: { text?: string; sharedTripId?: string }) =>
     request<DirectMessage>(`/dm/${userId}`, { method: 'POST', body }),
   getDmUnreadCount: () => request<{ count: number }>('/dm/unread-count'),
+  deleteDirectMessage: (messageId: string) =>
+    request(`/dm/message/${messageId}`, { method: 'DELETE' }),
 }

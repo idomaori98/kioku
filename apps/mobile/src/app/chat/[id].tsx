@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -100,6 +101,28 @@ export default function TripChatScreen() {
     setForced({ start: r.cursorPos, end: r.cursorPos })
   }
 
+  function tryDelete(m: TripMessage) {
+    if (!id || m.sender.id !== user?.id) return
+    if (Date.now() - new Date(m.createdAt).getTime() > 20 * 60 * 1000) {
+      Alert.alert('Too late to delete', 'Messages can only be deleted within 20 minutes of sending.')
+      return
+    }
+    Alert.alert('Delete message?', 'This removes it for everyone in the trip.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => {
+          setMessages((prev) => prev?.filter((x) => x.id !== m.id) ?? prev)
+          api.deleteTripMessage(id, m.id).catch(() => {
+            Alert.alert('Could not delete', 'Please try again.')
+            load()
+          })
+        },
+      },
+    ])
+  }
+
   async function send() {
     const payload = serializeForSend(text, mentions).trim()
     if (!payload || sending || !id) return
@@ -155,7 +178,11 @@ export default function TripChatScreen() {
                 <View style={[styles.bubbleRow, mine ? styles.rowMine : styles.rowTheirs]}>
                   <View style={{ maxWidth: '82%' }}>
                     {!mine ? <Text style={styles.senderName}>{item.sender.name}</Text> : null}
-                    <View style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleTheirs]}>
+                    <Pressable
+                      style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleTheirs]}
+                      onLongPress={() => tryDelete(item)}
+                      delayLongPress={350}
+                    >
                       <Text style={[styles.bubbleText, mine ? styles.textMine : styles.textTheirs]}>
                         {parseMessageText(item.text).map((seg, i) =>
                           seg.kind === 'text' ? (
@@ -173,7 +200,7 @@ export default function TripChatScreen() {
                           )
                         )}
                       </Text>
-                    </View>
+                    </Pressable>
                   </View>
                 </View>
               )

@@ -34,4 +34,19 @@ router.post('/', requireTripNotEnded, async (req, res) => {
   res.status(201).json(serializeMessage(message))
 })
 
+const DELETE_WINDOW_MS = 20 * 60 * 1000
+
+router.delete('/:messageId', async (req, res) => {
+  const msg = await Message.findOne({ _id: req.params.messageId, trip: req.params.tripId })
+  if (!msg) return res.status(404).json({ error: 'Message not found' })
+  if (msg.sender.toString() !== req.userId) {
+    return res.status(403).json({ error: 'You can only delete your own messages' })
+  }
+  if (Date.now() - new Date(msg.createdAt).getTime() > DELETE_WINDOW_MS) {
+    return res.status(403).json({ error: 'Messages can only be deleted within 20 minutes of sending' })
+  }
+  await msg.deleteOne()
+  res.status(204).end()
+})
+
 export default router
