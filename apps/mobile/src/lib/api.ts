@@ -184,6 +184,15 @@ export type TripComment = {
   user: { id: string; name: string; photoUrl?: string }
 }
 
+// GET/POST /trips/:tripId/messages — trip group chat (see server/routes/messages.js).
+// Text may contain mention tokens: @[member|place|expense|photo:<id>].
+export type TripMessage = {
+  id: string
+  text: string
+  sender: { id: string; name: string }
+  createdAt: string
+}
+
 // GET /dm/* — direct messages (see server/routes/directMessages.js).
 export type Conversation = {
   user: { id: string; name: string; photoUrl?: string }
@@ -241,6 +250,10 @@ export const api = {
     }),
   me: () => request<User>('/auth/me'),
   listTrips: () => request<Trip[]>('/trips'),
+  getTrip: (id: string) => request<Trip>(`/trips/${id}`),
+  getTripMessages: (tripId: string) => request<TripMessage[]>(`/trips/${tripId}/messages`),
+  sendTripMessage: (tripId: string, text: string) =>
+    request<TripMessage>(`/trips/${tripId}/messages`, { method: 'POST', body: { text } }),
   createTrip: (input: {
     name: string
     destination?: string
