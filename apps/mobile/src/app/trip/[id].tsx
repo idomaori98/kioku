@@ -33,6 +33,7 @@ import { ErrorState } from '@/components/ui'
 import { SwipeableRow } from '@/components/SwipeableRow'
 import { TripDetailSkeleton } from '@/components/Skeleton'
 import { TripMap } from '@/components/TripMap'
+import { PhotoLightbox } from '@/components/PhotoLightbox'
 
 const TRAVEL_LABEL: Record<PublicTrip['travelType'], string> = {
   family: 'Family',
@@ -358,6 +359,7 @@ function DayView({
   const [expenseModal, setExpenseModal] = useState<null | { expense?: PublicExpense }>(null)
   const [uploading, setUploading] = useState(false)
   const [photoError, setPhotoError] = useState<string | null>(null)
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
   const hasNote = !!day.note.trim()
 
   function confirmDelete(label: string, run: () => Promise<unknown>) {
@@ -564,9 +566,11 @@ function DayView({
             <Text style={styles.emptyLine}>No photos yet.</Text>
           ) : (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 2 }}>
-              {day.photos.map((ph) => (
+              {day.photos.map((ph, i) => (
                 <View key={ph.id} style={styles.photoWrap}>
-                  <Image source={{ uri: ph.url }} style={styles.photo} contentFit="cover" transition={150} />
+                  <Pressable onPress={() => setLightboxIndex(i)}>
+                    <Image source={{ uri: ph.url }} style={styles.photo} contentFit="cover" transition={150} />
+                  </Pressable>
                   {isOwner ? (
                     <Pressable
                       style={styles.photoDelete}
@@ -613,6 +617,12 @@ function DayView({
           setExpenseModal(null)
           onChanged()
         }}
+      />
+      <PhotoLightbox
+        photos={day.photos}
+        initialIndex={lightboxIndex ?? 0}
+        visible={lightboxIndex !== null}
+        onClose={() => setLightboxIndex(null)}
       />
     </View>
   )
