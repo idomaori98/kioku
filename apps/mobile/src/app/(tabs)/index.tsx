@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
+import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native'
 import { useFocusEffect, useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { api, type Trip } from '@/lib/api'
@@ -20,16 +20,20 @@ export default function TripsScreen() {
   const [styles, KIOKU] = useStyles(makeStyles)
   const [trips, setTrips] = useState<Trip[] | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [refreshing, setRefreshing] = useState(false)
 
-  const load = useCallback(() => {
+  const fetchTrips = useCallback((mode: 'load' | 'refresh') => {
     setError(null)
-    setTrips(null)
+    if (mode === 'load') setTrips(null)
+    else setRefreshing(true)
     api
       .listTrips()
       .then(setTrips)
       .catch((e) => setError(e instanceof Error ? e.message : 'Failed to load'))
+      .finally(() => setRefreshing(false))
   }, [])
 
+  const load = useCallback(() => fetchTrips('load'), [fetchTrips])
   useFocusEffect(load)
 
   return (
@@ -58,6 +62,9 @@ export default function TripsScreen() {
           data={trips}
           keyExtractor={(t) => t.id}
           contentContainerStyle={styles.list}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={() => fetchTrips('refresh')} tintColor={KIOKU.accent} colors={[KIOKU.accent]} />
+          }
           renderItem={({ item }) => (
             <PressableScale style={styles.card} onPress={() => router.push(`/trip/${item.id}`)}>
               <View style={styles.iconWrap}>

@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
+import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native'
 import { useFocusEffect, useRouter } from 'expo-router'
 import { Image } from 'expo-image'
 import { Ionicons } from '@expo/vector-icons'
@@ -58,9 +58,11 @@ export default function NotificationsScreen() {
   const ICON = iconMap(KIOKU)
   const [items, setItems] = useState<AppNotification[] | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [refreshing, setRefreshing] = useState(false)
 
-  const load = useCallback(() => {
+  const fetchNotifs = useCallback((mode: 'load' | 'refresh') => {
     setError(null)
+    if (mode === 'refresh') setRefreshing(true)
     api
       .getNotifications()
       .then((list) => {
@@ -69,8 +71,10 @@ export default function NotificationsScreen() {
         if (list.some((n) => !n.read)) api.markAllNotificationsRead().catch(() => {})
       })
       .catch((e) => setError(e instanceof Error ? e.message : 'Failed to load'))
+      .finally(() => setRefreshing(false))
   }, [])
 
+  const load = useCallback(() => fetchNotifs('load'), [fetchNotifs])
   useFocusEffect(load)
 
   function open(n: AppNotification) {
@@ -100,6 +104,9 @@ export default function NotificationsScreen() {
           keyExtractor={(n) => n.id}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={() => fetchNotifs('refresh')} tintColor={KIOKU.accent} colors={[KIOKU.accent]} />
+          }
           renderItem={({ item }) => {
             const ic = ICON[item.type]
             return (

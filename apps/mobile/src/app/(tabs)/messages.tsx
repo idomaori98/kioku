@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
+import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native'
 import { useFocusEffect, useRouter } from 'expo-router'
 import { Image } from 'expo-image'
 import { Ionicons } from '@expo/vector-icons'
@@ -26,15 +26,19 @@ export default function MessagesScreen() {
   const [styles, KIOKU] = useStyles(makeStyles)
   const [items, setItems] = useState<Conversation[] | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [refreshing, setRefreshing] = useState(false)
 
-  const load = useCallback(() => {
+  const fetchConvos = useCallback((mode: 'load' | 'refresh') => {
     setError(null)
+    if (mode === 'refresh') setRefreshing(true)
     api
       .getConversations()
       .then(setItems)
       .catch((e) => setError(e instanceof Error ? e.message : 'Failed to load'))
+      .finally(() => setRefreshing(false))
   }, [])
 
+  const load = useCallback(() => fetchConvos('load'), [fetchConvos])
   useFocusEffect(load)
 
   return (
@@ -64,6 +68,9 @@ export default function MessagesScreen() {
           keyExtractor={(c) => c.user.id}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={() => fetchConvos('refresh')} tintColor={KIOKU.accent} colors={[KIOKU.accent]} />
+          }
           renderItem={({ item }) => (
             <PressableScale style={styles.row} onPress={() => router.push(`/dm/${item.user.id}?name=${encodeURIComponent(item.user.name)}`)}>
               <View style={styles.avatar}>

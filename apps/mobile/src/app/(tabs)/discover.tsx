@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
+import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native'
 import { useFocusEffect, useRouter } from 'expo-router'
 import { Image } from 'expo-image'
 import { Ionicons } from '@expo/vector-icons'
@@ -24,16 +24,23 @@ export default function DiscoverScreen() {
   const [scope, setScope] = useState<Scope>('all')
   const [cards, setCards] = useState<FeedCard[] | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [refreshing, setRefreshing] = useState(false)
 
-  const load = useCallback(() => {
-    setError(null)
-    setCards(null)
-    api
-      .getFeed(scope === 'following' ? { scope: 'following' } : {})
-      .then((res) => setCards(res.cards))
-      .catch((e) => setError(e instanceof Error ? e.message : 'Failed to load'))
-  }, [scope])
+  const fetchFeed = useCallback(
+    (mode: 'load' | 'refresh') => {
+      setError(null)
+      if (mode === 'load') setCards(null)
+      else setRefreshing(true)
+      api
+        .getFeed(scope === 'following' ? { scope: 'following' } : {})
+        .then((res) => setCards(res.cards))
+        .catch((e) => setError(e instanceof Error ? e.message : 'Failed to load'))
+        .finally(() => setRefreshing(false))
+    },
+    [scope]
+  )
 
+  const load = useCallback(() => fetchFeed('load'), [fetchFeed])
   useFocusEffect(load)
 
   const toggleLike = useCallback((id: string) => {
@@ -92,6 +99,9 @@ export default function DiscoverScreen() {
           keyExtractor={(c) => c.id}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={() => fetchFeed('refresh')} tintColor={KIOKU.accent} colors={[KIOKU.accent]} />
+          }
           renderItem={({ item }) => <FeedCardView card={item} onToggleLike={toggleLike} />}
         />
       )}
