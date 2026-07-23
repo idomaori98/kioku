@@ -1,12 +1,12 @@
 import { useCallback, useState } from 'react'
-import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native'
+import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native'
 import { useFocusEffect, useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { api, type Trip } from '@/lib/api'
 import { useStyles, type Theme } from '@/lib/theme'
 import { EmptyState, ErrorState, Screen, ScreenTitle } from '@/components/ui'
-import { PressableScale } from '@/components/PressableScale'
 import { ListSkeleton } from '@/components/Skeleton'
+import { SwipeableRow } from '@/components/SwipeableRow'
 
 function formatRange(trip: Trip) {
   const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' }
@@ -35,6 +35,27 @@ export default function TripsScreen() {
 
   const load = useCallback(() => fetchTrips('load'), [fetchTrips])
   useFocusEffect(load)
+
+  function confirmDelete(trip: Trip) {
+    Alert.alert(
+      `Delete "${trip.name}"?`,
+      'This permanently deletes the whole trip — all its days, places, expenses, and photos. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete trip',
+          style: 'destructive',
+          onPress: () => {
+            setTrips((prev) => prev?.filter((t) => t.id !== trip.id) ?? prev)
+            api.deleteTrip(trip.id).catch(() => {
+              Alert.alert('Could not delete', 'Something went wrong. Pull to refresh and try again.')
+              load()
+            })
+          },
+        },
+      ]
+    )
+  }
 
   return (
     <Screen>
@@ -66,23 +87,25 @@ export default function TripsScreen() {
             <RefreshControl refreshing={refreshing} onRefresh={() => fetchTrips('refresh')} tintColor={KIOKU.accent} colors={[KIOKU.accent]} />
           }
           renderItem={({ item }) => (
-            <PressableScale style={styles.card} onPress={() => router.push(`/trip/${item.id}`)}>
-              <View style={styles.iconWrap}>
-                <Ionicons name="airplane-outline" size={18} color={KIOKU.accent} />
-              </View>
-              <View style={styles.info}>
-                <Text style={styles.name} numberOfLines={1}>
-                  {item.name}
-                </Text>
-                <Text style={styles.sub} numberOfLines={1}>
-                  {item.destination ? `${item.destination} · ` : ''}
-                  {formatRange(item)}
-                </Text>
-              </View>
-              {item.endedAt ? (
-                <Ionicons name="lock-closed-outline" size={15} color={KIOKU.inkMuted} />
-              ) : null}
-            </PressableScale>
+            <SwipeableRow containerStyle={styles.swipeRow} onDelete={() => confirmDelete(item)}>
+              <Pressable style={styles.card} onPress={() => router.push(`/trip/${item.id}`)}>
+                <View style={styles.iconWrap}>
+                  <Ionicons name="airplane-outline" size={18} color={KIOKU.accent} />
+                </View>
+                <View style={styles.info}>
+                  <Text style={styles.name} numberOfLines={1}>
+                    {item.name}
+                  </Text>
+                  <Text style={styles.sub} numberOfLines={1}>
+                    {item.destination ? `${item.destination} · ` : ''}
+                    {formatRange(item)}
+                  </Text>
+                </View>
+                {item.endedAt ? (
+                  <Ionicons name="lock-closed-outline" size={15} color={KIOKU.inkMuted} />
+                ) : null}
+              </Pressable>
+            </SwipeableRow>
           )}
         />
       )}
@@ -101,6 +124,7 @@ function makeStyles(KIOKU: Theme) {
     justifyContent: 'center',
   },
   list: { paddingHorizontal: 16, paddingBottom: 24, gap: 10 },
+  swipeRow: { borderRadius: 16, overflow: 'hidden' },
   card: {
     flexDirection: 'row',
     alignItems: 'center',

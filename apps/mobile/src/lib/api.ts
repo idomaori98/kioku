@@ -251,6 +251,7 @@ export const api = {
   me: () => request<User>('/auth/me'),
   listTrips: () => request<Trip[]>('/trips'),
   getTrip: (id: string) => request<Trip>(`/trips/${id}`),
+  deleteTrip: (id: string) => request(`/trips/${id}`, { method: 'DELETE' }),
   getTripMessages: (tripId: string) => request<TripMessage[]>(`/trips/${tripId}/messages`),
   sendTripMessage: (tripId: string, text: string) =>
     request<TripMessage>(`/trips/${tripId}/messages`, { method: 'POST', body: { text } }),
