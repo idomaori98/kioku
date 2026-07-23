@@ -32,6 +32,7 @@ import { useStyles, type Theme } from '@/lib/theme'
 import { ErrorState } from '@/components/ui'
 import { SwipeableRow } from '@/components/SwipeableRow'
 import { TripDetailSkeleton } from '@/components/Skeleton'
+import { TripMap } from '@/components/TripMap'
 
 const TRAVEL_LABEL: Record<PublicTrip['travelType'], string> = {
   family: 'Family',
@@ -148,6 +149,7 @@ export default function TripDetailScreen() {
   const isOwner = !!user && !!trip && String(trip.createdBy) === user.id
   const cover = trip?.days.flatMap((d) => d.photos)[0]?.url ?? null
   const day = trip?.days[selected]
+  const hasMapped = !!trip && trip.days.some((d) => d.places.some((p) => p.lat != null && p.lng != null))
 
   if (error) {
     return (
@@ -252,6 +254,14 @@ export default function TripDetailScreen() {
             <Ionicons name="chevron-forward" size={16} color={KIOKU.inkMuted} />
           </Pressable>
 
+          {hasMapped ? (
+            <Pressable style={styles.recapBtn} onPress={() => router.push(`/map/${trip.id}`)}>
+              <Ionicons name="map-outline" size={16} color={KIOKU.ink} />
+              <Text style={styles.recapText}>Trip map</Text>
+              <Ionicons name="chevron-forward" size={16} color={KIOKU.inkMuted} />
+            </Pressable>
+          ) : null}
+
           {isOwner ? (
             <Pressable style={styles.recapBtn} onPress={() => router.push(`/chat/${trip.id}`)}>
               <Ionicons name="chatbubbles-outline" size={16} color={KIOKU.ink} />
@@ -339,6 +349,10 @@ function DayView({
   onChanged: () => void
 }) {
   const [styles, KIOKU] = useStyles(makeStyles)
+  const router = useRouter()
+  const dayPins = day.places
+    .filter((p) => p.lat != null && p.lng != null)
+    .map((p) => ({ lat: p.lat as number, lng: p.lng as number, label: p.name }))
   const [placeModal, setPlaceModal] = useState<null | { place?: PublicPlace }>(null)
   const [editingNote, setEditingNote] = useState(false)
   const [expenseModal, setExpenseModal] = useState<null | { expense?: PublicExpense }>(null)
@@ -464,6 +478,12 @@ function DayView({
           )
         })
       )}
+
+      {dayPins.length > 0 ? (
+        <Pressable style={styles.miniMap} onPress={() => router.push(`/map/${trip.id}`)}>
+          <TripMap markers={dayPins} height={150} interactive={false} radius={14} />
+        </Pressable>
+      ) : null}
 
       {/* Expenses */}
       <View style={styles.sectionHead}>
@@ -1020,6 +1040,7 @@ function makeStyles(KIOKU: Theme) {
 
   rowGap: { marginBottom: 8 },
   swipeRow: { marginBottom: 8, borderRadius: 12, overflow: 'hidden' },
+  miniMap: { marginTop: 12 },
   place: {
     flexDirection: 'row',
     gap: 10,
